@@ -2,9 +2,10 @@
 
 ## ✅ Estado Actual
 - ✅ Código subido a GitHub: https://github.com/Alanrele/finsmart
-- ✅ Dockerfile configurado para Railway
+- ✅ Dockerfile configurado para Railway (Node.js 20)
 - ✅ railway.yml configurado
 - ✅ Variables de entorno separadas (seguras)
+- ✅ Package locks regenerados y sincronizados
 
 ## 📋 Pasos para Desplegar en Railway
 
@@ -38,11 +39,12 @@ PORT=5000
 
 ### 4. 🏗️ Proceso de Construcción
 Railway automáticamente:
-- ✅ Detectará el Dockerfile
-- ✅ Construirá la imagen Docker multi-stage
-- ✅ Instalará dependencias del frontend y backend
+- ✅ Detectará el Dockerfile (Node.js 20 Alpine)
+- ✅ Construirá la imagen Docker multi-stage con dependencias nativas
+- ✅ Instalará dependencias del frontend y backend (sincronizadas)
 - ✅ Generará build de producción del React
 - ✅ Configurará el servidor Express para servir estáticos
+- ✅ Ejecutará como usuario no-root por seguridad
 
 ### 5. 🌍 Acceso a la Aplicación
 - Railway te dará una URL tipo: `https://finsmart-production-XXXX.up.railway.app`
