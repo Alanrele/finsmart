@@ -1,0 +1,27 @@
+{
+  "name": "finsmart-monorepo",
+  "version": "1.0.0",
+  "description": "FinSmart - Análisis Financiero Inteligente",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install", 
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "build:frontend": "cd frontend && npm run build",
+    "build": "npm run build:frontend",
+    "start": "cd backend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "deploy:railway": "railway up"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usuario/finsmart.git"
+  },
+  "keywords": ["fintech", "ai", "bcp", "finance", "pwa"],
+  "author": "FinSmart Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
