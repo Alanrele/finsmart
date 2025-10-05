@@ -50,6 +50,23 @@ app.use('/api/graph', authMiddleware, graphRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/finance', authMiddleware, financeRoutes);
 
+// Health check endpoint (before static files)
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    env: process.env.NODE_ENV,
+    mongodb: process.env.MONGODB_URI ? 'configured' : 'missing',
+    openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
+    azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing'
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Serve static files from React build (for production)
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../public')));
@@ -59,11 +76,6 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
   });
 }
-
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 // Socket.io connection handling
 io.on('connection', (socket) => {
@@ -90,8 +102,12 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`MongoDB: ${process.env.MONGODB_URI ? 'Configured' : 'Not configured'}`);
+  console.log(`OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
+  console.log(`Azure OCR: ${process.env.AZURE_OCR_KEY ? 'Configured' : 'Not configured'}`);
 });
 
 module.exports = app;
