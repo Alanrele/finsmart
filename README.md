@@ -1,23 +1,24 @@
-# FinSmart - Análisis Financiero Inteligente
+# 🏦 FinSmart - Aplicación PWA de Finanzas Inteligentes
 
-FinSmart es una aplicación web progresiva (PWA) que analiza automáticamente tus correos electrónicos del Banco de Crédito del Perú (BCP) utilizando inteligencia artificial para generar insights financieros personalizados y recomendaciones de ahorro.
+## 🌟 Descripción
 
-## 🎯 Estado Actual del Proyecto
+FinSmart es una Progressive Web Application (PWA) completa para gestión financiera inteligente, que combina autenticación Microsoft, inteligencia artificial y análisis automatizado de documentos.
 
-### ✅ Completado
-- **Frontend completo**: React 18 + Vite funcionando en puerto 3001
-- **Backend completo**: Node.js + Express funcionando en puerto 5001  
-- **Base de datos**: MongoDB Atlas conectada y operativa
-- **Autenticación MSAL**: Microsoft login configurado con manejo de errores
-- **APIs integradas**: OpenAI GPT-4 y Azure Computer Vision operativas
-- **PWA funcional**: Todos los componentes principales implementados
-- **Verificador de servicios**: Script para comprobar estado del sistema
+## ✨ Características Principales
 
-### ⚠️ Configuración Pendiente
-- **Azure AD URIs**: Configurar URIs de redirección en Azure Portal
-- **Variables de producción**: Configurar entorno de producción
+- 🔐 **Autenticación Microsoft**: Login seguro con Azure AD
+- 🤖 **IA Integrada**: Asistente financiero con OpenAI  
+- 📊 **Análisis Automático**: Procesamiento de documentos con Azure OCR
+- 📱 **PWA**: Aplicación instalable y con soporte offline
+- ⚡ **Tecnología Moderna**: React 18, Node.js, MongoDB Atlas
+- 🚀 **Producción Ready**: Desplegable en Railway.com
 
-### 🌐 URLs de Desarrollo
+## 🔗 Enlaces Importantes
+
+- **🌐 Repositorio GitHub**: https://github.com/Alanrele/finsmart
+- **📖 Documentación Completa**: Ver archivos `.md` en el proyecto
+- **🚀 Guía de Despliegue**: [DESPLIEGUE_RAILWAY.md](./DESPLIEGUE_RAILWAY.md)
+- **🔒 Variables de Entorno**: [CLAVES_REALES.md](./CLAVES_REALES.md) (archivo local)
 - **Frontend**: http://localhost:3001
 - **Backend**: http://localhost:5001  
 - **API Docs**: http://localhost:5001/api/docs
