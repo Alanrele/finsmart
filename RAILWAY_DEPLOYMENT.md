@@ -5,7 +5,7 @@
 ### ✅ **Archivos de Configuración Creados**
 
 1. **Dockerfile** - Construcción multi-stage optimizada
-2. **railway.yml** - Configuración específica de Railway  
+2. **railway.yml** - Configuración específica de Railway
 3. **package.json** - Scripts de construcción y despliegue
 4. **.env.production** - Variables de entorno para producción
 5. **.gitignore** - Archivos excluidos del repositorio
@@ -23,7 +23,7 @@
 ```bash
 # Opción A: Subir a GitHub primero
 git remote add origin https://github.com/TU_USUARIO/finsmart.git
-git branch -M main  
+git branch -M main
 git push -u origin main
 
 # Opción B: Railway desde código local
@@ -43,7 +43,7 @@ MONGODB_URI=mongodb+srv://miusuario:Alan12345@cluster0.goboze9.mongodb.net/finsm
 # JWT
 JWT_SECRET=finsmart_jwt_secret_2024_production_ready_railway_deployment
 
-# OpenAI  
+# OpenAI
 OPENAI_API_KEY=your_openai_api_key_here
 
 # Azure OCR

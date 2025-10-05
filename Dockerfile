@@ -8,13 +8,13 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 
-# Use npm ci for reproducible builds, fallback to install
-RUN npm ci || npm install
+# Install ALL dependencies for build (including devDependencies)
+RUN npm install
 
 COPY frontend/ ./
 RUN npm run build
 
-# Backend stage
+# Backend stage  
 FROM node:20-alpine as backend
 
 # Install runtime dependencies for native modules
@@ -23,8 +23,8 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 COPY backend/package*.json ./
 
-# Use npm ci for reproducible builds, fallback to install
-RUN npm ci --omit=dev || npm install --omit=dev
+# Install only production dependencies for backend
+RUN npm install --omit=dev
 
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist ./public

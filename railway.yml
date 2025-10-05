@@ -5,7 +5,7 @@ railway_projects:
     build_command: cd backend && npm install
     start_command: cd backend && npm start
     port: 5000
-  - name: finsmart-frontend  
+  - name: finsmart-frontend
     build_command: cd frontend && npm install && npm run build
     start_command: cd frontend && npm run preview
     port: 4173

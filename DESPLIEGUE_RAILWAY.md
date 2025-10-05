@@ -25,7 +25,7 @@ En el dashboard de Railway, ve a "Variables" y agrega:
 
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
-AZURE_OCR_KEY=your_azure_ocr_key_here  
+AZURE_OCR_KEY=your_azure_ocr_key_here
 AZURE_OCR_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
 MONGODB_URI=your_mongodb_connection_string_here
 JWT_SECRET=your_jwt_secret_here
@@ -45,6 +45,8 @@ Railway automáticamente:
 - ✅ Generará build de producción del React
 - ✅ Configurará el servidor Express para servir estáticos
 - ✅ Ejecutará como usuario no-root por seguridad
+
+> 💡 **Si el build falla**: Railway incluye un `Dockerfile.simple` como alternativa más básica.
 
 ### 5. 🌍 Acceso a la Aplicación
 - Railway te dará una URL tipo: `https://finsmart-production-XXXX.up.railway.app`
@@ -102,5 +104,17 @@ Railway automáticamente:
 - Las variables de entorno están seguras en Railway
 - El código público en GitHub no contiene información sensible
 - La app es completamente funcional y lista para producción
+
+### 🔧 Troubleshooting
+
+**Si el build falla con el Dockerfile principal:**
+1. En Railway dashboard, ve a Settings > Environment
+2. Agrega variable: `DOCKERFILE_PATH=Dockerfile.simple`  
+3. Redeploy el proyecto
+
+**Verificar logs del build:**
+- Ve a Deployments en Railway dashboard
+- Click en el deployment fallido para ver logs detallados
+- Los errores más comunes están relacionados con dependencias npm
 
 ¡Tu FinSmart PWA está listo para el mundo! 🌟

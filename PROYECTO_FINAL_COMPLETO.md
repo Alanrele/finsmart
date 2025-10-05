@@ -10,7 +10,7 @@
 
 ### 📱 **Aplicación Completa**
 - ✅ **Frontend React 18** + Vite + TailwindCSS + PWA
-- ✅ **Backend Node.js** + Express + MongoDB Atlas  
+- ✅ **Backend Node.js** + Express + MongoDB Atlas
 - ✅ **Base de datos** MongoDB Atlas conectada y operativa
 - ✅ **APIs integradas** OpenAI GPT-4 + Azure Computer Vision
 - ✅ **Autenticación** JWT + Microsoft Graph MSAL
@@ -19,7 +19,7 @@
 
 ### 🛠️ **Características Técnicas**
 - ✅ **Chat con IA** para análisis financiero conversacional
-- ✅ **Procesamiento OCR** de imágenes bancarias  
+- ✅ **Procesamiento OCR** de imágenes bancarias
 - ✅ **Dashboard interactivo** con gráficos y métricas
 - ✅ **Gestión de transacciones** con categorización automática
 - ✅ **Conectividad Outlook** para leer correos BCP
@@ -148,7 +148,7 @@ Una vez desplegado tendrás:
 **Solo necesitas 20 minutos para tener FinSmart funcionando en producción:**
 
 1. **GitHub** (5 min): Crear repo y hacer push
-2. **Railway** (10 min): Deploy automático desde GitHub  
+2. **Railway** (10 min): Deploy automático desde GitHub
 3. **Azure AD** (5 min): Actualizar URLs de redirección
 
 **¡Tu aplicación PWA estará disponible públicamente con HTTPS y Microsoft Login funcional!**

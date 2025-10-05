@@ -58,7 +58,7 @@ Después del push, deberías ver en GitHub:
 
 Una vez en GitHub:
 1. Ve a: https://railway.app
-2. Sign up con tu cuenta de GitHub  
+2. Sign up con tu cuenta de GitHub
 3. "New Project" → "Deploy from GitHub repo"
 4. Selecciona tu repositorio "finsmart"
 5. Railway detectará automáticamente el Dockerfile

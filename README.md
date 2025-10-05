@@ -7,7 +7,7 @@ FinSmart es una Progressive Web Application (PWA) completa para gestión financi
 ## ✨ Características Principales
 
 - 🔐 **Autenticación Microsoft**: Login seguro con Azure AD
-- 🤖 **IA Integrada**: Asistente financiero con OpenAI  
+- 🤖 **IA Integrada**: Asistente financiero con OpenAI
 - 📊 **Análisis Automático**: Procesamiento de documentos con Azure OCR
 - 📱 **PWA**: Aplicación instalable y con soporte offline
 - ⚡ **Tecnología Moderna**: React 18, Node.js, MongoDB Atlas
@@ -20,7 +20,7 @@ FinSmart es una Progressive Web Application (PWA) completa para gestión financi
 - **🚀 Guía de Despliegue**: [DESPLIEGUE_RAILWAY.md](./DESPLIEGUE_RAILWAY.md)
 - **🔒 Variables de Entorno**: [CLAVES_REALES.md](./CLAVES_REALES.md) (archivo local)
 - **Frontend**: http://localhost:3001
-- **Backend**: http://localhost:5001  
+- **Backend**: http://localhost:5001
 - **API Docs**: http://localhost:5001/api/docs
 - **Health Check**: `node check-services.js`
 

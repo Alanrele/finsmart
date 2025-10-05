@@ -5,20 +5,20 @@
       <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
     </linearGradient>
   </defs>
-  
+
   <!-- Background circle -->
   <circle cx="256" cy="256" r="240" fill="url(#gradient)" />
-  
+
   <!-- F letter -->
   <text x="256" y="340" font-family="Arial, sans-serif" font-size="200" font-weight="bold" text-anchor="middle" fill="white">F</text>
-  
+
   <!-- Chart icon -->
   <g transform="translate(350, 120)">
     <rect x="0" y="50" width="20" height="50" fill="white" opacity="0.8"/>
     <rect x="30" y="30" width="20" height="70" fill="white" opacity="0.8"/>
     <rect x="60" y="40" width="20" height="60" fill="white" opacity="0.8"/>
   </g>
-  
+
   <!-- Dollar sign -->
   <g transform="translate(100, 120)">
     <circle cx="25" cy="50" r="30" fill="none" stroke="white" stroke-width="6" opacity="0.8"/>

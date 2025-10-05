@@ -11,7 +11,7 @@ React Router Future Flag Warning: Relative route resolution within Splat routes 
 
 **Solución**: Agregadas las flags futuras en `main.jsx`
 ```jsx
-<BrowserRouter 
+<BrowserRouter
   future={{
     v7_startTransition: true,
     v7_relativeSplatPath: true
@@ -36,11 +36,11 @@ React Router Future Flag Warning: Relative route resolution within Splat routes 
 ### 3. PWA Manifest - Iconos Faltantes
 **Problema**: Errores de iconos faltantes en el manifest
 ```
-Error while trying to use the following icon from the Manifest: 
+Error while trying to use the following icon from the Manifest:
 http://localhost:3001/android-chrome-192x192.png (Download error or resource isn't a valid image)
 ```
 
-**Solución**: 
+**Solución**:
 - ✅ Creados iconos PNG usando Canvas: `192x192`, `512x512`, `180x180`, `32x32`, `16x16`
 - ✅ Script automático: `generate-icons.cjs`
 - ✅ Iconos con diseño FinSmart (F + gradiente + elementos financieros)
@@ -105,7 +105,7 @@ public/
 ### ✅ Routing Corregido
 - `/` → Si autenticado: dashboard, sino: login
 - `/login` → Si autenticado: dashboard, sino: login
-- `/dashboard` → Si autenticado: dashboard, sino: login  
+- `/dashboard` → Si autenticado: dashboard, sino: login
 - `/*` → Si autenticado: dashboard, sino: login
 
 ## 🧪 Cómo Probar
@@ -134,7 +134,7 @@ public/
 
 **Todos los warnings y errores han sido corregidos:**
 - ✅ No más warnings de React Router
-- ✅ No más errores de iconos PWA  
+- ✅ No más errores de iconos PWA
 - ✅ No más meta tags deprecated
 - ✅ Routing funciona correctamente
 - ✅ PWA completamente funcional

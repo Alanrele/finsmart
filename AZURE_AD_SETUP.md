@@ -27,7 +27,7 @@
 2. Asegúrate de que estos permisos estén configurados:
    - Microsoft Graph:
      - `User.Read` (Delegated)
-     - `Mail.Read` (Delegated) 
+     - `Mail.Read` (Delegated)
      - `Mail.ReadBasic` (Delegated)
      - `openid` (Delegated)
      - `profile` (Delegated)

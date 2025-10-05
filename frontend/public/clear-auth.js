@@ -9,8 +9,8 @@ localStorage.clear();
 sessionStorage.clear();
 
 // Limpiar cookies específicas
-document.cookie.split(";").forEach(function(c) { 
-  document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+document.cookie.split(";").forEach(function(c) {
+  document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
 });
 
 console.log('✅ Datos limpiados. Refrescando página...');

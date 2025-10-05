@@ -20,7 +20,7 @@ urls.forEach((url, index) => {
 
 function getExpectedBehavior(url) {
   const path = new URL(url).pathname;
-  
+
   switch (path) {
     case '/':
       return 'If authenticated: redirect to /dashboard, else: show Home';

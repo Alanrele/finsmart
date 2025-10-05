@@ -30,7 +30,7 @@ const checks = [
     fix: 'Install backend dependencies'
   },
   {
-    name: 'Frontend package.json', 
+    name: 'Frontend package.json',
     check: () => fs.existsSync('frontend/package.json'),
     fix: 'Install frontend dependencies'
   },
@@ -63,9 +63,9 @@ let allPassed = true;
 checks.forEach((check, index) => {
   const passed = check.check();
   const icon = passed ? '✅' : '❌';
-  
+
   console.log(`${icon} ${check.name}`);
-  
+
   if (!passed) {
     console.log(`   Fix: ${check.fix}`);
     allPassed = false;
@@ -94,7 +94,7 @@ if (allPassed) {
 console.log('');
 console.log('🌐 Variables de entorno requeridas en Railway:');
 console.log('- MONGODB_URI');
-console.log('- JWT_SECRET'); 
+console.log('- JWT_SECRET');
 console.log('- OPENAI_API_KEY');
 console.log('- AZURE_OCR_KEY');
 console.log('- AZURE_OCR_ENDPOINT');

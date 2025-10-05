@@ -28,7 +28,7 @@ const services = [
 function checkHttpService(service) {
   return new Promise((resolve) => {
     const client = service.url.startsWith('https') ? https : http;
-    
+
     const req = client.get(service.url, (res) => {
       resolve({
         ...service,
@@ -80,9 +80,9 @@ async function checkServices() {
   console.log('═'.repeat(50));
 
   results.forEach(result => {
-    const icon = result.status === 'OK' ? '✅' : 
+    const icon = result.status === 'OK' ? '✅' :
                  result.status === 'CONFIGURED' ? '⚙️' : '❌';
-    
+
     console.log(`${icon} ${result.name.padEnd(20)} ${result.status.padEnd(10)} ${result.message || ''}`);
   });
 

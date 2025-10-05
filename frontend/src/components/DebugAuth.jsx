@@ -24,7 +24,7 @@ const DebugAuth = () => {
       <p><strong>isAuthenticated:</strong> {isAuthenticated ? '✅' : '❌'}</p>
       <p><strong>User:</strong> {user ? user.email || user.firstName : 'null'}</p>
       <p><strong>Token:</strong> {token ? '✅ Present' : '❌ None'}</p>
-      <button 
+      <button
         onClick={logout}
         style={{
           background: 'red',

@@ -12,7 +12,7 @@ async function convertSvgToPng(svgPath, pngPath, size) {
     console.log(`✅ Created ${pngPath}`);
   } catch (error) {
     console.error(`❌ Error creating ${pngPath}:`, error.message);
-    
+
     // Fallback: create a simple colored square
     await sharp({
       create: {
@@ -32,7 +32,7 @@ async function convertSvgToPng(svgPath, pngPath, size) {
 function createFallbackIcon(path, size) {
   // Create a simple HTML canvas approach or use a different method
   console.log(`Creating fallback for ${path} with size ${size}x${size}`);
-  
+
   // For now, we'll create the manifest without the PNG files
   // and let the browser use the SVG files
 }
@@ -40,20 +40,20 @@ function createFallbackIcon(path, size) {
 // Create the icons
 async function createIcons() {
   console.log('🎨 Creating PWA icons...');
-  
+
   try {
     // Try to use sharp if available
     await convertSvgToPng('./public/icon-192.svg', './public/android-chrome-192x192.png', 192);
     await convertSvgToPng('./public/icon-512.svg', './public/android-chrome-512x512.png', 512);
-    
+
     // Create additional sizes
     await convertSvgToPng('./public/icon-192.svg', './public/apple-touch-icon.png', 180);
     await convertSvgToPng('./public/icon-192.svg', './public/favicon-32x32.png', 32);
     await convertSvgToPng('./public/icon-192.svg', './public/favicon-16x16.png', 16);
-    
+
   } catch (error) {
     console.log('Sharp not available, using alternative approach...');
-    
+
     // Copy SVG files as fallback
     if (fs.existsSync('./public/icon-192.svg')) {
       fs.copyFileSync('./public/icon-192.svg', './public/android-chrome-192x192.svg');

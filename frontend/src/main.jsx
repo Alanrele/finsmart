@@ -37,7 +37,7 @@ const Root = () => {
     // Render app without MSAL if initialization failed
     return (
       <React.StrictMode>
-        <BrowserRouter 
+        <BrowserRouter
           future={{
             v7_startTransition: true,
             v7_relativeSplatPath: true
@@ -52,7 +52,7 @@ const Root = () => {
   return (
     <React.StrictMode>
       <MsalProvider instance={msalInstance}>
-        <BrowserRouter 
+        <BrowserRouter
           future={{
             v7_startTransition: true,
             v7_relativeSplatPath: true
