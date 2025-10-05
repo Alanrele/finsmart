@@ -1,15 +1,15 @@
 # Multi-stage build for FinSmart
 FROM node:20-alpine as frontend-build
 
-# Install build dependencies for native modules
+# Install essential build dependencies
 RUN apk add --no-cache python3 make g++
 
 # Build frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 
-# Install ALL dependencies for build (including devDependencies)
-RUN npm install
+# Install dependencies with clean cache and skip optional deps
+RUN npm ci --omit=optional --cache /tmp/.npm || npm install --omit=optional
 
 COPY frontend/ ./
 RUN npm run build
@@ -24,7 +24,7 @@ WORKDIR /app
 COPY backend/package*.json ./
 
 # Install only production dependencies for backend
-RUN npm install --omit=dev
+RUN npm install --omit=dev --omit=optional
 
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist ./public
