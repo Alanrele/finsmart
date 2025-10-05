@@ -46,7 +46,9 @@ Railway automáticamente:
 - ✅ Configurará el servidor Express para servir estáticos
 - ✅ Ejecutará como usuario no-root por seguridad
 
-> 💡 **Si el build falla**: Railway incluye un `Dockerfile.simple` como alternativa más básica.
+> 💡 **Si el build falla**: Railway incluye múltiples Dockerfiles:
+> - `Dockerfile.debian` (Node.js base - mejor para Rollup)
+> - `Dockerfile.simple` (versión más básica)
 
 ### 5. 🌍 Acceso a la Aplicación
 - Railway te dará una URL tipo: `https://finsmart-production-XXXX.up.railway.app`
@@ -108,9 +110,18 @@ Railway automáticamente:
 ### 🔧 Troubleshooting
 
 **Si el build falla con el Dockerfile principal:**
-1. En Railway dashboard, ve a Settings > Environment
-2. Agrega variable: `DOCKERFILE_PATH=Dockerfile.simple`  
-3. Redeploy el proyecto
+1. **Opción 1 - Dockerfile Debian**: `DOCKERFILE_PATH=Dockerfile.debian`
+2. **Opción 2 - Dockerfile Simple**: `DOCKERFILE_PATH=Dockerfile.simple`  
+
+En Railway dashboard:
+- Ve a Settings > Environment
+- Agrega la variable DOCKERFILE_PATH
+- Redeploy el proyecto
+
+**Problemas comunes y soluciones:**
+- **Rollup musl error**: Usa Dockerfile.debian (Node.js base en lugar de Alpine)
+- **Canvas/native modules**: Ya removidos del proyecto
+- **Package-lock issues**: Dockerfiles regeneran node_modules frescos
 
 **Verificar logs del build:**
 - Ve a Deployments en Railway dashboard

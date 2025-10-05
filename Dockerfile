@@ -8,8 +8,11 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 
-# Install dependencies with clean cache and skip optional deps
-RUN npm ci --omit=optional --cache /tmp/.npm || npm install --omit=optional
+# Clear npm cache and install with fresh modules
+RUN npm cache clean --force
+RUN npm install --no-package-lock --no-optional
+RUN rm -rf node_modules package-lock.json || true
+RUN npm install
 
 COPY frontend/ ./
 RUN npm run build
