@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useMsal } from '@azure/msal-react'
+import { useMsal, useIsAuthenticated } from '@azure/msal-react'
 import toast from 'react-hot-toast'
 import useAuthStore from './stores/authStore'
 import useAppStore from './stores/appStore'
@@ -23,21 +23,89 @@ import DebugMSAL from './components/DebugMSAL'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
+  const msalAuthenticated = useIsAuthenticated();
+  const { accounts } = useMsal();
   const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+  useEffect(() => {
+    console.log('🛡️ ProtectedRoute verificando estado:', {
+      msalAuthenticated,
+      zustandAuthenticated: isAuthenticated,
+      hasUser: !!user,
+      accountsCount: accounts.length,
+      timestamp: new Date().toISOString()
+    });
+
+    // Dar tiempo para que MSAL se inicialice completamente
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [msalAuthenticated, isAuthenticated, user, accounts]);
+
+  // Mostrar loading mientras se verifica el estado
+  if (isLoading) {
+    console.log('🛡️ ProtectedRoute: Verificando autenticación...');
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Verificando autenticación...</p>
+        </div>
+      </div>
+    );
   }
 
-  return children
-}
+  // Verificar tanto MSAL como Zustand y que tenga cuentas
+  if (!msalAuthenticated || !isAuthenticated || accounts.length === 0) {
+    console.log('🛡️ ProtectedRoute: Usuario no autenticado, redirigiendo a login');
+    return <Navigate to="/login" replace />;
+  }
+
+  console.log('🛡️ ProtectedRoute: Usuario autenticado, mostrando contenido protegido');
+  return children;
+};
 
 function App() {
-  const { isAuthenticated, user, token, login } = useAuthStore()
+  const { isAuthenticated, user, token, login, updateLastActivity, clearExpiredSession } = useAuthStore()
   const { initializeTheme, addNotification } = useAppStore()
-  const { instance, inProgress } = useMsal()
+  const { instance, inProgress, accounts } = useMsal()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Activity tracker effect para mantener la sesión activa
+  useEffect(() => {
+    const trackActivity = () => {
+      if (isAuthenticated) {
+        updateLastActivity();
+      }
+    };
+
+    // Eventos que indican actividad del usuario
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, trackActivity, true);
+    });
+
+    // Verificar sesión cada 5 minutos
+    const sessionCheck = setInterval(() => {
+      if (isAuthenticated && clearExpiredSession()) {
+        console.log('🔐 Sesión expirada, redirigiendo al login');
+        navigate('/login', { replace: true });
+      }
+    }, 5 * 60 * 1000); // 5 minutos
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, trackActivity, true);
+      });
+      clearInterval(sessionCheck);
+    };
+  }, [isAuthenticated, updateLastActivity, clearExpiredSession, navigate]);
 
   useEffect(() => {
     // Handle Microsoft login callback
@@ -65,14 +133,23 @@ function App() {
             // Create a demo token for development
             const token = `demo-token-${Date.now()}`
 
+            // Ensure login is processed
+            console.log('🔐 Setting auth state:', userInfo)
             login(userInfo, token)
-            toast.success('✅ Autenticación exitosa con Microsoft')
+            
+            // Wait a bit for state to update
+            setTimeout(() => {
+              console.log('🎯 Auth state after login:', { isAuthenticated, user: useAuthStore.getState().user })
+              toast.success('✅ Autenticación exitosa con Microsoft')
+              
+              // Clear any login progress flags
+              sessionStorage.removeItem('msalLoginInProgress')
 
-            // Clear any login progress flags
-            sessionStorage.removeItem('msalLoginInProgress')
-
-            // Navigate to dashboard
-            navigate('/dashboard')
+              // Navigate to dashboard
+              console.log('🚀 Navigating to dashboard...')
+              navigate('/dashboard', { replace: true })
+            }, 100)
+            
           } else if (sessionStorage.getItem('msalLoginInProgress') === 'true') {
             // Login was in progress but no response received
             console.log('⚠️ Login was in progress but no response received')
@@ -138,7 +215,11 @@ function App() {
         <Route
           path="/login"
           element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Login />
+            )
           }
         />
 
@@ -146,6 +227,28 @@ function App() {
           path="/auth/ms-callback"
           element={<AuthCallback />}
         />
+
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />
+        </Route>
 
         <Route
           path="/"

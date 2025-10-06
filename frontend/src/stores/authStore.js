@@ -8,26 +8,34 @@ const useAuthStore = create(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      lastActivity: null,
 
       // Actions
       login: (user, token) => {
+        console.log('🔐 AuthStore: Login llamado con:', { user, hasToken: !!token });
+        const currentTime = Date.now();
         set({
           user,
           token,
           isAuthenticated: true,
-          isLoading: false
-        })
+          isLoading: false,
+          lastActivity: currentTime
+        });
+        console.log('🔐 AuthStore: Estado después del login:', get());
       },
 
       logout: () => {
+        console.log('🔐 AuthStore: Logout llamado');
         set({
           user: null,
           token: null,
           isAuthenticated: false,
-          isLoading: false
-        })
+          isLoading: false,
+          lastActivity: null
+        });
         // Clear localStorage
-        localStorage.removeItem('auth-storage')
+        localStorage.removeItem('auth-storage');
+        console.log('🔐 AuthStore: Estado después del logout:', get());
       },
 
       updateUser: (userData) => {
@@ -38,6 +46,32 @@ const useAuthStore = create(
 
       setLoading: (loading) => {
         set({ isLoading: loading })
+      },
+
+      updateLastActivity: () => {
+        const currentTime = Date.now();
+        set({ lastActivity: currentTime });
+      },
+
+      // Verificar si la sesión ha expirado (30 minutos de inactividad)
+      isSessionValid: () => {
+        const { lastActivity } = get();
+        if (!lastActivity) return false;
+        
+        const thirtyMinutes = 30 * 60 * 1000; // 30 minutos en ms
+        const now = Date.now();
+        return (now - lastActivity) < thirtyMinutes;
+      },
+
+      // Limpiar sesión expirada
+      clearExpiredSession: () => {
+        const { isSessionValid, logout } = get();
+        if (!isSessionValid()) {
+          console.log('🔐 AuthStore: Sesión expirada, cerrando sesión');
+          logout();
+          return true;
+        }
+        return false;
       },
 
       // Getters
@@ -51,8 +85,18 @@ const useAuthStore = create(
       partialize: (state) => ({
         user: state.user,
         token: state.token,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+        lastActivity: state.lastActivity
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log('🔐 AuthStore: Estado rehidratado desde localStorage:', state);
+          // Verificar si la sesión ha expirado al rehidratar
+          if (state.clearExpiredSession) {
+            state.clearExpiredSession();
+          }
+        }
+      },
     }
   )
 )
