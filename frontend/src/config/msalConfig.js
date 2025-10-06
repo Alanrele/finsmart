@@ -1,10 +1,10 @@
 // MSAL configuration for Microsoft Graph authentication - Railway Production
 export const msalConfig = {
   auth: {
-    clientId: "29f56526-69dc-4e89-9955-060aa8292fd0",
-    authority: "https://login.microsoftonline.com/common",
-    redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback", // Como en Render
-    postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
+    clientId: import.meta.env.VITE_GRAPH_CLIENT_ID || "29f56526-69dc-4e89-9955-060aa8292fd0",
+    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_GRAPH_TENANT_ID || 'common'}`,
+    redirectUri: import.meta.env.VITE_REDIRECT_URI || "https://finsmart-production.up.railway.app/auth/ms-callback",
+    postLogoutRedirectUri: import.meta.env.VITE_API_URL || "https://finsmart-production.up.railway.app",
     navigateToLoginRequestUrl: false,
   },
   cache: {
@@ -23,7 +23,7 @@ export const msalConfig = {
 export const loginRequest = {
   scopes: [
     "User.Read",
-    "Mail.Read", 
+    "Mail.Read",
     "Mail.ReadBasic",
     "offline_access",
     "openid",

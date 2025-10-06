@@ -100,7 +100,7 @@ app.get('/api/debug/env', (req, res) => {
   if (process.env.NODE_ENV !== 'production') {
     return res.status(403).json({ error: 'Debug endpoint disabled in production' });
   }
-  
+
   res.json({
     frontend_vars: {
       VITE_GRAPH_CLIENT_ID: process.env.VITE_GRAPH_CLIENT_ID ? 'configured' : 'missing',

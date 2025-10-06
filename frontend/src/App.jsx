@@ -49,7 +49,7 @@ function App() {
 
           if (response && response.account) {
             console.log('Microsoft login success:', response.account.username)
-            
+
             // Success - user is authenticated
             const userInfo = {
               _id: response.account.localAccountId,
@@ -64,10 +64,10 @@ function App() {
 
             login(userInfo, token)
             toast.success('Autenticación exitosa con Microsoft')
-            
+
             // Clear any login progress flags
             sessionStorage.removeItem('msalLoginInProgress')
-            
+
             // Navigate to dashboard
             navigate('/dashboard')
           } else if (sessionStorage.getItem('msalLoginInProgress') === 'true') {
@@ -79,7 +79,7 @@ function App() {
       } catch (error) {
         console.error('Auth callback error:', error)
         sessionStorage.removeItem('msalLoginInProgress')
-        
+
         // Only show error if it's a real error, not just normal flow
         if (error.name !== 'InteractionInProgress') {
           toast.error('Error en la autenticación con Microsoft')
@@ -135,9 +135,9 @@ function App() {
           }
         />
 
-        <Route 
-          path="/auth/ms-callback" 
-          element={<AuthCallback />} 
+        <Route
+          path="/auth/ms-callback"
+          element={<AuthCallback />}
         />
 
         <Route

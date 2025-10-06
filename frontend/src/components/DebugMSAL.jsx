@@ -46,7 +46,7 @@ const DebugMSAL = () => {
       <div>Authenticated: {isAuthenticated ? 'YES' : 'NO'}</div>
       <div>User: {user?.email || 'none'}</div>
       <hr />
-      <button 
+      <button
         onClick={handleTestRedirect}
         style={{
           background: '#007ACC',

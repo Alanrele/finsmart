@@ -10,10 +10,10 @@ export const useMicrosoftAuth = () => {
   const loginMicrosoft = async () => {
     try {
       console.log('Starting Microsoft login redirect...')
-      
+
       // Clear any previous login state
       sessionStorage.removeItem('msalLoginInProgress')
-      
+
       // Use redirect for production, popup for development
       if (import.meta.env.PROD) {
         // Set flag to track login in progress
@@ -48,10 +48,10 @@ export const useMicrosoftAuth = () => {
 
         login(userInfo, token)
         toast.success('Autenticación exitosa con Microsoft')
-        
+
         // Clear login progress flag
         sessionStorage.removeItem('msalLoginInProgress')
-        
+
         return true
       }
     } catch (error) {
