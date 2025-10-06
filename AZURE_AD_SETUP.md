@@ -2,8 +2,35 @@
 
 ## Información de la Aplicación
 - **Client ID**: `29f56526-69dc-4e89-9955-060aa8292fd0`
-- **URL del Frontend**: `https://localhost:3001`
-- **URL de Redirección**: `https://localhost:3001`
+- **URL del Frontend Desarrollo**: `https://localhost:3001`
+- **URL del Frontend Producción**: `https://finsmart-production.up.railway.app`
+- **URLs de Redirección**: 
+  - Desarrollo: `https://localhost:3001`
+  - Producción: `https://finsmart-production.up.railway.app`
+
+## ⚠️ ACCIÓN REQUERIDA: Actualizar URLs de Redirección
+
+### 🚨 Para que funcione el login de Microsoft en Railway:
+
+1. **Ve a [Azure Portal](https://portal.azure.com)**
+2. **Busca "Azure Active Directory" o "Microsoft Entra ID"**
+3. **Ve a "App registrations"**
+4. **Busca la aplicación con Client ID: `29f56526-69dc-4e89-9955-060aa8292fd0`**
+5. **Click en "Authentication"**
+6. **En "Platform configurations" > "Single-page application"**
+7. **AGREGA estas URIs de redirección:**
+   - `https://finsmart-production.up.railway.app`
+   - `https://finsmart-production.up.railway.app/`
+   - `https://localhost:3001` (mantener para desarrollo)
+   - `https://localhost:3001/` (mantener para desarrollo)
+
+### 📋 URIs de Redirección Completas:
+```
+https://localhost:3001
+https://localhost:3001/
+https://finsmart-production.up.railway.app
+https://finsmart-production.up.railway.app/
+```
 
 ## Pasos para Configurar en Azure Portal
 
