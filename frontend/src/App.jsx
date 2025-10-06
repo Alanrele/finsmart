@@ -20,6 +20,7 @@ import LoadingScreen from './components/LoadingScreen'
 import AuthCallback from './components/AuthCallback'
 import DebugAuth from './components/DebugAuth'
 import DebugMSAL from './components/DebugMSAL'
+import AuthDebugPanel from './components/AuthDebugPanel'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -296,6 +297,9 @@ function App() {
           },
         }}
       />
+      
+      {/* Debug Panel - solo en desarrollo */}
+      {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
     </div>
   )
 }
