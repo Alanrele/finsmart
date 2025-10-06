@@ -1,6 +1,18 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// Configurar URL del backend para producción y desarrollo
+const getApiBaseUrl = () => {
+  // Si estamos en producción (Railway), usar la URL de Railway
+  if (import.meta.env.PROD || window.location.hostname !== 'localhost') {
+    return 'https://finsmart-production.up.railway.app/api'
+  }
+  // En desarrollo local
+  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+}
+
+const API_BASE_URL = getApiBaseUrl()
+
+console.log('🔗 API Base URL:', API_BASE_URL)
 
 // Create axios instance
 const api = axios.create({

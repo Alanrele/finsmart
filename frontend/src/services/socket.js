@@ -11,7 +11,19 @@ class SocketService {
       this.disconnect()
     }
 
-    const serverUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'
+    // Configurar URL del servidor Socket.IO
+    const getSocketUrl = () => {
+      // Si estamos en producción (Railway), usar la URL de Railway
+      if (import.meta.env.PROD || window.location.hostname !== 'localhost') {
+        return 'https://finsmart-production.up.railway.app'
+      }
+      // En desarrollo local
+      return 'http://localhost:5000'
+    }
+
+    const serverUrl = getSocketUrl()
+    
+    console.log('🔌 Socket.IO connecting to:', serverUrl)
 
     this.socket = io(serverUrl, {
       auth: {
