@@ -43,12 +43,15 @@ function App() {
     // Handle Microsoft login callback
     const handleCallback = async () => {
       try {
+        console.log('🔍 Callback handler - inProgress:', inProgress, 'accounts:', accounts.length)
+        
         // Wait for MSAL to initialize and ensure no other operations are in progress
         if (instance && inProgress === "none") {
+          console.log('🚀 Handling redirect promise...')
           const response = await instance.handleRedirectPromise()
 
           if (response && response.account) {
-            console.log('Microsoft login success:', response.account.username)
+            console.log('✅ Microsoft login success:', response.account.username)
 
             // Success - user is authenticated
             const userInfo = {
@@ -63,7 +66,7 @@ function App() {
             const token = `demo-token-${Date.now()}`
 
             login(userInfo, token)
-            toast.success('Autenticación exitosa con Microsoft')
+            toast.success('✅ Autenticación exitosa con Microsoft')
 
             // Clear any login progress flags
             sessionStorage.removeItem('msalLoginInProgress')
@@ -72,12 +75,16 @@ function App() {
             navigate('/dashboard')
           } else if (sessionStorage.getItem('msalLoginInProgress') === 'true') {
             // Login was in progress but no response received
-            console.log('Login was in progress but no response received')
+            console.log('⚠️ Login was in progress but no response received')
             sessionStorage.removeItem('msalLoginInProgress')
+          } else {
+            console.log('ℹ️ No redirect response, normal page load')
           }
+        } else {
+          console.log('⏳ MSAL not ready or operation in progress:', inProgress)
         }
       } catch (error) {
-        console.error('Auth callback error:', error)
+        console.error('❌ Auth callback error:', error)
         sessionStorage.removeItem('msalLoginInProgress')
 
         // Only show error if it's a real error, not just normal flow

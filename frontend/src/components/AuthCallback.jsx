@@ -13,12 +13,15 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('📱 AuthCallback component mounted')
         setLoading(true)
 
         // Handle redirect promise
         const response = await instance.handleRedirectPromise()
 
-        if (response) {
+        if (response && response.account) {
+          console.log('✅ AuthCallback - Login successful:', response.account.username)
+          
           // Success - user is authenticated
           const userInfo = {
             _id: response.account.localAccountId,
@@ -32,18 +35,19 @@ const AuthCallback = () => {
           const token = `demo-token-${Date.now()}`
 
           login(userInfo, token)
-          toast.success('Autenticación exitosa con Microsoft')
+          toast.success('✅ Autenticación exitosa con Microsoft')
           navigate('/dashboard')
         } else {
-          // No response, redirect to login
+          console.log('⚠️ AuthCallback - No response, redirecting to login')
           navigate('/login')
         }
       } catch (error) {
-        console.error('Auth callback error:', error)
+        console.error('❌ AuthCallback error:', error)
         toast.error('Error en la autenticación')
         navigate('/login')
       } finally {
         setLoading(false)
+        sessionStorage.removeItem('msalLoginInProgress')
       }
     }
 

@@ -9,38 +9,23 @@ export const useMicrosoftAuth = () => {
 
   const loginMicrosoft = async () => {
     try {
-      console.log('🚀 Starting Microsoft login popup with simplified config...')
+      console.log('🚀 Starting Microsoft login redirect (like Render)...')
 
       // Clear any previous login state
       sessionStorage.removeItem('msalLoginInProgress')
       sessionStorage.setItem('msalLoginInProgress', 'true')
 
-      // Usar popup con configuración mínima
-      const response = await instance.loginPopup({
+      // Usar redirect como en Render (más estable que popup)
+      await instance.loginRedirect({
         scopes: ["openid", "profile", "User.Read"],
-        prompt: "select_account"
+        prompt: "select_account",
+        redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback"
       })
 
-      // Manejar respuesta directamente
-      if (response && response.account) {
-        const userInfo = {
-          _id: response.account.localAccountId,
-          firstName: response.account.idTokenClaims?.given_name || 'Usuario',
-          lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
-          email: response.account.username,
-          avatar: null
-        }
-
-        const token = `demo-token-${Date.now()}`
-        login(userInfo, token)
-        toast.success('✅ Autenticación exitosa con Microsoft')
-        sessionStorage.removeItem('msalLoginInProgress')
-        
-        return response
-      }
+      // Nota: loginRedirect no retorna respuesta, se maneja en AuthCallback
       
     } catch (error) {
-      console.error('❌ Microsoft login error:', error)
+      console.error('❌ Microsoft login redirect error:', error)
       toast.error('Error al iniciar sesión con Microsoft')
       sessionStorage.removeItem('msalLoginInProgress')
       throw error
