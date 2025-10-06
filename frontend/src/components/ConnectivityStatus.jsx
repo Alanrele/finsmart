@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Wifi, WifiOff, Server, XCircle } from 'lucide-react';
+import { AlertTriangle, Wifi, WifiOff, Server, XCircle, Monitor } from 'lucide-react';
 
-const ConnectivityStatus = () => {
+const ConnectivityStatus = ({ offlineMode = false }) => {
   const [backendStatus, setBackendStatus] = useState('checking'); // checking, online, offline
   const [socketStatus, setSocketStatus] = useState('disconnected'); // connected, disconnected, error
   const [isVisible, setIsVisible] = useState(false);
@@ -135,21 +135,44 @@ const ConnectivityStatus = () => {
           </span>
         </div>
 
-        {(backendStatus === 'offline' || socketStatus === 'error') && (
+        {offlineMode && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Monitor className="w-4 h-4" />
+              <span>Modo Offline</span>
+            </div>
+            <span className="font-semibold text-blue-600">
+              🎭 Demo Activo
+            </span>
+          </div>
+        )}
+
+        {(backendStatus === 'offline' || socketStatus === 'error' || offlineMode) && (
           <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mt-3">
             <p className="text-xs text-yellow-800">
-              <strong>Problema detectado:</strong><br />
+              <strong>{offlineMode ? 'Modo Demo Activo:' : 'Problema detectado:'}</strong><br />
               {backendStatus === 'offline' && 'El servidor backend no responde. '}
               {socketStatus === 'error' && 'Error de certificado SSL en WebSocket. '}
-              Las funcionalidades pueden estar limitadas.
+              {offlineMode && 'La aplicación funciona con datos de demostración. '}
+              {!offlineMode && 'Las funcionalidades pueden estar limitadas.'}
             </p>
             
             <div className="mt-2 text-xs text-yellow-700">
-              <strong>Posibles soluciones:</strong>
+              <strong>{offlineMode ? 'Características del modo demo:' : 'Posibles soluciones:'}</strong>
               <ul className="list-disc list-inside mt-1 space-y-1">
-                <li>Verificar que el backend esté desplegado en Railway</li>
-                <li>Comprobar la configuración SSL del servidor</li>
-                <li>Intentar recargar la página</li>
+                {offlineMode ? (
+                  <>
+                    <li>Datos financieros de ejemplo</li>
+                    <li>Funcionalidades básicas disponibles</li>
+                    <li>No requiere conexión al servidor</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Verificar que el backend esté desplegado en Railway</li>
+                    <li>Comprobar la configuración SSL del servidor</li>
+                    <li>Intentar recargar la página</li>
+                  </>
+                )}
               </ul>
             </div>
           </div>

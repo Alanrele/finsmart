@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import useAuthStore from './stores/authStore'
 import useAppStore from './stores/appStore'
 import socketService from './services/socket'
+import { createOfflineMode } from './utils/offlineMode'
 
 // Components
 import Layout from './components/Layout'
@@ -77,6 +78,50 @@ function App() {
   const { instance, inProgress, accounts } = useMsal()
   const navigate = useNavigate()
   const location = useLocation()
+  const [offlineMode, setOfflineMode] = useState(false)
+
+  // Backend health check and offline mode activation
+  useEffect(() => {
+    const checkBackendHealth = async () => {
+      try {
+        const baseUrl = window.location.hostname.includes('railway.app') 
+          ? `${window.location.protocol}//${window.location.hostname}`
+          : 'http://localhost:5000';
+        
+        const response = await fetch(`${baseUrl}/health`, {
+          method: 'GET',
+          timeout: 5000
+        });
+        
+        if (!response.ok) {
+          throw new Error('Backend not responding');
+        }
+        
+        console.log('✅ Backend is healthy');
+        return true;
+      } catch (error) {
+        console.warn('❌ Backend health check failed:', error.message);
+        
+        // Activar modo offline si el backend falla
+        if (!offlineMode) {
+          console.log('🔧 Activando modo offline debido a problemas del backend');
+          createOfflineMode();
+          setOfflineMode(true);
+          toast.error('⚠️ Backend no disponible - Modo demo activado');
+        }
+        
+        return false;
+      }
+    };
+
+    // Verificar salud del backend inmediatamente
+    checkBackendHealth();
+
+    // Verificar cada 30 segundos
+    const healthCheckInterval = setInterval(checkBackendHealth, 30000);
+
+    return () => clearInterval(healthCheckInterval);
+  }, [offlineMode]);
 
   // Activity tracker effect para mantener la sesión activa
   useEffect(() => {
@@ -303,7 +348,7 @@ function App() {
       {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
       
       {/* Connectivity Status - siempre visible cuando hay problemas */}
-      <ConnectivityStatus />
+      <ConnectivityStatus offlineMode={offlineMode} />
     </div>
   )
 }
