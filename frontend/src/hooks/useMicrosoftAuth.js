@@ -9,15 +9,17 @@ export const useMicrosoftAuth = () => {
 
   const loginMicrosoft = async () => {
     try {
-      console.log('Starting Microsoft login popup...')
+      console.log('Starting Microsoft login redirect with Auth Code Flow...')
 
       // Clear any previous login state
       sessionStorage.removeItem('msalLoginInProgress')
 
-      // Use popup for both development and production (more stable)
+      // Use redirect with Authorization Code Flow
       sessionStorage.setItem('msalLoginInProgress', 'true')
-      const response = await instance.loginPopup(loginRequest)
-      await handleLoginSuccess(response)
+      await instance.loginRedirect({
+        ...loginRequest,
+        prompt: "select_account"
+      })
       
     } catch (error) {
       console.error('Microsoft login error:', error)
