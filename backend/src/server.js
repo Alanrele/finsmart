@@ -46,15 +46,15 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
-    
+
     // Allow Railway domain and localhost for development
     const allowedOrigins = [
       'http://localhost:3000',
-      'http://localhost:3001', 
+      'http://localhost:3001',
       'https://finsmart-production.up.railway.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -80,8 +80,8 @@ app.use('/api/finance', authMiddleware, financeRoutes);
 
 // Health check endpoint (before static files)
 app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
+  res.status(200).json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     port: PORT,
     env: process.env.NODE_ENV,

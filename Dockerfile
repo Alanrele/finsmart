@@ -17,7 +17,7 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# Backend stage  
+# Backend stage
 FROM node:20-alpine as backend
 
 # Install runtime dependencies for native modules

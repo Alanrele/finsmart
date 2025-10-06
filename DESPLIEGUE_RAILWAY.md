@@ -111,7 +111,7 @@ Railway automáticamente:
 
 **Si el build falla con el Dockerfile principal:**
 1. **Opción 1 - Dockerfile Debian**: `DOCKERFILE_PATH=Dockerfile.debian`
-2. **Opción 2 - Dockerfile Simple**: `DOCKERFILE_PATH=Dockerfile.simple`  
+2. **Opción 2 - Dockerfile Simple**: `DOCKERFILE_PATH=Dockerfile.simple`
 
 En Railway dashboard:
 - Ve a Settings > Environment

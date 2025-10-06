@@ -4,7 +4,7 @@
 - **Client ID**: `29f56526-69dc-4e89-9955-060aa8292fd0`
 - **URL del Frontend Desarrollo**: `https://localhost:3001`
 - **URL del Frontend Producción**: `https://finsmart-production.up.railway.app`
-- **URLs de Redirección**: 
+- **URLs de Redirección**:
   - Desarrollo: `https://localhost:3001`
   - Producción: `https://finsmart-production.up.railway.app`
 
