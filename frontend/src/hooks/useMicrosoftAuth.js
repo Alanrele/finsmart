@@ -9,20 +9,38 @@ export const useMicrosoftAuth = () => {
 
   const loginMicrosoft = async () => {
     try {
-      console.log('Starting Microsoft login redirect with Auth Code Flow...')
+      console.log('🚀 Starting Microsoft login popup with simplified config...')
 
       // Clear any previous login state
       sessionStorage.removeItem('msalLoginInProgress')
-
-      // Use redirect with Authorization Code Flow
       sessionStorage.setItem('msalLoginInProgress', 'true')
-      await instance.loginRedirect({
-        ...loginRequest,
+
+      // Usar popup con configuración mínima
+      const response = await instance.loginPopup({
+        scopes: ["openid", "profile", "User.Read"],
         prompt: "select_account"
       })
+
+      // Manejar respuesta directamente
+      if (response && response.account) {
+        const userInfo = {
+          _id: response.account.localAccountId,
+          firstName: response.account.idTokenClaims?.given_name || 'Usuario',
+          lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
+          email: response.account.username,
+          avatar: null
+        }
+
+        const token = `demo-token-${Date.now()}`
+        login(userInfo, token)
+        toast.success('✅ Autenticación exitosa con Microsoft')
+        sessionStorage.removeItem('msalLoginInProgress')
+        
+        return response
+      }
       
     } catch (error) {
-      console.error('Microsoft login error:', error)
+      console.error('❌ Microsoft login error:', error)
       toast.error('Error al iniciar sesión con Microsoft')
       sessionStorage.removeItem('msalLoginInProgress')
       throw error

@@ -16,8 +16,10 @@ export const msalConfig = {
     postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
     navigateToLoginRequestUrl: false,
     validateAuthority: false,
-    // Forzar Authorization Code Flow con PKCE
-    clientCapabilities: ["CP1"]
+    // Configuración específica para SPA
+    knownAuthorities: [],
+    cloudDiscoveryMetadata: "",
+    authorityMetadata: ""
   },
   cache: {
     cacheLocation: "sessionStorage",
@@ -25,32 +27,36 @@ export const msalConfig = {
   },
   system: {
     allowNativeBroker: false,
+    // Configuración optimizada para evitar GET requests
     windowHashTimeout: 60000,
     iframeHashTimeout: 6000,
     loadFrameTimeout: 0,
-    tokenRenewalOffsetSeconds: 300,
     navigateFrameWait: 500,
-    // Forzar Authorization Code Flow
+    tokenRenewalOffsetSeconds: 300,
+    allowRedirectInIframe: false,
+    // Logging para debug
     loggerOptions: {
       loggerCallback: (level, message, containsPii) => {
         if (containsPii) return;
-        console.log(`MSAL ${level}: ${message}`);
+        console.log(`🔍 MSAL ${level}: ${message}`);
       },
       piiLoggingEnabled: false,
-      logLevel: 3 // Info level
+      logLevel: 3
     }
   }
 }
 
-// Scopes for Microsoft Graph API - Authorization Code Flow
+// Scopes for Microsoft Graph API - Simplified for SPA
 export const loginRequest = {
   scopes: ["openid", "profile", "User.Read"],
   prompt: "select_account",
   redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback",
-  // Forzar Authorization Code Flow
-  responseMode: "fragment", 
-  state: `login_${Date.now()}`,
-  extraQueryParameters: {}
+  // Configuración específica para evitar GET requests
+  responseMode: undefined, // Dejar que MSAL decida automáticamente
+  extraQueryParameters: {},
+  // Forzar PKCE para SPA
+  codeChallenge: undefined,
+  codeChallengeMethod: undefined
 }
 
 export const graphConfig = {
