@@ -1,19 +1,65 @@
 import { useMsal } from '@azure/msal-react'
 import { loginRequest } from '../config/msalConfig'
+import useAuthStore from '../stores/authStore'
+import toast from 'react-hot-toast'
 
 export const useMicrosoftAuth = () => {
   const { instance, accounts } = useMsal()
+  const { login } = useAuthStore()
 
   const loginMicrosoft = async () => {
     try {
-      // Use redirect instead of popup for better compatibility
-      await instance.loginRedirect(loginRequest)
-      // Note: This won't return a response as it redirects
-      // The response will be handled in AuthCallback component
+      console.log('Starting Microsoft login redirect...')
+      
+      // Clear any previous login state
+      sessionStorage.removeItem('msalLoginInProgress')
+      
+      // Use redirect for production, popup for development
+      if (import.meta.env.PROD) {
+        // Set flag to track login in progress
+        sessionStorage.setItem('msalLoginInProgress', 'true')
+        await instance.loginRedirect(loginRequest)
+      } else {
+        // Use popup for development
+        const response = await instance.loginPopup(loginRequest)
+        await handleLoginSuccess(response)
+      }
     } catch (error) {
       console.error('Microsoft login error:', error)
+      toast.error('Error al iniciar sesión con Microsoft')
+      sessionStorage.removeItem('msalLoginInProgress')
       throw error
     }
+  }
+
+  const handleLoginSuccess = async (response) => {
+    try {
+      if (response && response.account) {
+        const userInfo = {
+          _id: response.account.localAccountId,
+          firstName: response.account.idTokenClaims?.given_name || 'Usuario',
+          lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
+          email: response.account.username,
+          avatar: null
+        }
+
+        // Create a demo token for development
+        const token = `demo-token-${Date.now()}`
+
+        login(userInfo, token)
+        toast.success('Autenticación exitosa con Microsoft')
+        
+        // Clear login progress flag
+        sessionStorage.removeItem('msalLoginInProgress')
+        
+        return true
+      }
+    } catch (error) {
+      console.error('Login success handler error:', error)
+      toast.error('Error al procesar la autenticación')
+      sessionStorage.removeItem('msalLoginInProgress')
+    }
+    return false
   }
 
   const loginMicrosoftPopup = async () => {

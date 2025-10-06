@@ -42,11 +42,13 @@ function App() {
     // Handle Microsoft login callback
     const handleCallback = async () => {
       try {
-        // Wait for MSAL to initialize
+        // Wait for MSAL to initialize and ensure no other operations are in progress
         if (instance && inProgress === "none") {
           const response = await instance.handleRedirectPromise()
 
-          if (response) {
+          if (response && response.account) {
+            console.log('Microsoft login success:', response.account.username)
+            
             // Success - user is authenticated
             const userInfo = {
               _id: response.account.localAccountId,
@@ -61,12 +63,26 @@ function App() {
 
             login(userInfo, token)
             toast.success('Autenticación exitosa con Microsoft')
+            
+            // Clear any login progress flags
+            sessionStorage.removeItem('msalLoginInProgress')
+            
+            // Navigate to dashboard
             navigate('/dashboard')
+          } else if (sessionStorage.getItem('msalLoginInProgress') === 'true') {
+            // Login was in progress but no response received
+            console.log('Login was in progress but no response received')
+            sessionStorage.removeItem('msalLoginInProgress')
           }
         }
       } catch (error) {
         console.error('Auth callback error:', error)
-        // Don't show error toast here as it might be normal flow
+        sessionStorage.removeItem('msalLoginInProgress')
+        
+        // Only show error if it's a real error, not just normal flow
+        if (error.name !== 'InteractionInProgress') {
+          toast.error('Error en la autenticación con Microsoft')
+        }
       }
     }
 
