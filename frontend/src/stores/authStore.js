@@ -57,7 +57,7 @@ const useAuthStore = create(
       isSessionValid: () => {
         const { lastActivity } = get();
         if (!lastActivity) return false;
-        
+
         const thirtyMinutes = 30 * 60 * 1000; // 30 minutos en ms
         const now = Date.now();
         return (now - lastActivity) < thirtyMinutes;

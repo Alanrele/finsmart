@@ -16,18 +16,18 @@ class SocketService {
       // Forzar Railway en cualquier dominio que no sea localhost
       const hostname = window.location.hostname
       const isProduction = hostname.includes('railway.app') || hostname !== 'localhost'
-      
+
       if (isProduction) {
         console.log('🚀 Production Socket - Using Railway URL')
         return 'https://finsmart-production.up.railway.app'
       }
-      
+
       console.log('🏠 Development Socket - Using localhost')
       return 'http://localhost:5000'
     }
 
     const serverUrl = getSocketUrl()
-    
+
     console.log('🔌 Socket.IO connecting to:', serverUrl)
     console.log('🌐 Current hostname:', window.location.hostname)
 
@@ -35,20 +35,39 @@ class SocketService {
       auth: {
         token
       },
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      // Configuración para manejar problemas de conexión
+      timeout: 20000,
+      forceNew: true,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 3,
+      maxReconnectionAttempts: 3,
+      // Configuración específica para Railway
+      upgrade: true,
+      rememberUpgrade: false
     })
 
     this.socket.on('connect', () => {
-      console.log('Connected to socket server')
+      console.log('✅ Connected to socket server')
       this.socket.emit('join-user-room', userId)
     })
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from socket server')
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ Disconnected from socket server:', reason)
     })
 
     this.socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error)
+      console.error('🔌 Socket connection error:', error.message)
+      // Si falla WebSocket, intentar con polling solamente
+      if (error.message.includes('websocket')) {
+        console.log('🔄 Retrying with polling transport only...')
+        this.socket.io.opts.transports = ['polling']
+      }
+    })
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('🚫 Socket reconnection failed completely')
     })
 
     // Set up default listeners

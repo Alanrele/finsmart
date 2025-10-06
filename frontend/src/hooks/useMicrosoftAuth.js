@@ -23,7 +23,7 @@ export const useMicrosoftAuth = () => {
       })
 
       // Nota: loginRedirect no retorna respuesta, se maneja en AuthCallback
-      
+
     } catch (error) {
       console.error('❌ Microsoft login redirect error:', error)
       toast.error('Error al iniciar sesión con Microsoft')

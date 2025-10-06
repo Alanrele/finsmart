@@ -5,7 +5,7 @@ import useAuthStore from '../stores/authStore';
 const AuthDebugPanel = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [logs, setLogs] = useState([]);
-  
+
   const msalAuthenticated = useIsAuthenticated();
   const { accounts } = useMsal();
   const authStore = useAuthStore();
@@ -55,7 +55,7 @@ const AuthDebugPanel = () => {
           ✕
         </button>
       </div>
-      
+
       <div className="space-y-2 text-xs">
         <div className="grid grid-cols-2 gap-2">
           <div>
@@ -77,20 +77,20 @@ const AuthDebugPanel = () => {
             <strong>User:</strong> {authStore.user?.firstName || 'None'}
           </div>
         </div>
-        
+
         {authStore.lastActivity && (
           <div>
             <strong>Last Activity:</strong> {new Date(authStore.lastActivity).toLocaleTimeString()}
           </div>
         )}
-        
+
         <div>
           <strong>Session Valid:</strong>
           <span className={authStore.isSessionValid() ? 'text-green-600' : 'text-red-600'}>
             {authStore.isSessionValid() ? ' ✅' : ' ❌'}
           </span>
         </div>
-        
+
         <div className="border-t pt-2">
           <strong>Recent Logs:</strong>
           <div className="max-h-32 overflow-y-auto">
@@ -103,7 +103,7 @@ const AuthDebugPanel = () => {
             ))}
           </div>
         </div>
-        
+
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => authStore.logout()}

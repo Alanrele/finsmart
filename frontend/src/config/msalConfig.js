@@ -15,7 +15,7 @@ export const msalConfig = {
     clientId: '29f56526-69dc-4e89-9955-060aa8292fd0',
     authority: 'https://login.microsoftonline.com/common',
     redirectUri: railwayConfig.redirectUri,
-    postLogoutRedirectUri: railwayConfig.isProduction 
+    postLogoutRedirectUri: railwayConfig.isProduction
       ? `${railwayConfig.protocol}//${railwayConfig.hostname}/login`
       : 'http://localhost:3000/login',
     navigateToLoginRequestUrl: false,
@@ -28,7 +28,7 @@ export const msalConfig = {
     loggerOptions: {
       loggerCallback: (level, message, containsPii) => {
         if (containsPii) return;
-        
+
         const timestamp = new Date().toISOString();
         switch (level) {
           case LogLevel.Error:

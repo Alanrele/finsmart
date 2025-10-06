@@ -4,14 +4,14 @@ import { getRailwayConfig } from '../config/railway'
 // Configurar URL del backend para producción y desarrollo
 const getApiBaseUrl = () => {
   const railwayConfig = getRailwayConfig();
-  
+
   console.log('🌐 API Config - Railway Environment:', {
     isDevelopment: railwayConfig.isDevelopment,
     isProduction: railwayConfig.isProduction,
     hostname: railwayConfig.hostname,
     apiUrl: railwayConfig.apiUrl
   });
-  
+
   // Agregar /api al final para el backend
   return `${railwayConfig.apiUrl}/api`;
 }
@@ -27,8 +27,34 @@ const api = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  // Configuración para manejar problemas de SSL en desarrollo
+  validateStatus: function (status) {
+    return status >= 200 && status < 500; // Resolver para códigos 2xx y 4xx
+  },
 })
+
+// Función para verificar si el backend está disponible
+const checkBackendHealth = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL.replace('/api', '')}/health`, {
+      method: 'GET',
+      timeout: 5000
+    });
+    return response.ok;
+  } catch (error) {
+    console.warn('🏥 Backend health check failed:', error.message);
+    return false;
+  }
+};
+
+// Verificar salud del backend al inicializar
+checkBackendHealth().then(isHealthy => {
+  console.log('🏥 Backend health status:', isHealthy ? '✅ Healthy' : '❌ Unhealthy');
+  if (!isHealthy) {
+    console.warn('⚠️ Backend no está disponible. Las funcionalidades pueden estar limitadas.');
+  }
+});
 
 // Request interceptor to add auth token
 api.interceptors.request.use(

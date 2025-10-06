@@ -1,0 +1,17 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "sleepApplication": false,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3
+  },
+  "environment": {
+    "NODE_ENV": "production",
+    "PORT": "${{ PORT }}"
+  },
+  "healthcheckPath": "/health",
+  "healthcheckTimeout": 300
+}

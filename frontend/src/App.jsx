@@ -21,6 +21,7 @@ import AuthCallback from './components/AuthCallback'
 import DebugAuth from './components/DebugAuth'
 import DebugMSAL from './components/DebugMSAL'
 import AuthDebugPanel from './components/AuthDebugPanel'
+import ConnectivityStatus from './components/ConnectivityStatus'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -87,7 +88,7 @@ function App() {
 
     // Eventos que indican actividad del usuario
     const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
+
     events.forEach(event => {
       document.addEventListener(event, trackActivity, true);
     });
@@ -113,7 +114,7 @@ function App() {
     const handleCallback = async () => {
       try {
         console.log('🔍 Callback handler - inProgress:', inProgress, 'accounts:', accounts.length)
-        
+
         // Wait for MSAL to initialize and ensure no other operations are in progress
         if (instance && inProgress === "none") {
           console.log('🚀 Handling redirect promise...')
@@ -137,12 +138,12 @@ function App() {
             // Ensure login is processed
             console.log('🔐 Setting auth state:', userInfo)
             login(userInfo, token)
-            
+
             // Wait a bit for state to update
             setTimeout(() => {
               console.log('🎯 Auth state after login:', { isAuthenticated, user: useAuthStore.getState().user })
               toast.success('✅ Autenticación exitosa con Microsoft')
-              
+
               // Clear any login progress flags
               sessionStorage.removeItem('msalLoginInProgress')
 
@@ -150,7 +151,7 @@ function App() {
               console.log('🚀 Navigating to dashboard...')
               navigate('/dashboard', { replace: true })
             }, 100)
-            
+
           } else if (sessionStorage.getItem('msalLoginInProgress') === 'true') {
             // Login was in progress but no response received
             console.log('⚠️ Login was in progress but no response received')
@@ -297,9 +298,12 @@ function App() {
           },
         }}
       />
-      
+
       {/* Debug Panel - solo en desarrollo */}
       {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
+      
+      {/* Connectivity Status - siempre visible cuando hay problemas */}
+      <ConnectivityStatus />
     </div>
   )
 }

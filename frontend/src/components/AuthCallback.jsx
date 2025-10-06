@@ -21,7 +21,7 @@ const AuthCallback = () => {
 
         if (response && response.account) {
           console.log('✅ AuthCallback - Login successful:', response.account.username)
-          
+
           // Success - user is authenticated
           const userInfo = {
             _id: response.account.localAccountId,
