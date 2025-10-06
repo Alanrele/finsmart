@@ -1,10 +1,19 @@
 // MSAL configuration for Microsoft Graph authentication - Railway Production
+
+// Debug: verificar variables (temporal)
+console.log('🔍 MSAL Config Debug:', {
+  VITE_GRAPH_CLIENT_ID: import.meta.env.VITE_GRAPH_CLIENT_ID,
+  VITE_GRAPH_TENANT_ID: import.meta.env.VITE_GRAPH_TENANT_ID,
+  VITE_REDIRECT_URI: import.meta.env.VITE_REDIRECT_URI,
+  VITE_API_URL: import.meta.env.VITE_API_URL
+});
+
 export const msalConfig = {
   auth: {
-    clientId: import.meta.env.VITE_GRAPH_CLIENT_ID || "29f56526-69dc-4e89-9955-060aa8292fd0",
-    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_GRAPH_TENANT_ID || 'common'}`,
-    redirectUri: import.meta.env.VITE_REDIRECT_URI || "https://finsmart-production.up.railway.app/auth/ms-callback",
-    postLogoutRedirectUri: import.meta.env.VITE_API_URL || "https://finsmart-production.up.railway.app",
+    clientId: "29f56526-69dc-4e89-9955-060aa8292fd0", // Hardcoded para debug
+    authority: "https://login.microsoftonline.com/common",
+    redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback", // Hardcoded exacto
+    postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
     navigateToLoginRequestUrl: false,
   },
   cache: {
