@@ -13,17 +13,23 @@ class SocketService {
 
     // Configurar URL del servidor Socket.IO
     const getSocketUrl = () => {
-      // Si estamos en producción (Railway), usar la URL de Railway
-      if (import.meta.env.PROD || window.location.hostname !== 'localhost') {
+      // Forzar Railway en cualquier dominio que no sea localhost
+      const hostname = window.location.hostname
+      const isProduction = hostname.includes('railway.app') || hostname !== 'localhost'
+      
+      if (isProduction) {
+        console.log('🚀 Production Socket - Using Railway URL')
         return 'https://finsmart-production.up.railway.app'
       }
-      // En desarrollo local
+      
+      console.log('🏠 Development Socket - Using localhost')
       return 'http://localhost:5000'
     }
 
     const serverUrl = getSocketUrl()
     
     console.log('🔌 Socket.IO connecting to:', serverUrl)
+    console.log('🌐 Current hostname:', window.location.hostname)
 
     this.socket = io(serverUrl, {
       auth: {

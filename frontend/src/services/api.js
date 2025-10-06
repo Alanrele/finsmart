@@ -2,17 +2,23 @@ import axios from 'axios'
 
 // Configurar URL del backend para producción y desarrollo
 const getApiBaseUrl = () => {
-  // Si estamos en producción (Railway), usar la URL de Railway
-  if (import.meta.env.PROD || window.location.hostname !== 'localhost') {
+  // Forzar Railway en cualquier dominio que no sea localhost
+  const hostname = window.location.hostname
+  const isProduction = hostname.includes('railway.app') || hostname !== 'localhost'
+  
+  if (isProduction) {
+    console.log('🚀 Production mode detected - Using Railway URL')
     return 'https://finsmart-production.up.railway.app/api'
   }
-  // En desarrollo local
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+  
+  console.log('🏠 Development mode detected - Using localhost')
+  return 'http://localhost:5000/api'
 }
 
 const API_BASE_URL = getApiBaseUrl()
 
 console.log('🔗 API Base URL:', API_BASE_URL)
+console.log('🌐 Current hostname:', window.location.hostname)
 
 // Create axios instance
 const api = axios.create({
