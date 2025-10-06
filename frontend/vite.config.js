@@ -66,6 +66,24 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    assetsDir: 'assets'
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        // Ensure scripts are not inlined
+        inlineDynamicImports: false,
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          msal: ['@azure/msal-browser', '@azure/msal-react']
+        }
+      }
+    },
+    // Security settings
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    }
   }
 })

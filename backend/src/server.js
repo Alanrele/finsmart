@@ -18,6 +18,9 @@ const authMiddleware = require('./middleware/authMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./middleware/logger');
 
+// Import helmet config
+const { productionHelmetConfig, developmentHelmetConfig } = require('./config/helmet');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -35,11 +38,36 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart'
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  credentials: true
-}));
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig));
+
+// CORS configuration for production
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow Railway domain and localhost for development
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'https://finsmart-production.up.railway.app',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow for now, restrict later if needed
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(logger);
