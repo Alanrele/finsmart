@@ -23,6 +23,8 @@ import DebugAuth from './components/DebugAuth'
 import DebugMSAL from './components/DebugMSAL'
 import AuthDebugPanel from './components/AuthDebugPanel'
 import ConnectivityStatus from './components/ConnectivityStatus'
+import SSLErrorNotification from './components/SSLErrorNotification'
+import DemoModeBanner from './components/DemoModeBanner'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -82,6 +84,8 @@ function App() {
 
   // Backend health check and offline mode activation
   useEffect(() => {
+    let errorCount = 0;
+    
     const checkBackendHealth = async () => {
       try {
         const baseUrl = window.location.hostname.includes('railway.app') 
@@ -90,35 +94,48 @@ function App() {
         
         const response = await fetch(`${baseUrl}/health`, {
           method: 'GET',
-          timeout: 5000
+          timeout: 3000 // Reducir timeout para detectar problemas más rápido
         });
         
         if (!response.ok) {
-          throw new Error('Backend not responding');
+          throw new Error(`HTTP ${response.status}`);
         }
         
         console.log('✅ Backend is healthy');
+        errorCount = 0; // Reset error count on success
         return true;
       } catch (error) {
-        console.warn('❌ Backend health check failed:', error.message);
+        errorCount++;
+        console.warn(`❌ Backend health check failed (${errorCount}/3):`, error.message);
         
-        // Activar modo offline si el backend falla
-        if (!offlineMode) {
+        // Activar modo offline después de 2 errores consecutivos
+        if (errorCount >= 2 && !offlineMode) {
           console.log('🔧 Activando modo offline debido a problemas del backend');
           createOfflineMode();
           setOfflineMode(true);
-          toast.error('⚠️ Backend no disponible - Modo demo activado');
+          
+          // Mostrar notificación específica según el tipo de error
+          if (error.message.includes('CERT') || error.message.includes('SSL') || error.message.includes('fetch')) {
+            toast.error('🔒 Problema SSL detectado - Modo demo activado', {
+              duration: 5000,
+              icon: '🛡️'
+            });
+          } else {
+            toast.error('⚠️ Backend no disponible - Modo demo activado', {
+              duration: 3000
+            });
+          }
         }
         
         return false;
       }
     };
 
-    // Verificar salud del backend inmediatamente
+    // Verificar inmediatamente
     checkBackendHealth();
 
-    // Verificar cada 30 segundos
-    const healthCheckInterval = setInterval(checkBackendHealth, 30000);
+    // Verificar cada 20 segundos en lugar de 30
+    const healthCheckInterval = setInterval(checkBackendHealth, 20000);
 
     return () => clearInterval(healthCheckInterval);
   }, [offlineMode]);
@@ -256,8 +273,14 @@ function App() {
 
   return (
     <div className="App min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+      {/* Demo Mode Banner */}
+      <DemoModeBanner isActive={offlineMode} />
+      
       <DebugAuth />
       <DebugMSAL />
+      
+      {/* Main content with padding if demo mode is active */}
+      <div className={offlineMode ? 'pt-10' : ''}>
       <Routes>
         <Route
           path="/login"
@@ -349,6 +372,10 @@ function App() {
       
       {/* Connectivity Status - siempre visible cuando hay problemas */}
       <ConnectivityStatus offlineMode={offlineMode} />
+      
+      {/* SSL Error Notification - detecta automáticamente problemas de certificado */}
+      <SSLErrorNotification />
+      </div>
     </div>
   )
 }
