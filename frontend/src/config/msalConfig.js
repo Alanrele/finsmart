@@ -1,10 +1,10 @@
 // MSAL configuration for Microsoft Graph authentication
 export const msalConfig = {
   auth: {
-    clientId: import.meta.env.VITE_GRAPH_CLIENT_ID || "29f56526-69dc-4e89-9955-060aa8292fd0",
-    authority: `https://login.microsoftonline.com/${import.meta.env.VITE_GRAPH_TENANT_ID || 'common'}`,
-    redirectUri: import.meta.env.PROD ? "https://finsmart-production.up.railway.app" : "http://localhost:3001",
-    postLogoutRedirectUri: import.meta.env.PROD ? "https://finsmart-production.up.railway.app" : "http://localhost:3001",
+    clientId: "29f56526-69dc-4e89-9955-060aa8292fd0", // Hardcoded for production
+    authority: "https://login.microsoftonline.com/common",
+    redirectUri: "https://finsmart-production.up.railway.app",
+    postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
     navigateToLoginRequestUrl: false,
   },
   cache: {
@@ -31,7 +31,7 @@ export const loginRequest = {
     "email"
   ],
   prompt: "select_account",
-  redirectUri: import.meta.env.PROD ? "https://finsmart-production.up.railway.app" : "http://localhost:3001"
+  redirectUri: "https://finsmart-production.up.railway.app"
 }
 
 export const graphConfig = {
