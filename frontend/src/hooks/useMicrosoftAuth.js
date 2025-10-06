@@ -9,21 +9,16 @@ export const useMicrosoftAuth = () => {
 
   const loginMicrosoft = async () => {
     try {
-      console.log('Starting Microsoft login redirect...')
+      console.log('Starting Microsoft login popup...')
 
       // Clear any previous login state
       sessionStorage.removeItem('msalLoginInProgress')
 
-      // Use redirect for production, popup for development
-      if (import.meta.env.PROD) {
-        // Set flag to track login in progress
-        sessionStorage.setItem('msalLoginInProgress', 'true')
-        await instance.loginRedirect(loginRequest)
-      } else {
-        // Use popup for development
-        const response = await instance.loginPopup(loginRequest)
-        await handleLoginSuccess(response)
-      }
+      // Use popup for both development and production (more stable)
+      sessionStorage.setItem('msalLoginInProgress', 'true')
+      const response = await instance.loginPopup(loginRequest)
+      await handleLoginSuccess(response)
+      
     } catch (error) {
       console.error('Microsoft login error:', error)
       toast.error('Error al iniciar sesión con Microsoft')

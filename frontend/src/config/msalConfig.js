@@ -15,6 +15,7 @@ export const msalConfig = {
     redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback", // Hardcoded exacto
     postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
     navigateToLoginRequestUrl: false,
+    validateAuthority: false, // Deshabilitar validación
   },
   cache: {
     cacheLocation: "sessionStorage",
@@ -25,6 +26,8 @@ export const msalConfig = {
     windowHashTimeout: 60000,
     iframeHashTimeout: 6000,
     loadFrameTimeout: 0,
+    tokenRenewalOffsetSeconds: 300,
+    navigateFrameWait: 500,
   }
 }
 
@@ -32,15 +35,17 @@ export const msalConfig = {
 export const loginRequest = {
   scopes: [
     "User.Read",
-    "Mail.Read",
-    "Mail.ReadBasic",
     "offline_access",
     "openid",
     "profile",
     "email"
   ],
   prompt: "select_account",
-  redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback" // Como en Render
+  redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback", // Como en Render
+  extraScopesToConsent: [
+    "Mail.Read",
+    "Mail.ReadBasic"
+  ]
 }
 
 export const graphConfig = {
