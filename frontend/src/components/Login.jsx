@@ -136,13 +136,14 @@ const Login = () => {
             {isRegister && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nombre
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
+                      id="firstName"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
@@ -153,13 +154,14 @@ const Login = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Apellido
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
+                      id="lastName"
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
@@ -174,13 +176,14 @@ const Login = () => {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Correo Electrónico
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                 <input
                   type="email"
+                  id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
@@ -193,13 +196,14 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Contraseña
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
+                  id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
@@ -220,13 +224,14 @@ const Login = () => {
             {/* Confirm Password (Register only) */}
             {isRegister && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Confirmar Contraseña
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
