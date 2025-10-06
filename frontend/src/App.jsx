@@ -19,6 +19,7 @@ import Settings from './components/Settings'
 import LoadingScreen from './components/LoadingScreen'
 import AuthCallback from './components/AuthCallback'
 import DebugAuth from './components/DebugAuth'
+import DebugMSAL from './components/DebugMSAL'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -125,6 +126,7 @@ function App() {
   return (
     <div className="App min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
       <DebugAuth />
+      <DebugMSAL />
       <Routes>
         <Route
           path="/login"

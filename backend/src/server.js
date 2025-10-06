@@ -95,6 +95,28 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Debug endpoint (development only)
+app.get('/api/debug/env', (req, res) => {
+  if (process.env.NODE_ENV !== 'production') {
+    return res.status(403).json({ error: 'Debug endpoint disabled in production' });
+  }
+  
+  res.json({
+    frontend_vars: {
+      VITE_GRAPH_CLIENT_ID: process.env.VITE_GRAPH_CLIENT_ID ? 'configured' : 'missing',
+      VITE_GRAPH_TENANT_ID: process.env.VITE_GRAPH_TENANT_ID ? 'configured' : 'missing',
+      VITE_API_URL: process.env.VITE_API_URL ? 'configured' : 'missing'
+    },
+    backend_vars: {
+      NODE_ENV: process.env.NODE_ENV,
+      PORT: process.env.PORT,
+      MONGODB_URI: process.env.MONGODB_URI ? 'configured' : 'missing',
+      JWT_SECRET: process.env.JWT_SECRET ? 'configured' : 'missing',
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'configured' : 'missing'
+    }
+  });
+});
+
 // Serve static files from React build (for production)
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../public')));
