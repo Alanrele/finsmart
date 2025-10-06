@@ -3,8 +3,9 @@ export const msalConfig = {
   auth: {
     clientId: import.meta.env.VITE_GRAPH_CLIENT_ID || "29f56526-69dc-4e89-9955-060aa8292fd0",
     authority: `https://login.microsoftonline.com/${import.meta.env.VITE_GRAPH_TENANT_ID || 'common'}`,
-    redirectUri: window.location.origin + "/auth/ms-callback",
+    redirectUri: window.location.origin,
     postLogoutRedirectUri: window.location.origin,
+    navigateToLoginRequestUrl: false,
   },
   cache: {
     cacheLocation: "sessionStorage",
@@ -12,6 +13,9 @@ export const msalConfig = {
   },
   system: {
     allowNativeBroker: false, // Disables WAM Broker
+    windowHashTimeout: 60000,
+    iframeHashTimeout: 6000,
+    loadFrameTimeout: 0,
   }
 }
 
@@ -26,7 +30,8 @@ export const loginRequest = {
     "profile",
     "email"
   ],
-  prompt: "select_account"
+  prompt: "select_account",
+  redirectUri: window.location.origin
 }
 
 export const graphConfig = {

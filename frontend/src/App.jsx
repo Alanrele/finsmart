@@ -117,11 +117,6 @@ function App() {
           }
         />
 
-        <Route 
-          path="/auth/ms-callback" 
-          element={<AuthCallback />} 
-        />
-
         <Route
           path="/"
           element={
