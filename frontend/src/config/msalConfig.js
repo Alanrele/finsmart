@@ -3,8 +3,8 @@ export const msalConfig = {
   auth: {
     clientId: "29f56526-69dc-4e89-9955-060aa8292fd0", // Hardcoded for production
     authority: "https://login.microsoftonline.com/common",
-    redirectUri: "https://finsmart-production.up.railway.app",
-    postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
+    redirectUri: window.location.origin, // Detecta automáticamente HTTP/HTTPS
+    postLogoutRedirectUri: window.location.origin,
     navigateToLoginRequestUrl: false,
   },
   cache: {
@@ -31,7 +31,7 @@ export const loginRequest = {
     "email"
   ],
   prompt: "select_account",
-  redirectUri: "https://finsmart-production.up.railway.app"
+  redirectUri: window.location.origin // Detecta automáticamente HTTP/HTTPS
 }
 
 export const graphConfig = {
