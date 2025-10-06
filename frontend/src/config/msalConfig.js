@@ -1,10 +1,10 @@
-// MSAL configuration for Microsoft Graph authentication
+// MSAL configuration for Microsoft Graph authentication - Railway Production
 export const msalConfig = {
   auth: {
-    clientId: "29f56526-69dc-4e89-9955-060aa8292fd0", // Hardcoded for production
+    clientId: "29f56526-69dc-4e89-9955-060aa8292fd0",
     authority: "https://login.microsoftonline.com/common",
-    redirectUri: window.location.origin, // Detecta automáticamente HTTP/HTTPS
-    postLogoutRedirectUri: window.location.origin,
+    redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback", // Como en Render
+    postLogoutRedirectUri: "https://finsmart-production.up.railway.app",
     navigateToLoginRequestUrl: false,
   },
   cache: {
@@ -19,11 +19,11 @@ export const msalConfig = {
   }
 }
 
-// Scopes for Microsoft Graph API
+// Scopes for Microsoft Graph API - Railway Production
 export const loginRequest = {
   scopes: [
     "User.Read",
-    "Mail.Read",
+    "Mail.Read", 
     "Mail.ReadBasic",
     "offline_access",
     "openid",
@@ -31,7 +31,7 @@ export const loginRequest = {
     "email"
   ],
   prompt: "select_account",
-  redirectUri: window.location.origin // Detecta automáticamente HTTP/HTTPS
+  redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback" // Como en Render
 }
 
 export const graphConfig = {
