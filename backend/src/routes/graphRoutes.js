@@ -149,6 +149,7 @@ router.post('/sync-emails', async (req, res) => {
     const processedTransactions = [];
     const skippedEmails = [];
     const io = req.app.get('io');
+    let newTransactionsCount = 0;
 
     for (const message of messages_filtered.value) {
       try {
@@ -162,6 +163,23 @@ router.post('/sync-emails', async (req, res) => {
           console.log(`⏭️ Skipping already processed email: ${message.subject}`);
           continue;
         }
+
+        // Quick check if email is likely transactional before processing
+        const isLikelyTransactional = emailParserService.isTransactionalEmail(
+          message.subject, 
+          message.body.content || ''
+        );
+
+        if (!isLikelyTransactional) {
+          console.log(`📧 Skipping promotional email: ${message.subject}`);
+          skippedEmails.push({
+            subject: message.subject,
+            reason: 'Promotional email - no transaction data expected'
+          });
+          continue;
+        }
+
+        console.log(`💳 Processing potential transaction email: ${message.subject}`);
 
         let emailContent = '';
 
@@ -251,6 +269,7 @@ router.post('/sync-emails', async (req, res) => {
 
             await transaction.save();
             processedTransactions.push(transaction);
+            newTransactionsCount++;
 
             console.log('✅ Transaction created:', {
               messageId: message.id,

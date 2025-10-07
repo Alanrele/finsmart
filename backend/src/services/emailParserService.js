@@ -1,5 +1,157 @@
 const cheerio = require('cheerio');
 
+/**
+ * Detecta si un email es transaccional (contiene información de transacciones) o promocional
+ */
+function isTransactionalEmail(subject, content) {
+    // Palabras clave que indican emails transaccionales
+    const transactionalKeywords = [
+        'realizaste un consumo',
+        'realizaste consumo',
+        'consumo realizado',
+        'transferencia realizada',
+        'transferencia recibida',
+        'constancia de transferencia',
+        'pago de servicio',
+        'retiro',
+        'depósito',
+        'número de operación',
+        'numero de operacion',
+        'fecha y hora',
+        'movimiento realizado',
+        'cargo efectuado',
+        'abono recibido'
+    ];
+
+    // Palabras clave que indican emails promocionales (evitar)
+    const promotionalKeywords = [
+        'descuento',
+        'promoción',
+        'oferta',
+        'beneficio',
+        'gustito',
+        'préstamo preaprobado',
+        'préstamo tarjetero',
+        'tarjeta invita',
+        'travel sale',
+        'shopping',
+        'seguro de viaje',
+        'date un gustito',
+        'calificas a',
+        'descubre beneficios',
+        'momento de hacer realidad',
+        'clóset con tommy',
+        'cafetera de regalo',
+        'dólar está a la baja',
+        'clara y todo lo que puede',
+        'ya revisaste si tienes',
+        '15% off',
+        'off en tu seguro',
+        'super precio',
+        'regalamos una cuota',
+        'proteger tu auto',
+        'ya conoces a clara',
+        'inicio de mes',
+        'tarjeta de crédito',
+        'felicitaciones',
+        'llave a un mundo',
+        'celebra la magia',
+        'renueva tu clóset',
+        'tommy hilfiger',
+        'calvin klein',
+        'magia de la primavera',
+        'qore',
+        'europa',
+        'euros al exterior',
+        'millas en el shopping',
+        'latam pass',
+        'depa propio',
+        'activa tu préstamo',
+        'mejora tu mes',
+        'dinero de vuelta',
+        'familia protegida',
+        'así sí vale la pena',
+        'calificas a una tarjeta',
+        'entra y descubre',
+        'tu préstamo tarjetero',
+        'ya está aprobado',
+        'activa',
+        'mejora',
+        'impulso a tu mes',
+        'dale un impulso',
+        'revive los clásicos',
+        'sinatra en navidad',
+        'dto.',
+        'descuentos con tarjetas',
+        'mundo de promociones',
+        'está aquí',
+        'renovar',
+        'estado de cuenta de tu tarjeta american express'
+    ];
+
+    const fullText = (subject + ' ' + content).toLowerCase();
+
+    // Detectar patrones promocionales específicos
+    const promotionalPatterns = [
+        /\d+%\s*off/i,                    // "15% OFF"
+        /💰.*gustito/i,                   // "💰¡Date un gustito"
+        /🎁.*regalo/i,                    // "🎁 regalo"
+        /🔑.*llave.*mundo/i,              // "🔑 La llave a un mundo"
+        /🚀.*activa/i,                    // "🚀 Activa tu"
+        /🚨.*renueva/i,                   // "🚨 ¡Alan, renueva"
+        /💳.*invita/i,                    // "💳 Alan, tu tarjeta te invita"
+        /🎉.*felicitaciones/i,            // "🎉 ¡Felicitaciones!"
+        /👀.*inicio.*mes/i,               // "👀 Es inicio de mes"
+        /¿.*conoces.*clara/i,             // "¿Ya conoces a Clara"
+        /¿.*calificas.*tarjeta/i,         // "¿Calificas a una Tarjeta"
+        /celebra.*magia.*primavera/i,     // "Celebra la magia de la primavera"
+        /momento.*hacer.*realidad.*depa/i, // "momento de hacer realidad el sueño del depa"
+        /✨.*descubre.*beneficios/i,      // "✨ ¡Alan, descubre beneficios"
+        /⌛.*recibos.*vencer/i             // "⌛ Tienes recibos que están por vencer"
+    ];
+
+    // PRIMERO: Verificar palabras transaccionales fuertes (tienen prioridad)
+    const strongTransactionalKeywords = [
+        'realizaste un consumo',
+        'realizaste consumo',
+        'consumo realizado',
+        'transferencia realizada',
+        'constancia de transferencia'
+    ];
+
+    for (const keyword of strongTransactionalKeywords) {
+        if (fullText.includes(keyword.toLowerCase())) {
+            return true; // Es claramente transaccional
+        }
+    }
+
+    // SEGUNDO: Verificar patrones promocionales
+    for (const pattern of promotionalPatterns) {
+        if (pattern.test(fullText)) {
+            return false;
+        }
+    }
+
+    // TERCERO: Si contiene palabras promocionales, probablemente no es transaccional
+    for (const keyword of promotionalKeywords) {
+        if (fullText.includes(keyword.toLowerCase())) {
+            return false;
+        }
+    }
+
+    // CUARTO: Si contiene otras palabras transaccionales, probablemente es transaccional
+    for (const keyword of transactionalKeywords) {
+        if (fullText.includes(keyword.toLowerCase())) {
+            return true;
+        }
+    }
+
+    // Si tiene patrones de montos, podría ser transaccional
+    const hasAmount = /S\/\s*[\d,]+\.?\d*|US\$\s*[\d,]+\.?\d*|\$\s*[\d,]+\.?\d*/.test(fullText);
+    
+    return hasAmount;
+}
+
 function extractAmountAndCurrency(text) {
     const patterns = [
         { regex: /S\/\s*([\d,]+\.?\d*)/i, currency: 'PEN' },
@@ -247,5 +399,6 @@ module.exports = {
     extractAmountAndCurrency,
     parseSpanishDate,
     classifyTransactionType,
-    createTransactionFromEmail
+    createTransactionFromEmail,
+    isTransactionalEmail
 };
