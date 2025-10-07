@@ -79,8 +79,8 @@ router.post('/sync-emails', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // For demo/Microsoft users, still require proper Graph connection
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Only block demo users, allow real Microsoft users
+    if (userId === 'demo-user-id') {
       return res.status(400).json({
         error: 'Real Microsoft Graph connection required',
         details: 'Please connect with a real Microsoft account to sync emails'
@@ -297,7 +297,8 @@ router.post('/sync-toggle', async (req, res) => {
     const { enabled } = req.body;
     const userId = req.user._id;
 
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Only block demo users
+    if (userId === 'demo-user-id') {
       return res.status(400).json({
         error: 'Real Microsoft Graph connection required',
         details: 'Demo users cannot enable sync'
@@ -341,7 +342,8 @@ router.get('/sync-status', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Only treat as demo if it's specifically the demo user ID
+    if (userId === 'demo-user-id') {
       return res.json({
         syncEnabled: false,
         lastSync: null,
@@ -366,7 +368,8 @@ router.get('/sync-status', async (req, res) => {
       lastSync: user.lastSync,
       hasConnection: !!user.accessToken,
       recentTransactions,
-      email: user.email
+      email: user.email,
+      isDemo: false
     });
 
   } catch (error) {

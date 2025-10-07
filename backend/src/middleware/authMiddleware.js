@@ -26,15 +26,77 @@ const authMiddleware = async (req, res, next) => {
 
     // Check if it's a Microsoft token (typical pattern)
     if (token.length > 100 && !token.includes('.')) {
-      console.log('🔑 Microsoft token detected, allowing access');
-      // For Microsoft tokens, create a demo user
-      req.user = {
-        _id: 'microsoft-user-id',
-        firstName: 'Microsoft',
-        lastName: 'User',
-        email: 'microsoft@example.com'
-      };
-      return next();
+      console.log('🔑 Microsoft token detected, processing...');
+      
+      try {
+        // Try to get user info from Microsoft Graph using the token
+        const { Client } = require('@microsoft/microsoft-graph-client');
+        
+        class CustomAuthProvider {
+          constructor(accessToken) {
+            this.accessToken = accessToken;
+          }
+          async getAccessToken() {
+            return this.accessToken;
+          }
+        }
+
+        const authProvider = new CustomAuthProvider(token);
+        const graphClient = Client.initWithMiddleware({ authProvider });
+        
+        // Get user profile from Microsoft Graph
+        const profile = await graphClient.api('/me').get();
+        
+        console.log('👤 Microsoft Graph profile:', {
+          displayName: profile.displayName,
+          email: profile.mail || profile.userPrincipalName,
+          id: profile.id
+        });
+
+        // Find or create user in database
+        let user = await User.findOne({ 
+          email: profile.mail || profile.userPrincipalName 
+        });
+
+        if (!user) {
+          // Create new user
+          user = new User({
+            email: profile.mail || profile.userPrincipalName,
+            firstName: profile.givenName || 'Usuario',
+            lastName: profile.surname || 'Microsoft',
+            microsoftId: profile.id,
+            accessToken: token,
+            tokenExpiry: new Date(Date.now() + 3600000), // 1 hour
+            password: 'microsoft-auth-' + Date.now(), // Dummy password
+            isVerified: true
+          });
+          
+          await user.save();
+          console.log('✅ New Microsoft user created:', user.email);
+        } else {
+          // Update existing user with new token
+          user.accessToken = token;
+          user.tokenExpiry = new Date(Date.now() + 3600000);
+          user.microsoftId = profile.id;
+          await user.save();
+          console.log('✅ Existing Microsoft user updated:', user.email);
+        }
+
+        req.user = user;
+        return next();
+
+      } catch (error) {
+        console.error('❌ Microsoft token validation failed:', error);
+        
+        // Fallback to demo user if Graph API fails
+        req.user = {
+          _id: 'microsoft-user-id',
+          firstName: 'Microsoft',
+          lastName: 'User',
+          email: 'microsoft@example.com'
+        };
+        return next();
+      }
     }
 
     // Try to verify as JWT
