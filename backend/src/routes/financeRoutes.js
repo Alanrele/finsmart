@@ -173,6 +173,7 @@ router.get('/dashboard', async (req, res) => {
 router.get('/transactions', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 100 }),
+  query('search').optional().isString(),
   query('category').optional().isString(),
   query('type').optional().isIn(['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit']),
   query('startDate').optional().isISO8601(),
@@ -192,7 +193,7 @@ router.get('/transactions', [
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo transactions data');
-      const demoTransactions = [
+      let demoTransactions = [
         {
           _id: 'demo-trans-1',
           description: 'Salario - Trabajo Principal',
@@ -240,6 +241,25 @@ router.get('/transactions', [
         }
       ];
 
+      // Apply demo filters
+      if (req.query.search) {
+        const searchTerm = req.query.search.toLowerCase();
+        demoTransactions = demoTransactions.filter(t => 
+          t.description.toLowerCase().includes(searchTerm) ||
+          t.category.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      if (req.query.category) {
+        demoTransactions = demoTransactions.filter(t => 
+          t.category.toLowerCase() === req.query.category.toLowerCase()
+        );
+      }
+
+      if (req.query.type) {
+        demoTransactions = demoTransactions.filter(t => t.type === req.query.type);
+      }
+
       return res.json({
         transactions: demoTransactions,
         pagination: {
@@ -258,6 +278,13 @@ router.get('/transactions', [
 
     // Build filter
     const filter = { userId };
+
+    if (req.query.search) {
+      filter.$or = [
+        { description: { $regex: req.query.search, $options: 'i' } },
+        { category: { $regex: req.query.search, $options: 'i' } }
+      ];
+    }
 
     if (req.query.category) {
       filter.category = req.query.category;

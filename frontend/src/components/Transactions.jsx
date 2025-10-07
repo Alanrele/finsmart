@@ -26,10 +26,13 @@ const Transactions = () => {
     try {
       setLoading(true)
       const response = await financeAPI.getTransactions(filters)
-      setTransactions(response.data.transactions)
+      console.log('📊 Transactions response:', response.data); // Debug log
+      setTransactions(response.data.transactions || [])
     } catch (error) {
       const errorInfo = handleApiError(error)
       toast.error(errorInfo.message)
+      console.error('❌ Error loading transactions:', error); // Debug log
+      setTransactions([]) // Set empty array on error
     } finally {
       setLoading(false)
     }
@@ -158,7 +161,7 @@ const Transactions = () => {
         className="card"
       >
         <div className="space-y-3">
-          {transactions.length === 0 ? (
+          {!transactions || transactions.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
               <p className="text-gray-500 dark:text-gray-400">
