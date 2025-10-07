@@ -142,8 +142,8 @@ function classifyTransactionType(parsedData) {
     const { operationType, sendingType, paymentType, merchant, beneficiary, amount } = parsedData;
 
     // Determinar si es ingreso o gasto
-    let type = 'expense'; // Por defecto es gasto
-    let category = 'Other';
+    let type = 'payment'; // Default type that exists in enum
+    let category = 'other'; // Default category in lowercase
 
     if (operationType) {
         const opType = operationType.toLowerCase();
@@ -151,27 +151,32 @@ function classifyTransactionType(parsedData) {
         // Ingresos
         if (opType.includes('depósito') || opType.includes('deposito') ||
             opType.includes('transferencia recibida') || opType.includes('abono')) {
-            type = 'income';
-            category = 'Transfer';
+            type = 'deposit';
+            category = 'income'; // 'income' is valid in enum
         }
         // Transferencias enviadas
         else if (opType.includes('transferencia') || opType.includes('envío')) {
             type = 'transfer';
-            category = 'Transfer';
+            category = 'transfer';
         }
         // Pagos
         else if (opType.includes('pago')) {
-            type = 'expense';
+            type = 'payment';
             if (merchant) {
-                category = 'Shopping';
+                category = 'shopping';
             } else {
-                category = 'Payment';
+                category = 'other';
             }
         }
         // Retiros
         else if (opType.includes('retiro')) {
             type = 'withdrawal';
-            category = 'Cash';
+            category = 'other';
+        }
+        // Compras/consumos
+        else if (opType.includes('consumo') || opType.includes('compra')) {
+            type = 'debit';
+            category = 'shopping';
         }
     }
 
@@ -180,17 +185,17 @@ function classifyTransactionType(parsedData) {
         const entity = (merchant || beneficiary).toLowerCase();
 
         if (entity.includes('supermercado') || entity.includes('market') || entity.includes('tienda')) {
-            category = 'Food';
+            category = 'food';
         } else if (entity.includes('gasolina') || entity.includes('grifo') || entity.includes('combustible')) {
-            category = 'Transportation';
+            category = 'transport';
         } else if (entity.includes('restaurante') || entity.includes('restaurant') || entity.includes('comida')) {
-            category = 'Food';
+            category = 'food';
         } else if (entity.includes('farmacia') || entity.includes('clinic') || entity.includes('hospital')) {
-            category = 'Healthcare';
+            category = 'healthcare';
         } else if (entity.includes('luz') || entity.includes('agua') || entity.includes('gas') || entity.includes('telefon')) {
-            category = 'Utilities';
+            category = 'utilities';
         } else if (entity.includes('cine') || entity.includes('entretenimiento') || entity.includes('netflix')) {
-            category = 'Entertainment';
+            category = 'entertainment';
         }
     }
 
@@ -221,7 +226,7 @@ function createTransactionFromEmail(parsedData, userId, emailData) {
         description,
         date: parsedData.date ? new Date(parsedData.date) : new Date(),
         currency: parsedData.currency || 'PEN',
-        channel: parsedData.channel || 'Email Import',
+        channel: 'other', // Changed from 'Email Import' to valid enum value
         isAI: true, // Marcamos como procesado por IA
         metadata: {
             emailId: emailData.id,
