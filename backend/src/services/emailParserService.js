@@ -148,7 +148,7 @@ function isTransactionalEmail(subject, content) {
 
     // Si tiene patrones de montos, podría ser transaccional
     const hasAmount = /S\/\s*[\d,]+\.?\d*|US\$\s*[\d,]+\.?\d*|\$\s*[\d,]+\.?\d*/.test(fullText);
-    
+
     return hasAmount;
 }
 

@@ -87,7 +87,7 @@ const authMiddleware = async (req, res, next) => {
 
       } catch (error) {
         console.error('❌ Microsoft token validation failed:', error);
-        
+
         // Try to find existing user by email from token header if possible
         try {
           // Check if we can find user by existing Microsoft ID or email
@@ -107,10 +107,10 @@ const authMiddleware = async (req, res, next) => {
           console.error('Fallback user lookup failed:', fallbackError);
         }
 
-        return res.status(401).json({ 
+        return res.status(401).json({
           error: 'Microsoft token validation failed',
           details: 'Token may have expired. Please log in again.',
-          originalError: error.message 
+          originalError: error.message
         });
       }
     }

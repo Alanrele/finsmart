@@ -96,16 +96,16 @@ router.post('/analyze', async (req, res) => {
 
     if (transactions.length === 0) {
       console.log('⚠️ AI Analyze - No transactions found, trying broader search...');
-      
+
       // Try to find any transactions for this user regardless of date
       const allUserTransactions = await Transaction.find({ userId }).sort({ date: -1 }).limit(10);
       console.log('📊 AI Analyze - Total user transactions found:', allUserTransactions.length);
-      
+
       if (allUserTransactions.length > 0) {
         console.log('📅 AI Analyze - User has transactions but not in selected period');
         console.log('📅 AI Analyze - Latest transaction date:', allUserTransactions[0].date);
         console.log('📅 AI Analyze - Oldest checked transaction date:', allUserTransactions[allUserTransactions.length - 1].date);
-        
+
         return res.json({
           message: `No transactions found for ${period}. You have ${allUserTransactions.length} transactions in other periods.`,
           analysis: {
@@ -124,7 +124,7 @@ router.post('/analyze', async (req, res) => {
           }
         });
       }
-      
+
       return res.json({
         message: 'No transactions found for analysis',
         analysis: {
@@ -304,10 +304,10 @@ router.get('/insights', async (req, res) => {
 
     // Get spending trends
     let trends, monthlyData, insights;
-    
+
     try {
       trends = await Transaction.getSpendingTrends(userId, parseInt(months));
-      
+
       // Get current month summary
       const now = new Date();
       monthlyData = await Transaction.getMonthlySummary(userId, now.getFullYear(), now.getMonth() + 1);
@@ -336,7 +336,7 @@ router.get('/insights', async (req, res) => {
         monthlyData,
         insights
       });
-      
+
     } catch (dbError) {
       console.error('Database error in insights:', dbError);
       // Return basic response if database fails
@@ -401,7 +401,7 @@ router.get('/recommendations', async (req, res) => {
 
     // Get last 3 months of transactions
     let transactions, recommendations;
-    
+
     try {
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
@@ -442,7 +442,7 @@ router.get('/recommendations', async (req, res) => {
         recommendations,
         basedOnTransactions: transactions.length
       });
-      
+
     } catch (dbError) {
       console.error('Database error in recommendations:', dbError);
       // Return basic recommendations if database fails
@@ -464,9 +464,9 @@ router.get('/recommendations', async (req, res) => {
 
   } catch (error) {
     console.error('Get recommendations error:', error);
-    res.status(500).json({ 
-      error: 'Failed to get financial recommendations', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Failed to get financial recommendations',
+      details: error.message
     });
   }
 });

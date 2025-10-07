@@ -79,7 +79,7 @@ router.post('/sync-emails', async (req, res) => {
   try {
     console.log('🔄 Starting email sync process...');
     console.log('👤 Request user:', req.user);
-    
+
     const userId = req.user._id;
 
     // Only block demo users, allow real Microsoft users
@@ -93,7 +93,7 @@ router.post('/sync-emails', async (req, res) => {
 
     console.log('🔍 Looking up user in database with ID:', userId);
     const user = await User.findById(userId);
-    
+
     if (!user) {
       console.log('❌ User not found in database:', userId);
       return res.status(404).json({
@@ -117,20 +117,41 @@ router.post('/sync-emails', async (req, res) => {
 
     // Define BCP email domains for filtering
     const bcpDomains = ['bcp.com.pe'];
-    
-    // Simplified approach: Get recent emails and filter in memory to avoid complex Graph queries
+
+    // Ultra-simplified approach: Get recent emails with minimal query complexity
     const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
-    const orderBy = 'receivedDateTime desc';
-    const top = 200; // Get more emails to filter in memory
+    const top = 50; // Reduced to avoid complexity issues
 
-    console.log('📧 Fetching recent emails without complex filter');
+    console.log('📧 Fetching recent emails with minimal complexity query');
 
-    const messages = await graphClient
-      .api('/me/messages')
-      .select(select)
-      .orderby(orderBy)
-      .top(top)
-      .get();
+    let messages;
+    try {
+      // First attempt: Try with basic query
+      messages = await graphClient
+        .api('/me/messages')
+        .select(select)
+        .top(top)
+        .get();
+    } catch (graphError) {
+      if (graphError.code === 'InefficientFilter') {
+        console.log('⚠️ First attempt failed, trying with even simpler query...');
+        // Fallback: Ultra-minimal query
+        try {
+          messages = await graphClient
+            .api('/me/messages')
+            .select('id,subject,receivedDateTime,from')
+            .top(20)
+            .get();
+
+          console.log('✅ Fallback query successful, but with limited data');
+        } catch (fallbackError) {
+          console.error('❌ Even fallback query failed:', fallbackError);
+          throw fallbackError;
+        }
+      } else {
+        throw graphError;
+      }
+    }
 
     console.log(`📨 Retrieved ${messages.value.length} total emails, filtering for BCP emails`);
 
@@ -165,9 +186,11 @@ router.post('/sync-emails', async (req, res) => {
         }
 
         // Quick check if email is likely transactional before processing
+        // Handle case where body might be missing from fallback query
+        const emailBodyContent = message.body?.content || '';
         const isLikelyTransactional = emailParserService.isTransactionalEmail(
-          message.subject, 
-          message.body.content || ''
+          message.subject,
+          emailBodyContent
         );
 
         if (!isLikelyTransactional) {
@@ -183,15 +206,20 @@ router.post('/sync-emails', async (req, res) => {
 
         let emailContent = '';
 
-        // Extract content from email body
-        if (message.body.contentType === 'html') {
-          emailContent = message.body.content;
+        // Extract content from email body (handle missing body from fallback queries)
+        if (message.body && message.body.content) {
+          if (message.body.contentType === 'html') {
+            emailContent = message.body.content;
+          } else {
+            emailContent = message.body.content;
+          }
         } else {
-          emailContent = message.body.content;
+          console.log(`⚠️ Email body missing (fallback query), using subject only: ${message.subject}`);
+          emailContent = message.subject; // Use subject as fallback
         }
 
-        // Process attachments for OCR if any
-        if (message.hasAttachments) {
+        // Process attachments for OCR if any (only if hasAttachments property is available)
+        if (message.hasAttachments === true) {
           try {
             const attachments = await graphClient
               .api(`/me/messages/${message.id}/attachments`)
@@ -207,18 +235,20 @@ router.post('/sync-emails', async (req, res) => {
           } catch (attachmentError) {
             console.error('❌ Error processing attachments:', attachmentError);
           }
+        } else if (message.hasAttachments === undefined) {
+          console.log('⚠️ Attachment info not available (fallback query), skipping attachment processing');
         }
 
         // Parse email content
         console.log('🔍 Parsing email:', message.subject);
-        
+
         let parsedData;
         try {
           parsedData = emailParserService.parseEmailContent(emailContent);
-          console.log('📊 Parsed result:', { 
-            hasAmount: !!parsedData?.amount, 
+          console.log('📊 Parsed result:', {
+            hasAmount: !!parsedData?.amount,
             amount: parsedData?.amount,
-            type: parsedData?.type 
+            type: parsedData?.type
           });
         } catch (parseError) {
           console.error('❌ Email parsing failed:', parseError);
@@ -231,7 +261,7 @@ router.post('/sync-emails', async (req, res) => {
 
         if (parsedData && parsedData.amount && parsedData.amount > 0) {
           console.log('💰 Creating transaction from parsed data...');
-          
+
           let transactionData;
           try {
             transactionData = emailParserService.createTransactionFromEmail(
@@ -370,6 +400,17 @@ router.post('/sync-emails', async (req, res) => {
         error: 'Microsoft authentication expired',
         details: 'Please reconnect your Microsoft account',
         code: error.code
+      });
+    }
+
+    // Handle InefficientFilter error with fallback strategy
+    if (error.code === 'InefficientFilter') {
+      console.log('⚠️ Graph query too complex, attempting fallback with minimal query...');
+      return res.status(500).json({
+        error: 'Email query complexity issue',
+        details: 'Microsoft Graph query is too complex. Please try again with a smaller date range.',
+        code: error.code,
+        suggestion: 'Reduce the number of emails being processed or try again later'
       });
     }
 

@@ -30,9 +30,9 @@ class AIAnalysisService {
       this.openai = new OpenAI({
         apiKey: apiKey
       });
-      
+
       console.log('✅ OpenAI service initialized (validation will happen on first use)');
-      
+
     } catch (error) {
       console.warn('⚠️ Failed to initialize OpenAI service. Using fallback analysis only.', error.message);
       this.openai = null;
