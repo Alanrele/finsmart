@@ -105,7 +105,7 @@ router.post('/sync-emails', async (req, res) => {
       "from/emailAddress/address eq 'alertas@bcp.com.pe'",
       "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
     ];
-    
+
     const filter = bcpFilters.join(' or ');
     const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
     const orderBy = 'receivedDateTime desc';
@@ -210,7 +210,7 @@ router.post('/sync-emails', async (req, res) => {
               ...transaction.toObject(),
               isNew: true
             });
-            
+
             // Also emit general notification
             io.to(`user-${user._id}`).emit('notification', {
               type: 'success',
@@ -284,9 +284,9 @@ router.post('/sync-emails', async (req, res) => {
       });
     }
 
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to sync emails',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -330,9 +330,9 @@ router.post('/sync-toggle', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Sync toggle error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to toggle sync',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -374,9 +374,9 @@ router.get('/sync-status', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Sync status error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get sync status',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -527,9 +527,9 @@ router.post('/disconnect', async (req, res) => {
     // Handle demo/Microsoft users differently
     if (req.user._id === 'demo-user-id' || req.user._id === 'microsoft-user-id') {
       console.log('🎭 Demo/Microsoft user disconnect - no database operation needed');
-      return res.json({ 
+      return res.json({
         message: 'Microsoft account disconnected successfully',
-        demo: true 
+        demo: true
       });
     }
 
@@ -552,9 +552,9 @@ router.post('/disconnect', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Disconnect error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to disconnect Microsoft account',
-      details: error.message 
+      details: error.message
     });
   }
 });

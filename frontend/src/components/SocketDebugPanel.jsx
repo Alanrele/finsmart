@@ -36,12 +36,12 @@ const SocketDebugPanel = () => {
         addLog('✅ Socket connected', 'success')
         checkSocketStatus()
       }
-      
+
       const onDisconnect = (reason) => {
         addLog(`❌ Socket disconnected: ${reason}`, 'error')
         checkSocketStatus()
       }
-      
+
       const onConnectError = (error) => {
         addLog(`🔌 Connection error: ${error.message}`, 'error')
         checkSocketStatus()
@@ -114,8 +114,8 @@ const SocketDebugPanel = () => {
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
           <span className={`text-sm font-medium ${
-            socketStatus === 'connected' ? 'text-green-600' : 
-            socketStatus === 'disconnected' ? 'text-red-600' : 
+            socketStatus === 'connected' ? 'text-green-600' :
+            socketStatus === 'disconnected' ? 'text-red-600' :
             'text-yellow-600'
           }`}>
             {socketStatus}
@@ -162,8 +162,8 @@ const SocketDebugPanel = () => {
             ) : (
               connectionLogs.map((log, index) => (
                 <div key={index} className={`text-xs ${
-                  log.type === 'success' ? 'text-green-600' : 
-                  log.type === 'error' ? 'text-red-600' : 
+                  log.type === 'success' ? 'text-green-600' :
+                  log.type === 'error' ? 'text-red-600' :
                   'text-gray-600'
                 }`}>
                   <span className="text-gray-400">{log.timestamp}</span> {log.message}

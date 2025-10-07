@@ -39,7 +39,7 @@ class SocketService {
 
     // Configuración específica para Railway (limita WebSockets en plan gratuito)
     const isRailwayProduction = serverUrl.includes('railway.app')
-    const transportConfig = isRailwayProduction 
+    const transportConfig = isRailwayProduction
       ? ['polling'] // Railway: solo polling por estabilidad
       : ['websocket', 'polling'] // Desarrollo: preferir WebSocket
 
@@ -77,7 +77,7 @@ class SocketService {
 
     this.socket.on('disconnect', (reason) => {
       console.log('❌ Disconnected from socket server:', reason)
-      
+
       // Auto-reconexión más agresiva para Railway
       if (isRailwayProduction && reason === 'transport close') {
         console.log('🔄 Railway transport closed, attempting reconnection...')
@@ -91,7 +91,7 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('🔌 Socket connection error:', error.message)
-      
+
       // Manejo específico para Railway
       if (isRailwayProduction) {
         console.log('🚀 Railway connection issue - ensuring polling mode')
@@ -144,7 +144,7 @@ class SocketService {
       clearInterval(this.heartbeatInterval)
       this.heartbeatInterval = null
     }
-    
+
     if (this.socket) {
       this.socket.disconnect()
       this.socket = null

@@ -40,9 +40,9 @@ const EmailSyncControl = () => {
     try {
       setIsToggling(true)
       const newState = !syncStatus.syncEnabled
-      
+
       const response = await graphAPI.toggleSync(newState)
-      
+
       setSyncStatus(prev => ({
         ...prev,
         syncEnabled: newState,
@@ -50,8 +50,8 @@ const EmailSyncControl = () => {
       }))
 
       toast.success(
-        newState 
-          ? '✅ Sincronización automática activada' 
+        newState
+          ? '✅ Sincronización automática activada'
           : '⏸️ Sincronización automática desactivada'
       )
     } catch (error) {
@@ -66,14 +66,14 @@ const EmailSyncControl = () => {
     try {
       setIsSyncing(true)
       toast.loading('📧 Sincronizando correos...', { id: 'sync' })
-      
+
       const response = await graphAPI.syncEmails()
-      
+
       toast.success(
         `✅ Sincronización completada: ${response.data.processedCount} transacciones procesadas`,
         { id: 'sync' }
       )
-      
+
       // Reload status after sync
       await loadSyncStatus()
     } catch (error) {
@@ -86,11 +86,11 @@ const EmailSyncControl = () => {
 
   const formatLastSync = (lastSync) => {
     if (!lastSync) return 'Nunca'
-    
+
     const date = new Date(lastSync)
     const now = new Date()
     const diffInMinutes = Math.floor((now - date) / (1000 * 60))
-    
+
     if (diffInMinutes < 1) return 'Hace unos segundos'
     if (diffInMinutes < 60) return `Hace ${diffInMinutes} minutos`
     if (diffInMinutes < 1440) return `Hace ${Math.floor(diffInMinutes / 60)} horas`
@@ -149,8 +149,8 @@ const EmailSyncControl = () => {
             <div>
               <span className="text-gray-500 dark:text-gray-400">Estado:</span>
               <span className={`ml-2 font-medium ${
-                syncStatus.syncEnabled 
-                  ? 'text-green-600 dark:text-green-400' 
+                syncStatus.syncEnabled
+                  ? 'text-green-600 dark:text-green-400'
                   : 'text-gray-600 dark:text-gray-400'
               }`}>
                 {syncStatus.syncEnabled ? 'Activa' : 'Inactiva'}

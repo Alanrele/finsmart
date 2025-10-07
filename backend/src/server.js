@@ -28,14 +28,14 @@ const app = express();
 const server = http.createServer(app);
 
 // Configuración específica de Socket.io para Railway
-const isRailwayProduction = process.env.RAILWAY_ENVIRONMENT === 'production' || 
+const isRailwayProduction = process.env.RAILWAY_ENVIRONMENT === 'production' ||
                            process.env.NODE_ENV === 'production'
 
 const io = socketIo(server, {
   cors: {
     origin: [
       "http://localhost:3000",
-      "http://localhost:3001", 
+      "http://localhost:3001",
       "https://finsmart-production.up.railway.app",
       process.env.FRONTEND_URL
     ].filter(Boolean),
@@ -105,7 +105,7 @@ app.use('/api/finance', authMiddleware, financeRoutes);
 // Health check endpoint (before static files)
 app.get('/health', (req, res) => {
   const connectedSockets = io.engine.clientsCount || 0;
-  
+
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -124,8 +124,8 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     socketio_clients: io.engine.clientsCount || 0
   });
@@ -205,7 +205,7 @@ if (process.env.NODE_ENV === 'production') {
 // Socket.io connection handling con logging mejorado
 io.on('connection', (socket) => {
   console.log(`✅ Socket connected: ${socket.id} via ${socket.conn.transport.name}`);
-  
+
   // Log cuando cambia el transporte
   socket.conn.on('upgrade', () => {
     console.log(`🔄 Socket ${socket.id} upgraded to ${socket.conn.transport.name}`);

@@ -27,11 +27,11 @@ const authMiddleware = async (req, res, next) => {
     // Check if it's a Microsoft token (typical pattern)
     if (token.length > 100 && !token.includes('.')) {
       console.log('🔑 Microsoft token detected, processing...');
-      
+
       try {
         // Try to get user info from Microsoft Graph using the token
         const { Client } = require('@microsoft/microsoft-graph-client');
-        
+
         class CustomAuthProvider {
           constructor(accessToken) {
             this.accessToken = accessToken;
@@ -43,10 +43,10 @@ const authMiddleware = async (req, res, next) => {
 
         const authProvider = new CustomAuthProvider(token);
         const graphClient = Client.initWithMiddleware({ authProvider });
-        
+
         // Get user profile from Microsoft Graph
         const profile = await graphClient.api('/me').get();
-        
+
         console.log('👤 Microsoft Graph profile:', {
           displayName: profile.displayName,
           email: profile.mail || profile.userPrincipalName,
@@ -54,8 +54,8 @@ const authMiddleware = async (req, res, next) => {
         });
 
         // Find or create user in database
-        let user = await User.findOne({ 
-          email: profile.mail || profile.userPrincipalName 
+        let user = await User.findOne({
+          email: profile.mail || profile.userPrincipalName
         });
 
         if (!user) {
@@ -70,7 +70,7 @@ const authMiddleware = async (req, res, next) => {
             password: 'microsoft-auth-' + Date.now(), // Dummy password
             isVerified: true
           });
-          
+
           await user.save();
           console.log('✅ New Microsoft user created:', user.email);
         } else {
@@ -87,7 +87,7 @@ const authMiddleware = async (req, res, next) => {
 
       } catch (error) {
         console.error('❌ Microsoft token validation failed:', error);
-        
+
         // Fallback to demo user if Graph API fails
         req.user = {
           _id: 'microsoft-user-id',

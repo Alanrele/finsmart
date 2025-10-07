@@ -76,7 +76,7 @@ class EmailSyncService {
           await new Promise(resolve => setTimeout(resolve, 2000));
         } catch (error) {
           console.error(`❌ Error syncing user ${user.email}:`, error);
-          
+
           // If token expired, disable sync for this user
           if (error.code === 'InvalidAuthenticationToken') {
             user.syncEnabled = false;
@@ -101,14 +101,14 @@ class EmailSyncService {
 
       // Get recent emails (last 24 hours for periodic sync)
       const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      
+
       const bcpFilters = [
         "from/emailAddress/address eq 'notificaciones@bcp.com.pe'",
         "from/emailAddress/address eq 'bcp@bcp.com.pe'",
         "from/emailAddress/address eq 'alertas@bcp.com.pe'",
         "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
       ];
-      
+
       const filter = `(${bcpFilters.join(' or ')}) and receivedDateTime ge ${last24Hours}`;
       const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
       const orderBy = 'receivedDateTime desc';
