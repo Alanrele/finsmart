@@ -61,7 +61,7 @@ api.interceptors.request.use(
   (config) => {
     console.log('🔐 API Request interceptor - checking for token...');
 
-    // Intentar obtener el token del localStorage
+    // Intentar obtener el token del localStorage (Zustand structure)
     const authStorage = localStorage.getItem('auth-storage');
 
     if (authStorage) {
@@ -70,11 +70,30 @@ api.interceptors.request.use(
         console.log('🔍 Auth data found:', {
           hasState: !!authData.state,
           hasToken: !!authData.state?.token,
-          isAuthenticated: authData.state?.isAuthenticated
+          isAuthenticated: authData.state?.isAuthenticated,
+          // Also check direct structure for backward compatibility
+          hasDirectToken: !!authData.token,
+          directIsAuthenticated: authData.isAuthenticated
         });
 
+        // Try Zustand structure first (state.token)
+        let token = null;
+        let isAuthenticated = false;
+
         if (authData.state?.token && authData.state?.isAuthenticated) {
-          config.headers.Authorization = `Bearer ${authData.state.token}`;
+          token = authData.state.token;
+          isAuthenticated = authData.state.isAuthenticated;
+          console.log('✅ Using Zustand structure token');
+        } 
+        // Fallback to direct structure
+        else if (authData.token && authData.isAuthenticated) {
+          token = authData.token;
+          isAuthenticated = authData.isAuthenticated;
+          console.log('✅ Using direct structure token');
+        }
+
+        if (token && isAuthenticated) {
+          config.headers.Authorization = `Bearer ${token}`;
           console.log('✅ Authorization header added');
         } else {
           console.warn('⚠️ No valid token found in auth storage');
@@ -90,7 +109,7 @@ api.interceptors.request.use(
       method: config.method?.toUpperCase(),
       url: config.url,
       hasAuth: !!config.headers.Authorization,
-      headers: config.headers
+      baseURL: config.baseURL
     });
 
     return config;
@@ -154,7 +173,8 @@ export const authAPI = {
   login: (credentials) => api.post('/auth/login', credentials),
   verify: () => api.get('/auth/verify'),
   microsoftCallback: (data) => api.post('/auth/microsoft/callback', data),
-  refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken })
+  refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  demoLogin: () => api.post('/auth/demo-login')
 }
 
 // Graph API

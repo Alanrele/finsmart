@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSmart - Demo Mode Setup</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        p {
+            margin-bottom: 30px;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        .error-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .error-info h3 {
+            margin-top: 0;
+            color: #ffeb3b;
+        }
+        button {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        .success {
+            background: rgba(40, 167, 69, 0.3);
+            color: #28a745;
+        }
+        .error {
+            background: rgba(220, 53, 69, 0.3);
+            color: #dc3545;
+        }
+        .loading {
+            background: rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 FinSmart</h1>
+        <p>Sistema de Gestión Financiera Inteligente</p>
+        
+        <div class="error-info">
+            <h3>⚠️ Errores 401 Detectados</h3>
+            <p><strong>Problema:</strong> El frontend no tiene un token de autenticación válido.</p>
+            <p><strong>Causa:</strong> No hay un usuario autenticado en el sistema.</p>
+            <p><strong>Solución:</strong> Activar el modo demo para obtener acceso al sistema.</p>
+        </div>
+
+        <button onclick="activateDemoMode()">
+            🎭 Activar Modo Demo
+        </button>
+        
+        <button onclick="goToApp()">
+            🏠 Ir a la Aplicación
+        </button>
+
+        <div id="status"></div>
+    </div>
+
+    <script>
+        async function activateDemoMode() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = '⏳ Activando modo demo...';
+
+            try {
+                const response = await fetch('/api/auth/demo-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Store auth data in localStorage (compatible with Zustand)
+                    const authData = {
+                        state: {
+                            user: data.user,
+                            token: data.token,
+                            isAuthenticated: true,
+                            lastActivity: Date.now()
+                        }
+                    };
+                    
+                    localStorage.setItem('auth-storage', JSON.stringify(authData));
+                    
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ Modo demo activado exitosamente!';
+                    
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                    
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                console.error('Error activating demo mode:', error);
+                statusDiv.className = 'status error';
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        function goToApp() {
+            window.location.href = '/';
+        }
+
+        // Auto-check if user is already authenticated
+        window.onload = function() {
+            const authStorage = localStorage.getItem('auth-storage');
+            if (authStorage) {
+                try {
+                    const authData = JSON.parse(authStorage);
+                    if (authData.state?.isAuthenticated) {
+                        const statusDiv = document.getElementById('status');
+                        statusDiv.className = 'status success';
+                        statusDiv.textContent = '✅ Ya estás autenticado. Puedes ir a la aplicación.';
+                    }
+                } catch (error) {
+                    console.error('Error checking auth status:', error);
+                }
+            }
+        };
+    </script>
+</body>
+</html>

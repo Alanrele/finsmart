@@ -227,4 +227,56 @@ router.post('/refresh', async (req, res) => {
   }
 });
 
+// TEMPORARY: Demo login for development (remove in production)
+router.post('/demo-login', async (req, res) => {
+  try {
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ error: 'Demo login not available in production' });
+    }
+
+    console.log('🎭 Demo login requested');
+
+    // Check if demo user exists, create if not
+    let demoUser = await User.findOne({ email: 'demo@example.com' });
+    
+    if (!demoUser) {
+      console.log('🎭 Creating demo user...');
+      demoUser = new User({
+        email: 'demo@example.com',
+        firstName: 'Demo',
+        lastName: 'User',
+        password: 'demo123', // Will be hashed by the model
+        isDemo: true
+      });
+      await demoUser.save();
+      console.log('✅ Demo user created');
+    }
+
+    // Generate token
+    const token = generateToken(demoUser._id);
+
+    console.log('✅ Demo login successful');
+
+    res.json({
+      message: 'Demo login successful',
+      token,
+      user: {
+        _id: demoUser._id,
+        email: demoUser.email,
+        firstName: demoUser.firstName,
+        lastName: demoUser.lastName,
+        isDemo: true
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Demo login error:', error);
+    res.status(500).json({ 
+      error: 'Demo login failed',
+      details: error.message 
+    });
+  }
+});
+
 module.exports = router;
