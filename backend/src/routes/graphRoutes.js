@@ -118,42 +118,42 @@ router.post('/sync-emails', async (req, res) => {
     // Define BCP email domains for filtering
     const bcpDomains = ['bcp.com.pe'];
 
-    // Ultra-simplified approach: Get recent emails with minimal query complexity
-    const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
-    const top = 50; // Reduced to avoid complexity issues
-
-    console.log('📧 Fetching recent emails with minimal complexity query');
+    console.log('📧 Fetching emails with ultra-minimal query to avoid complexity issues');
 
     let messages;
     try {
-      // First attempt: Try with basic query
+      // Ultra-minimal attempt: Absolute simplest possible query
+      console.log('� Attempting ultra-minimal Graph API query...');
       messages = await graphClient
         .api('/me/messages')
-        .select(select)
-        .top(top)
+        .top(25) // Very small number
         .get();
+      
+      console.log('✅ Ultra-minimal query successful');
     } catch (graphError) {
       if (graphError.code === 'InefficientFilter') {
-        console.log('⚠️ First attempt failed, trying with even simpler query...');
-        // Fallback: Ultra-minimal query
+        console.log('⚠️ Ultra-minimal query failed, trying absolute minimum...');
+        // Last resort: Just get messages without any parameters
         try {
+          console.log('🔍 Attempting absolute minimum query (no parameters)...');
           messages = await graphClient
             .api('/me/messages')
-            .select('id,subject,receivedDateTime,from')
-            .top(20)
             .get();
-
-          console.log('✅ Fallback query successful, but with limited data');
-        } catch (fallbackError) {
-          console.error('❌ Even fallback query failed:', fallbackError);
-          throw fallbackError;
+          
+          console.log('✅ Absolute minimum query successful');
+          // Limit results manually if we get too many
+          if (messages.value && messages.value.length > 20) {
+            messages.value = messages.value.slice(0, 20);
+            console.log(`📝 Manually limited to 20 messages to avoid processing overhead`);
+          }
+        } catch (finalError) {
+          console.error('❌ All Graph API query attempts failed:', finalError);
+          throw finalError;
         }
       } else {
         throw graphError;
       }
-    }
-
-    console.log(`📨 Retrieved ${messages.value.length} total emails, filtering for BCP emails`);
+    }    console.log(`📨 Retrieved ${messages.value.length} total emails, filtering for BCP emails`);
 
     // Filter BCP emails in memory
     const bcpEmails = messages.value.filter(message => {
@@ -181,53 +181,59 @@ router.post('/sync-emails', async (req, res) => {
         });
 
         if (existingTransaction) {
-          console.log(`⏭️ Skipping already processed email: ${message.subject}`);
+          console.log(`⏭️ Skipping already processed email: ${message.subject || 'No subject'}`);
           continue;
         }
 
         // Quick check if email is likely transactional before processing
         // Handle case where body might be missing from fallback query
-        const emailBodyContent = message.body?.content || '';
+        const emailSubject = message.subject || '';
+        const emailBodyContent = message.body?.content || message.bodyPreview || '';
         const isLikelyTransactional = emailParserService.isTransactionalEmail(
-          message.subject,
+          emailSubject,
           emailBodyContent
         );
 
         if (!isLikelyTransactional) {
-          console.log(`📧 Skipping promotional email: ${message.subject}`);
+          console.log(`📧 Skipping promotional email: ${emailSubject}`);
           skippedEmails.push({
-            subject: message.subject,
+            subject: emailSubject,
             reason: 'Promotional email - no transaction data expected'
           });
           continue;
         }
 
-        console.log(`💳 Processing potential transaction email: ${message.subject}`);
+        console.log(`💳 Processing potential transaction email: ${emailSubject}`);
 
         let emailContent = '';
 
-        // Extract content from email body (handle missing body from fallback queries)
+        // Extract content from email body (handle various Graph API response formats)
         if (message.body && message.body.content) {
           if (message.body.contentType === 'html') {
             emailContent = message.body.content;
           } else {
             emailContent = message.body.content;
           }
+        } else if (message.bodyPreview) {
+          // Fallback to bodyPreview if available (default Graph API response)
+          console.log(`⚠️ Using bodyPreview as fallback for: ${emailSubject}`);
+          emailContent = message.bodyPreview;
         } else {
-          console.log(`⚠️ Email body missing (fallback query), using subject only: ${message.subject}`);
-          emailContent = message.subject; // Use subject as fallback
+          // Last resort: use subject only
+          console.log(`⚠️ No body content available, using subject only: ${emailSubject}`);
+          emailContent = emailSubject;
         }
 
         // Process attachments for OCR if any (only if hasAttachments property is available)
         if (message.hasAttachments === true) {
           try {
+            console.log('🖼️ Processing image attachment with OCR');
             const attachments = await graphClient
               .api(`/me/messages/${message.id}/attachments`)
               .get();
 
             for (const attachment of attachments.value) {
               if (attachment.contentType && attachment.contentType.startsWith('image/')) {
-                console.log('🖼️ Processing image attachment with OCR');
                 const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
                 emailContent += '\n\nOCR Content:\n' + ocrText;
               }
@@ -236,11 +242,11 @@ router.post('/sync-emails', async (req, res) => {
             console.error('❌ Error processing attachments:', attachmentError);
           }
         } else if (message.hasAttachments === undefined) {
-          console.log('⚠️ Attachment info not available (fallback query), skipping attachment processing');
+          console.log('⚠️ Attachment info not available (minimal query), skipping attachment processing');
         }
 
         // Parse email content
-        console.log('🔍 Parsing email:', message.subject);
+        console.log('🔍 Parsing email:', emailSubject);
 
         let parsedData;
         try {
@@ -253,8 +259,8 @@ router.post('/sync-emails', async (req, res) => {
         } catch (parseError) {
           console.error('❌ Email parsing failed:', parseError);
           skippedEmails.push({
-            subject: message.subject,
-            reason: `Parsing error: ${parseError.message}`
+            subject: emailSubject,
+            reason: 'Email parsing error: ' + parseError.message
           });
           continue;
         }
@@ -269,7 +275,7 @@ router.post('/sync-emails', async (req, res) => {
               user._id,
               {
                 id: message.id,
-                subject: message.subject,
+                subject: emailSubject,
                 receivedDateTime: message.receivedDateTime
               }
             );
@@ -281,7 +287,7 @@ router.post('/sync-emails', async (req, res) => {
           } catch (createError) {
             console.error('❌ Transaction creation failed:', createError);
             skippedEmails.push({
-              subject: message.subject,
+              subject: emailSubject,
               reason: `Transaction creation error: ${createError.message}`
             });
             continue;
@@ -328,20 +334,24 @@ router.post('/sync-emails', async (req, res) => {
           } catch (saveError) {
             console.error('❌ Transaction save failed:', saveError);
             skippedEmails.push({
-              subject: message.subject,
+              subject: emailSubject,
               reason: `Database save error: ${saveError.message}`
             });
           }
         } else {
           skippedEmails.push({
-            subject: message.subject,
+            subject: emailSubject,
             reason: 'No valid transaction data found'
           });
-          console.log('⚠️ No transaction data in email:', message.subject);
+          console.log('⚠️ No transaction data in email:', emailSubject);
         }
 
       } catch (messageError) {
         console.error(`❌ Error processing message ${message.id}:`, messageError);
+        skippedEmails.push({
+          subject: emailSubject || 'Unknown subject',
+          reason: `Message processing error: ${messageError.message}`
+        });
         skippedEmails.push({
           subject: message.subject,
           reason: messageError.message
