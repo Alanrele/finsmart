@@ -4,10 +4,13 @@ import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown } from 'lu
 import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
+import TransactionDetailModal from './TransactionDetailModal'
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -44,6 +47,16 @@ const Transactions = () => {
   ]
 
   const types = ['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit']
+
+  const handleTransactionClick = (transaction) => {
+    setSelectedTransaction(transaction)
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedTransaction(null)
+  }
 
   if (loading) {
     return (
@@ -175,7 +188,8 @@ const Transactions = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => handleTransactionClick(transaction)}
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
               >
                 <div className="flex items-center space-x-4 flex-1">
                   <div className={`p-2 rounded-lg ${
@@ -222,6 +236,13 @@ const Transactions = () => {
           )}
         </div>
       </motion.div>
+
+      {/* Transaction Detail Modal */}
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   )
 }
