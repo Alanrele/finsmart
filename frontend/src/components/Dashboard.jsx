@@ -40,11 +40,27 @@ const Dashboard = () => {
   const loadDashboardData = async () => {
     try {
       setLoading(true)
+      console.log('🔄 Loading dashboard data...');
       const response = await financeAPI.getDashboard()
+      console.log('✅ Dashboard data loaded:', response.data);
       setDashboardData(response.data)
     } catch (error) {
+      console.error('❌ Dashboard loading error:', error);
       const errorInfo = handleApiError(error)
       toast.error(errorInfo.message)
+      
+      // Set default empty data to prevent undefined errors
+      setDashboardData({
+        summary: {
+          totalBalance: 0,
+          monthlyIncome: 0,
+          monthlyExpenses: 0,
+          totalSavings: 0
+        },
+        categorySpending: [],
+        topCategories: [],
+        recentTransactions: []
+      });
     } finally {
       setLoading(false)
     }
@@ -67,22 +83,44 @@ const Dashboard = () => {
     )
   }
 
-  const { summary, categorySpending, topCategories, recentTransactions } = dashboardData || {}
+  // Extract data with safe defaults
+  const { 
+    summary = {}, 
+    categorySpending = [], 
+    topCategories = [], 
+    recentTransactions = [] 
+  } = dashboardData || {}
+
+  console.log('📊 Dashboard data extracted:', { 
+    hasSummary: !!summary, 
+    categorySpendingLength: categorySpending?.length,
+    topCategoriesLength: topCategories?.length,
+    recentTransactionsLength: recentTransactions?.length 
+  });
 
   // Chart colors
   const COLORS = ['#C6A664', '#D4AF37', '#B8951A', '#A0860F', '#8B7509']
 
-  // Prepare data for charts
-  const categoryData = topCategories?.map((cat, index) => ({
-    name: cat.category,
-    value: cat.amount,
-    color: COLORS[index % COLORS.length]
-  })) || []
+  // Prepare data for charts with additional safety checks
+  const categoryData = Array.isArray(topCategories) 
+    ? topCategories.map((cat, index) => ({
+        name: cat?.category || 'Unknown',
+        value: cat?.amount || 0,
+        color: COLORS[index % COLORS.length]
+      }))
+    : []
 
-  const spendingTrend = recentTransactions?.slice(0, 7).reverse().map((transaction, index) => ({
-    day: `Día ${index + 1}`,
-    amount: transaction.amount
-  })) || []
+  const spendingTrend = Array.isArray(recentTransactions) && recentTransactions.length > 0
+    ? recentTransactions.slice(0, 7).reverse().map((transaction, index) => ({
+        day: `Día ${index + 1}`,
+        amount: Math.abs(transaction?.amount || 0)
+      }))
+    : []
+
+  console.log('📈 Chart data prepared:', { 
+    categoryDataLength: categoryData.length,
+    spendingTrendLength: spendingTrend.length 
+  });
 
   return (
     <div className="space-y-6">
