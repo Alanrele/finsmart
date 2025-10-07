@@ -87,15 +87,10 @@ const authMiddleware = async (req, res, next) => {
 
       } catch (error) {
         console.error('❌ Microsoft token validation failed:', error);
-
-        // Fallback to demo user if Graph API fails
-        req.user = {
-          _id: 'microsoft-user-id',
-          firstName: 'Microsoft',
-          lastName: 'User',
-          email: 'microsoft@example.com'
-        };
-        return next();
+        return res.status(401).json({ 
+          error: 'Microsoft token validation failed',
+          details: error.message 
+        });
       }
     }
 
