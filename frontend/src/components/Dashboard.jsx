@@ -49,7 +49,7 @@ const Dashboard = () => {
       console.error('❌ Dashboard loading error:', error);
       const errorInfo = handleApiError(error)
       toast.error(errorInfo.message)
-      
+
       // Set default empty data to prevent undefined errors
       setDashboardData({
         summary: {
@@ -85,25 +85,25 @@ const Dashboard = () => {
   }
 
   // Extract data with safe defaults
-  const { 
-    summary = {}, 
-    categorySpending = [], 
-    topCategories = [], 
-    recentTransactions = [] 
+  const {
+    summary = {},
+    categorySpending = [],
+    topCategories = [],
+    recentTransactions = []
   } = dashboardData || {}
 
-  console.log('📊 Dashboard data extracted:', { 
-    hasSummary: !!summary, 
+  console.log('📊 Dashboard data extracted:', {
+    hasSummary: !!summary,
     categorySpendingLength: categorySpending?.length,
     topCategoriesLength: topCategories?.length,
-    recentTransactionsLength: recentTransactions?.length 
+    recentTransactionsLength: recentTransactions?.length
   });
 
   // Chart colors
   const COLORS = ['#C6A664', '#D4AF37', '#B8951A', '#A0860F', '#8B7509']
 
   // Prepare data for charts with additional safety checks
-  const categoryData = Array.isArray(topCategories) 
+  const categoryData = Array.isArray(topCategories)
     ? topCategories.map((cat, index) => ({
         name: cat?.category || 'Unknown',
         value: cat?.amount || 0,
@@ -118,7 +118,7 @@ const Dashboard = () => {
       }))
     : []
 
-  console.log('📈 Chart data prepared:', { 
+  console.log('📈 Chart data prepared:', {
     categoryDataLength: categoryData?.length || 0,
     spendingTrendLength: spendingTrend?.length || 0
   });

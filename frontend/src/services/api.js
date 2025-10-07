@@ -60,19 +60,19 @@ checkBackendHealth().then(isHealthy => {
 api.interceptors.request.use(
   (config) => {
     console.log('🔐 API Request interceptor - checking for token...');
-    
+
     // Intentar obtener el token del localStorage
     const authStorage = localStorage.getItem('auth-storage');
-    
+
     if (authStorage) {
       try {
         const authData = JSON.parse(authStorage);
-        console.log('🔍 Auth data found:', { 
-          hasState: !!authData.state, 
+        console.log('🔍 Auth data found:', {
+          hasState: !!authData.state,
           hasToken: !!authData.state?.token,
-          isAuthenticated: authData.state?.isAuthenticated 
+          isAuthenticated: authData.state?.isAuthenticated
         });
-        
+
         if (authData.state?.token && authData.state?.isAuthenticated) {
           config.headers.Authorization = `Bearer ${authData.state.token}`;
           console.log('✅ Authorization header added');
@@ -85,14 +85,14 @@ api.interceptors.request.use(
     } else {
       console.warn('⚠️ No auth storage found');
     }
-    
+
     console.log('📤 API Request:', {
       method: config.method?.toUpperCase(),
       url: config.url,
       hasAuth: !!config.headers.Authorization,
       headers: config.headers
     });
-    
+
     return config;
   },
   (error) => {
@@ -122,20 +122,20 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       console.warn('🔐 Unauthorized request detected - clearing auth and redirecting');
-      
+
       // Limpiar el almacenamiento de autenticación
       localStorage.removeItem('auth-storage');
-      
+
       // Importar y usar el store para hacer logout limpio
       import('../stores/authStore').then(({ default: useAuthStore }) => {
         useAuthStore.getState().logout();
       });
-      
+
       // Mostrar notificación al usuario
       import('react-hot-toast').then(({ default: toast }) => {
         toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
       });
-      
+
       // Redirigir al login después de un breve delay
       setTimeout(() => {
         if (window.location.pathname !== '/login') {
@@ -143,7 +143,7 @@ api.interceptors.response.use(
         }
       }, 1000);
     }
-    
+
     return Promise.reject(error);
   }
 )
@@ -163,7 +163,8 @@ export const graphAPI = {
   syncEmails: () => api.post('/graph/sync-emails'),
   getStatus: () => api.get('/graph/status'),
   getFolders: () => api.get('/graph/folders'),
-  disconnect: () => api.post('/graph/disconnect')
+  disconnect: () => api.post('/graph/disconnect'),
+  testEmailParser: (emailContent) => api.post('/graph/test-email-parser', { emailContent })
 }
 
 // Finance API

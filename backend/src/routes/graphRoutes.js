@@ -6,6 +6,7 @@ const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
 const azureOcrService = require('../services/azureOcrService');
 const aiAnalysisService = require('../services/aiAnalysisService');
+const emailParserService = require('../services/emailParserService');
 
 const router = express.Router();
 
@@ -77,7 +78,7 @@ router.post('/connect', async (req, res) => {
 router.post('/sync-emails', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo email sync data');
@@ -93,14 +94,14 @@ router.post('/sync-emails', async (req, res) => {
             processed: true
           },
           {
-            id: 'demo-email-2', 
+            id: 'demo-email-2',
             subject: 'Transferencia recibida - S/750.00',
             date: new Date(Date.now() - 86400000 * 2).toISOString(),
             processed: true
           },
           {
             id: 'demo-email-3',
-            subject: 'Pago de servicios - S/35.75', 
+            subject: 'Pago de servicios - S/35.75',
             date: new Date(Date.now() - 86400000 * 3).toISOString(),
             processed: true
           }
@@ -151,9 +152,9 @@ router.post('/sync-emails', async (req, res) => {
 
         let emailContent = '';
 
-        // Extract text from email body
+        // Extract content from email body (keeping HTML for better parsing)
         if (message.body.contentType === 'html') {
-          emailContent = message.body.content.replace(/<[^>]*>/g, ''); // Strip HTML
+          emailContent = message.body.content; // Keep HTML for cheerio parsing
         } else {
           emailContent = message.body.content;
         }
@@ -176,40 +177,48 @@ router.post('/sync-emails', async (req, res) => {
           }
         }
 
-        // Analyze with AI to extract transaction data
-        const transactionData = await aiAnalysisService.extractTransactionData(emailContent);
+        // Parse email content using your sophisticated parser
+        console.log('📧 Parsing email content for message:', message.id);
+        const parsedData = emailParserService.parseEmailContent(emailContent);
+        
+        console.log('📊 Parsed data:', parsedData);
 
-        if (transactionData && transactionData.amount) {
+        if (parsedData && parsedData.amount) {
+          // Create transaction from parsed data
+          const transactionData = emailParserService.createTransactionFromEmail(
+            parsedData, 
+            user._id, 
+            {
+              id: message.id,
+              subject: message.subject,
+              receivedDateTime: message.receivedDateTime
+            }
+          );
+
           // Create transaction record
           const transaction = new Transaction({
-            userId: user._id,
+            ...transactionData,
             messageId: message.id,
-            amount: Math.abs(transactionData.amount),
-            type: transactionData.type || 'debit',
-            category: transactionData.category || 'other',
-            subcategory: transactionData.subcategory,
-            merchant: transactionData.merchant,
-            description: transactionData.description || message.subject,
-            channel: transactionData.channel || 'other',
-            operationNumber: transactionData.operationNumber,
-            cardNumber: transactionData.cardNumber,
-            date: transactionData.date || new Date(message.receivedDateTime),
-            balance: transactionData.balance,
-            location: transactionData.location,
             rawText: emailContent,
-            isProcessed: true,
-            aiAnalysis: {
-              confidence: transactionData.confidence || 0.8,
-              insights: transactionData.insights || [],
-              recommendations: transactionData.recommendations || []
-            }
+            isProcessed: true
           });
 
           await transaction.save();
           processedTransactions.push(transaction);
 
+          console.log('✅ Transaction created from email:', {
+            messageId: message.id,
+            amount: transaction.amount,
+            type: transaction.type,
+            description: transaction.description
+          });
+
           // Emit real-time update
-          io.to(`user-${user._id}`).emit('new-transaction', transaction);
+          if (io) {
+            io.to(`user-${user._id}`).emit('new-transaction', transaction);
+          }
+        } else {
+          console.log('⚠️ No valid transaction data found in email:', message.subject);
         }
 
       } catch (messageError) {
@@ -242,11 +251,52 @@ router.post('/sync-emails', async (req, res) => {
   }
 });
 
+// Test email parsing endpoint (for development)
+router.post('/test-email-parser', async (req, res) => {
+  try {
+    const { emailContent } = req.body;
+    
+    if (!emailContent) {
+      return res.status(400).json({ error: 'Email content is required' });
+    }
+    
+    console.log('🧪 Testing email parser with content length:', emailContent.length);
+    
+    // Parse the email content
+    const parsedData = emailParserService.parseEmailContent(emailContent);
+    
+    // Create a demo transaction object
+    const transactionData = emailParserService.createTransactionFromEmail(
+      parsedData,
+      'test-user-id',
+      {
+        id: 'test-email-id',
+        subject: 'Test Email',
+        receivedDateTime: new Date().toISOString()
+      }
+    );
+    
+    res.json({
+      success: true,
+      parsedData,
+      transactionData,
+      message: 'Email parsing completed successfully'
+    });
+    
+  } catch (error) {
+    console.error('Email parser test error:', error);
+    res.status(500).json({ 
+      error: 'Failed to parse email content',
+      details: error.message 
+    });
+  }
+});
+
 // Get user's email folders
 router.get('/folders', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo folders
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo Microsoft Graph folders');
@@ -311,7 +361,7 @@ router.get('/folders', async (req, res) => {
 router.get('/status', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo status
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo Microsoft Graph status');

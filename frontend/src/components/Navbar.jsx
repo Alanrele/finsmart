@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Sun,
-  Moon
+  Moon,
+  FileText
 } from 'lucide-react'
 import useAppStore from '../stores/appStore'
 
@@ -26,6 +27,7 @@ const Navbar = () => {
     { name: 'Análisis', href: '/analysis', icon: TrendingUp },
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
     { name: 'Outlook', href: '/outlook', icon: Mail },
+    { name: 'Email Parser', href: '/email-parser', icon: FileText },
     { name: 'Configuración', href: '/settings', icon: Settings },
   ]
 

@@ -26,6 +26,7 @@ import ConnectivityStatus from './components/ConnectivityStatus'
 import SSLErrorNotification from './components/SSLErrorNotification'
 import DemoModeBanner from './components/DemoModeBanner'
 import AuthStorageDebug from './components/AuthStorageDebug'
+import EmailParserTester from './components/EmailParserTester'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -202,7 +203,7 @@ function App() {
                 scopes: ['User.Read'],
                 account: response.account
               };
-              
+
               const tokenResponse = await instance.acquireTokenSilent(tokenRequest);
               accessToken = tokenResponse.accessToken;
               console.log('🔑 Got real access token from MSAL');
@@ -350,6 +351,7 @@ function App() {
           <Route path="chat" element={<ChatIA />} />
           <Route path="outlook" element={<OutlookConnect />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="email-parser" element={<EmailParserTester />} />
         </Route>
 
         <Route path="*" element={
@@ -390,7 +392,7 @@ function App() {
 
       {/* SSL Error Notification - detecta automáticamente problemas de certificado */}
       <SSLErrorNotification />
-      
+
       {/* Auth Storage Debug - para diagnosticar problemas de tokens */}
       <AuthStorageDebug />
       </div>

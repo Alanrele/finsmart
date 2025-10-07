@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/dashboard', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     console.log('📊 Dashboard endpoint called for user:', userId);
 
     // Check if it's a demo user - return demo data
@@ -198,7 +198,7 @@ router.get('/transactions', [
     }
 
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo transactions data');
@@ -253,14 +253,14 @@ router.get('/transactions', [
       // Apply demo filters
       if (req.query.search && req.query.search.trim() !== '') {
         const searchTerm = req.query.search.toLowerCase();
-        demoTransactions = demoTransactions.filter(t => 
+        demoTransactions = demoTransactions.filter(t =>
           t.description.toLowerCase().includes(searchTerm) ||
           t.category.toLowerCase().includes(searchTerm)
         );
       }
 
       if (req.query.category && req.query.category.trim() !== '') {
-        demoTransactions = demoTransactions.filter(t => 
+        demoTransactions = demoTransactions.filter(t =>
           t.category.toLowerCase() === req.query.category.toLowerCase()
         );
       }
@@ -356,49 +356,49 @@ router.get('/spending/categories', [
     }
 
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo spending categories data');
       return res.json([
-        { 
-          _id: 'Food', 
-          totalAmount: 1200.50, 
+        {
+          _id: 'Food',
+          totalAmount: 1200.50,
           count: 15,
           percentage: 37.5,
           avgAmount: 80.03
         },
-        { 
-          _id: 'Transportation', 
-          totalAmount: 580.25, 
+        {
+          _id: 'Transportation',
+          totalAmount: 580.25,
           count: 8,
           percentage: 18.1,
           avgAmount: 72.53
         },
-        { 
-          _id: 'Entertainment', 
-          totalAmount: 420.80, 
+        {
+          _id: 'Entertainment',
+          totalAmount: 420.80,
           count: 6,
           percentage: 13.1,
           avgAmount: 70.13
         },
-        { 
-          _id: 'Utilities', 
-          totalAmount: 380.30, 
+        {
+          _id: 'Utilities',
+          totalAmount: 380.30,
           count: 4,
           percentage: 11.9,
           avgAmount: 95.08
         },
-        { 
-          _id: 'Shopping', 
-          totalAmount: 320.15, 
+        {
+          _id: 'Shopping',
+          totalAmount: 320.15,
           count: 5,
           percentage: 10.0,
           avgAmount: 64.03
         },
-        { 
-          _id: 'Others', 
-          totalAmount: 296.75, 
+        {
+          _id: 'Others',
+          totalAmount: 296.75,
           count: 7,
           percentage: 9.4,
           avgAmount: 42.39
@@ -513,18 +513,18 @@ router.get('/trends', [
     }
 
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo trends data');
       const currentDate = new Date();
       const demoTrends = [];
-      
+
       // Generate 6 months of demo trend data
       for (let i = 5; i >= 0; i--) {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        
+
         demoTrends.push({
           period: monthKey,
           year: date.getFullYear(),
@@ -539,7 +539,7 @@ router.get('/trends', [
           totalSpending: 2550 + Math.random() * 690
         });
       }
-      
+
       return res.json(demoTrends);
     }
 
@@ -600,14 +600,14 @@ router.get('/summary', [
     }
 
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo summary data');
       const now = new Date();
       const year = parseInt(req.query.year) || now.getFullYear();
       const month = parseInt(req.query.month) || (now.getMonth() + 1);
-      
+
       return res.json({
         period: { year, month },
         summary: {

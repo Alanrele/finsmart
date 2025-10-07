@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: finsmart
+metadata:
+  template: finsmart-pwa@0.0.1-beta
+
+infra:
+  provider: bicep
+  path: infra
+
+services:
+  frontend:
+    project: ./frontend
+    language: js
+    host: containerapp
+    docker:
+      path: ./frontend/Dockerfile
+      context: ./frontend
+      platform: amd64
+
+  backend:
+    project: ./backend
+    language: js
+    host: containerapp
+    docker:
+      path: ./backend/Dockerfile
+      context: ./backend
+      platform: amd64
+
+hooks:
+  predeploy:
+    posix:
+      shell: sh
+      run: |
+        echo "Setting up production environment..."
+        # Copy production environment files
+        cp ./frontend/.env.production ./frontend/.env
+        cp ./backend/.env.production ./backend/.env
+        echo "Environment files configured for production"
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Setting up production environment..."
+        # Copy production environment files
+        Copy-Item "./frontend/.env.production" -Destination "./frontend/.env" -Force
+        Copy-Item "./backend/.env.production" -Destination "./backend/.env" -Force
+        Write-Host "Environment files configured for production"
+
+  postdeploy:
+    posix:
+      shell: sh
+      run: |
+        echo "Deployment completed successfully!"
+        echo "Please manually add the following secrets to Key Vault:"
+        echo "- mongodb-uri"
+        echo "- jwt-secret"
+        echo "- jwt-refresh-secret"
+        echo "- openai-api-key"
+        echo "- graph-client-id"
+        echo "- graph-client-secret"
+        echo "- azure-ocr-endpoint"
+        echo "- azure-ocr-key"
+        echo "- session-secret"
+    windows:
+      shell: pwsh
+      run: |
+        Write-Host "Deployment completed successfully!" -ForegroundColor Green
+        Write-Host "Please manually add the following secrets to Key Vault:" -ForegroundColor Yellow
+        Write-Host "- mongodb-uri" -ForegroundColor Cyan
+        Write-Host "- jwt-secret" -ForegroundColor Cyan
+        Write-Host "- jwt-refresh-secret" -ForegroundColor Cyan
+        Write-Host "- openai-api-key" -ForegroundColor Cyan
+        Write-Host "- graph-client-id" -ForegroundColor Cyan
+        Write-Host "- graph-client-secret" -ForegroundColor Cyan
+        Write-Host "- azure-ocr-endpoint" -ForegroundColor Cyan
+        Write-Host "- azure-ocr-key" -ForegroundColor Cyan
+        Write-Host "- session-secret" -ForegroundColor Cyan

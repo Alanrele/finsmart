@@ -29,8 +29,8 @@ const getRailwayConfig = () => {
   // Development configuration
   return {
     ...baseConfig,
-    apiUrl: 'http://localhost:5001',
-    websocketUrl: 'ws://localhost:5001',
+    apiUrl: 'http://localhost:5000',
+    websocketUrl: 'ws://localhost:5000',
     redirectUri: 'http://localhost:3001/auth/ms-callback'
   };
 };

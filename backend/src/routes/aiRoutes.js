@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/analyze', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo AI analysis data');
@@ -126,7 +126,7 @@ router.post('/chat', [
 
     const { message } = req.body;
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo AI chat response');
@@ -136,9 +136,9 @@ router.post('/chat', [
         "Tus ingresos de $8,500 mensuales te permiten tener un buen margen para inversiones. ¿Has considerado diversificar tu portafolio?",
         "Observo que tu categoría de mayor gasto es comida con $1,200.50. Esto está dentro del rango saludable del 30-40% de gastos totales."
       ];
-      
+
       const randomResponse = demoResponses[Math.floor(Math.random() * demoResponses.length)];
-      
+
       return res.json({
         response: randomResponse,
         confidence: 0.89,
@@ -174,7 +174,7 @@ router.post('/chat', [
 router.get('/insights', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo AI insights data');
@@ -248,7 +248,7 @@ router.get('/insights', async (req, res) => {
 router.get('/recommendations', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo AI recommendations data');
@@ -313,7 +313,7 @@ router.get('/recommendations', async (req, res) => {
 router.get('/predict', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo AI prediction data');
@@ -374,7 +374,7 @@ router.get('/predict', async (req, res) => {
 router.post('/categorize', async (req, res) => {
   try {
     const userId = req.user._id;
-    
+
     // Check if it's a demo user - return demo data
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
       console.log('🎭 Returning demo AI categorization data');

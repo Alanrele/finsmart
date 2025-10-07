@@ -84,11 +84,11 @@ export const createOfflineMode = () => {
   const originalFetch = window.fetch;
   window.fetch = async (url, options) => {
     console.log('🎭 Intercepting API call:', url);
-    
+
     // Verificar si hay un token válido - si lo hay, intentar la llamada real primero
-    const hasValidToken = localStorage.getItem('auth-storage') && 
+    const hasValidToken = localStorage.getItem('auth-storage') &&
                          !localStorage.getItem('auth-storage').includes('demo-token');
-    
+
     if (hasValidToken && !url.includes('/health')) {
       console.log('🔑 Valid token found, trying real API first...');
       try {
@@ -102,7 +102,7 @@ export const createOfflineMode = () => {
         console.log('❌ Real API error, falling back to mock data:', error.message);
       }
     }
-    
+
     // Simular delay de red
     await new Promise(resolve => setTimeout(resolve, 500));    if (url.includes('/api/finance/dashboard')) {
       return new Response(JSON.stringify(mockDashboardData), {

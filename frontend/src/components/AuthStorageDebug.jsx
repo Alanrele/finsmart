@@ -9,7 +9,7 @@ const AuthStorageDebug = () => {
   const refreshData = () => {
     const storage = localStorage.getItem('auth-storage');
     setRawData(storage || 'No data found');
-    
+
     if (storage) {
       try {
         const parsed = JSON.parse(storage);
@@ -67,7 +67,7 @@ const AuthStorageDebug = () => {
           </button>
         </div>
       </div>
-      
+
       <div className="space-y-3 text-xs">
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -84,7 +84,7 @@ const AuthStorageDebug = () => {
             {rawData}
           </pre>
         </div>
-        
+
         {authData && (
           <div>
             <strong>Parsed Data:</strong>
@@ -122,7 +122,7 @@ const AuthStorageDebug = () => {
             </div>
           </div>
         )}
-        
+
         <div className="border-t pt-2">
           <strong>Actions:</strong>
           <div className="flex gap-2 mt-1">
