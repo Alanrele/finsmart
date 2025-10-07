@@ -40,44 +40,61 @@ class SocketService {
     // Configuración específica para Railway (limita WebSockets en plan gratuito)
     const isRailwayProduction = serverUrl.includes('railway.app')
     const transportConfig = isRailwayProduction 
-      ? ['polling', 'websocket'] // Railway: usar polling primero, WebSocket como upgrade
+      ? ['polling'] // Railway: solo polling por estabilidad
       : ['websocket', 'polling'] // Desarrollo: preferir WebSocket
 
     this.socket = io(serverUrl, {
       auth: {
-        token
+        token,
+        userId
       },
       transports: transportConfig,
       // Configuración para manejar problemas de conexión
       timeout: 20000,
       forceNew: true,
       reconnection: true,
-      reconnectionDelay: 2000,
-      reconnectionAttempts: 3,
-      maxReconnectionAttempts: 3,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      maxReconnectionAttempts: 5,
       // Configuración específica para Railway
-      upgrade: !isRailwayProduction, // Deshabilitar upgrade en Railway
+      upgrade: false, // Siempre deshabilitar upgrades
       rememberUpgrade: false,
       // Configuración adicional para Railway
       autoConnect: true,
-      forceBase64: isRailwayProduction
+      forceBase64: isRailwayProduction,
+      // Query params para debugging
+      query: {
+        transport: isRailwayProduction ? 'polling' : 'websocket'
+      }
     })
 
     this.socket.on('connect', () => {
       console.log('✅ Connected to socket server via', this.socket.io.engine.transport.name)
+      console.log('🏠 Joining user room:', userId)
       this.socket.emit('join-user-room', userId)
     })
 
     this.socket.on('disconnect', (reason) => {
       console.log('❌ Disconnected from socket server:', reason)
+      
+      // Auto-reconexión más agresiva para Railway
+      if (isRailwayProduction && reason === 'transport close') {
+        console.log('🔄 Railway transport closed, attempting reconnection...')
+        setTimeout(() => {
+          if (!this.socket?.connected) {
+            this.socket?.connect()
+          }
+        }, 2000)
+      }
     })
 
     this.socket.on('connect_error', (error) => {
       console.error('🔌 Socket connection error:', error.message)
       
       // Manejo específico para Railway
-      if (isRailwayProduction && error.message.includes('websocket')) {
-        console.log('🚀 Railway detected - using polling transport only')
+      if (isRailwayProduction) {
+        console.log('🚀 Railway connection issue - ensuring polling mode')
         this.socket.io.opts.transports = ['polling']
         this.socket.io.opts.upgrade = false
       } else if (error.message.includes('websocket')) {
@@ -98,6 +115,24 @@ class SocketService {
       }
     })
 
+    // Heartbeat para mantener la conexión viva en Railway
+    this.socket.on('connect', () => {
+      if (isRailwayProduction) {
+        this.heartbeatInterval = setInterval(() => {
+          if (this.socket?.connected) {
+            this.socket.emit('ping')
+          }
+        }, 25000) // Ping cada 25 segundos
+      }
+    })
+
+    this.socket.on('disconnect', () => {
+      if (this.heartbeatInterval) {
+        clearInterval(this.heartbeatInterval)
+        this.heartbeatInterval = null
+      }
+    })
+
     // Set up default listeners
     this.setupDefaultListeners()
 
@@ -105,6 +140,11 @@ class SocketService {
   }
 
   disconnect() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval)
+      this.heartbeatInterval = null
+    }
+    
     if (this.socket) {
       this.socket.disconnect()
       this.socket = null

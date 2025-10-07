@@ -195,6 +195,12 @@ io.on('connection', (socket) => {
     console.log(`👤 User ${userId} joined room user-${userId} (socket: ${socket.id})`);
   });
 
+  // Heartbeat para mantener conexiones activas en Railway
+  socket.on('ping', () => {
+    socket.emit('pong');
+    console.log(`💓 Heartbeat from ${socket.id}`);
+  });
+
   socket.on('disconnect', (reason) => {
     console.log(`❌ Socket disconnected: ${socket.id}, reason: ${reason}`);
   });

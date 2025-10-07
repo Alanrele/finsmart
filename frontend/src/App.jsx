@@ -27,6 +27,7 @@ import SSLErrorNotification from './components/SSLErrorNotification'
 import DemoModeBanner from './components/DemoModeBanner'
 import AuthStorageDebug from './components/AuthStorageDebug'
 import EmailParserTester from './components/EmailParserTester'
+import SocketDebugPanel from './components/SocketDebugPanel'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -395,6 +396,9 @@ function App() {
 
       {/* Auth Storage Debug - para diagnosticar problemas de tokens */}
       <AuthStorageDebug />
+
+      {/* Socket Debug Panel - monitorea conexiones en tiempo real */}
+      <SocketDebugPanel />
       </div>
     </div>
   )
