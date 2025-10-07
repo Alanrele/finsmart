@@ -392,20 +392,40 @@ router.get('/status', async (req, res) => {
 // Disconnect Microsoft account
 router.post('/disconnect', async (req, res) => {
   try {
-    await User.findByIdAndUpdate(req.user._id, {
+    console.log('📤 Disconnect request from user:', req.user);
+
+    // Handle demo/Microsoft users differently
+    if (req.user._id === 'demo-user-id' || req.user._id === 'microsoft-user-id') {
+      console.log('🎭 Demo/Microsoft user disconnect - no database operation needed');
+      return res.json({ 
+        message: 'Microsoft account disconnected successfully',
+        demo: true 
+      });
+    }
+
+    // For real users, update the database
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, {
       $unset: {
         accessToken: 1,
         refreshToken: 1,
         tokenExpiry: 1,
         microsoftId: 1
       }
-    });
+    }, { new: true });
 
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log('✅ User disconnected successfully:', updatedUser._id);
     res.json({ message: 'Microsoft account disconnected successfully' });
 
   } catch (error) {
-    console.error('Disconnect error:', error);
-    res.status(500).json({ error: 'Failed to disconnect Microsoft account' });
+    console.error('❌ Disconnect error:', error);
+    res.status(500).json({ 
+      error: 'Failed to disconnect Microsoft account',
+      details: error.message 
+    });
   }
 });
 

@@ -153,18 +153,36 @@ app.get('/api/debug/env', (req, res) => {
 // Serve static files from React build (for production)
 if (process.env.NODE_ENV === 'production') {
   // Serve static files with proper MIME types
-  app.use(express.static(path.join(__dirname, '../public'), {
+  app.use('/assets', express.static(path.join(__dirname, '../public/assets'), {
     maxAge: '1y', // Cache static assets for 1 year
-    setHeaders: (res, path, stat) => {
+    setHeaders: (res, filePath, stat) => {
       // Set proper MIME types for common file extensions
-      if (path.endsWith('.css')) {
-        res.setHeader('Content-Type', 'text/css');
-      } else if (path.endsWith('.js')) {
-        res.setHeader('Content-Type', 'application/javascript');
-      } else if (path.endsWith('.json')) {
-        res.setHeader('Content-Type', 'application/json');
-      } else if (path.endsWith('.woff') || path.endsWith('.woff2')) {
+      if (filePath.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      } else if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      } else if (filePath.endsWith('.json')) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      } else if (filePath.endsWith('.woff') || filePath.endsWith('.woff2')) {
         res.setHeader('Content-Type', 'font/woff2');
+      } else if (filePath.endsWith('.ttf')) {
+        res.setHeader('Content-Type', 'font/ttf');
+      } else if (filePath.endsWith('.png')) {
+        res.setHeader('Content-Type', 'image/png');
+      } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+        res.setHeader('Content-Type', 'image/jpeg');
+      } else if (filePath.endsWith('.svg')) {
+        res.setHeader('Content-Type', 'image/svg+xml');
+      }
+    }
+  }));
+
+  // Serve other static files
+  app.use(express.static(path.join(__dirname, '../public'), {
+    maxAge: '1d', // Cache for 1 day
+    setHeaders: (res, filePath, stat) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
       }
     }
   }));
