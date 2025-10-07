@@ -5,6 +5,35 @@ const aiAnalysisService = require('../services/aiAnalysisService');
 
 const router = express.Router();
 
+// Health check endpoint for AI services
+router.get('/health', async (req, res) => {
+  try {
+    const status = {
+      openai: {
+        configured: !!process.env.OPENAI_API_KEY,
+        available: aiAnalysisService.isOpenAIAvailable(),
+        keyFormat: process.env.OPENAI_API_KEY ? 
+          (process.env.OPENAI_API_KEY.startsWith('sk-') ? 'valid-format' : 'invalid-format') : 
+          'not-configured'
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    res.json({
+      message: 'AI service health check',
+      status,
+      recommendations: status.openai.available ? 
+        'AI services are fully operational' : 
+        'AI services unavailable - check OpenAI API key configuration'
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Health check failed',
+      details: error.message
+    });
+  }
+});
+
 // Analyze financial data
 router.post('/analyze', async (req, res) => {
   try {

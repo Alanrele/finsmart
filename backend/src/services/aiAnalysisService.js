@@ -31,7 +31,19 @@ class AIAnalysisService {
         apiKey: apiKey
       });
 
-      console.log('✅ OpenAI service initialized (validation will happen on first use)');
+      // Test the API key with a minimal request
+      try {
+        await this.openai.models.list();
+        console.log('✅ OpenAI service initialized and API key validated');
+      } catch (testError) {
+        if (testError.status === 401) {
+          console.error('❌ OpenAI API key is invalid or expired. Please update OPENAI_API_KEY in .env file');
+          console.error('   Get a new API key from: https://platform.openai.com/account/api-keys');
+          this.openai = null;
+        } else {
+          console.warn('⚠️ OpenAI API key validation failed, but service will continue:', testError.message);
+        }
+      }
 
     } catch (error) {
       console.warn('⚠️ Failed to initialize OpenAI service. Using fallback analysis only.', error.message);
@@ -41,6 +53,28 @@ class AIAnalysisService {
 
   isOpenAIAvailable() {
     return this.openai !== null && this.isInitialized;
+  }
+
+  handleOpenAIError(error, operation = 'OpenAI operation') {
+    if (error.status === 401) {
+      console.error(`❌ ${operation} failed: Invalid or expired OpenAI API key`);
+      console.error('   Please update OPENAI_API_KEY in .env file');
+      console.error('   Get a new API key from: https://platform.openai.com/account/api-keys');
+      
+      // Disable OpenAI service for future requests
+      this.openai = null;
+      
+      throw new Error(`OpenAI authentication failed: API key is invalid or expired`);
+    } else if (error.status === 429) {
+      console.warn(`⚠️ ${operation} failed: Rate limit exceeded`);
+      throw new Error(`OpenAI rate limit exceeded. Please try again later.`);
+    } else if (error.status === 503) {
+      console.warn(`⚠️ ${operation} failed: OpenAI service unavailable`);
+      throw new Error(`OpenAI service is temporarily unavailable. Please try again later.`);
+    } else {
+      console.error(`❌ ${operation} failed:`, error.message);
+      throw new Error(`${operation} failed: ${error.message}`);
+    }
   }
 
   async extractTransactionData(emailContent) {
@@ -112,7 +146,7 @@ Si no puedes extraer información válida, devuelve null.
 
     } catch (error) {
       console.error('AI transaction extraction error:', error);
-      throw new Error(`Failed to extract transaction data: ${error.message}`);
+      this.handleOpenAIError(error, 'Transaction extraction');
     }
   }
 
