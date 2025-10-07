@@ -161,24 +161,33 @@ api.interceptors.response.use(
             const corruptedToken = authData.state?.token || authData.token;
             
             if (corruptedToken) {
-              // Call backend to clean up the corrupted token
-              fetch('/api/auth/cleanup-corrupted-token', {
+              console.log('🧹 Calling backend cleanup for corrupted token:', corruptedToken.substring(0, 20) + '...');
+              
+              // Call backend to clean up the corrupted token using full API URL
+              fetch(`${API_BASE_URL}/auth/cleanup-corrupted-token`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ token: corruptedToken })
-              }).then(response => response.json())
+              }).then(response => {
+                console.log('🧹 Cleanup response status:', response.status);
+                return response.json();
+              })
                 .then(data => {
                   console.log('🧹 Token cleanup response:', data);
                 })
                 .catch(cleanupError => {
                   console.error('❌ Token cleanup failed:', cleanupError);
                 });
+            } else {
+              console.warn('⚠️ No corrupted token found for cleanup');
             }
           } catch (parseError) {
             console.error('❌ Error parsing auth data for cleanup:', parseError);
           }
+        } else {
+          console.warn('⚠️ No auth storage found for cleanup');
         }
 
         // Show specific error message for JWT issues

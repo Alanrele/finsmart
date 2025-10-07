@@ -332,4 +332,32 @@ router.post('/cleanup-corrupted-token', async (req, res) => {
   }
 });
 
+// Endpoint to clean up ALL corrupted tokens (admin/debug use)
+router.post('/cleanup-all-corrupted-tokens', async (req, res) => {
+  try {
+    console.log('🧹 Manual cleanup of ALL corrupted tokens requested');
+    
+    // Import the tokenCleanup utility
+    const tokenCleanup = require('../utils/tokenCleanup');
+    
+    // Run comprehensive cleanup
+    const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+    
+    console.log(`🧹 Comprehensive cleanup completed: ${cleanedCount} tokens cleaned`);
+    
+    res.json({
+      message: 'Comprehensive token cleanup completed',
+      tokensCleanedUp: cleanedCount,
+      recommendation: 'All users with corrupted tokens should sign in again'
+    });
+    
+  } catch (error) {
+    console.error('❌ Comprehensive cleanup failed:', error);
+    res.status(500).json({
+      error: 'Cleanup failed',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
