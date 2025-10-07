@@ -279,4 +279,57 @@ router.post('/demo-login', async (req, res) => {
   }
 });
 
+// Endpoint to clean up corrupted tokens for a specific user
+router.post('/cleanup-corrupted-token', async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({
+        error: 'Token required',
+        details: 'Please provide the corrupted token to clean up'
+      });
+    }
+
+    console.log('🧹 Manual token cleanup requested for token:', token.substring(0, 20) + '...');
+    
+    // Find and clean up users with this corrupted token
+    const result = await User.updateMany(
+      { accessToken: token },
+      { 
+        $unset: { 
+          accessToken: 1,
+          refreshToken: 1,
+          tokenExpiry: 1
+        },
+        lastSync: new Date(),
+        syncEnabled: false
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log(`🧹 Cleaned up corrupted token for ${result.modifiedCount} user(s)`);
+      
+      res.json({
+        message: 'Corrupted token cleaned up successfully',
+        usersAffected: result.modifiedCount,
+        recommendation: 'Please sign in again to get a new valid token'
+      });
+    } else {
+      res.json({
+        message: 'No users found with this token',
+        usersAffected: 0,
+        recommendation: 'Token may have already been cleaned up'
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Token cleanup error:', error);
+    res.status(500).json({
+      error: 'Failed to cleanup corrupted token',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;

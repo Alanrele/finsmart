@@ -39,6 +39,18 @@ const authMiddleware = async (req, res, next) => {
         });
       }
 
+      // Additional pre-validation for Microsoft tokens
+      // Check for common patterns that indicate corruption
+      if (token.length < 20 || token.includes(' ') || token.includes('\n') || token.includes('\r')) {
+        console.error('❌ Suspicious token format detected - likely corrupted');
+        await cleanupCorruptedToken(token);
+        return res.status(401).json({
+          error: 'Suspicious token format',
+          details: 'Token appears to be corrupted. Please re-authenticate.',
+          code: 'TOKEN_FORMAT_SUSPICIOUS'
+        });
+      }
+
       // Microsoft Graph tokens can have different formats (not always JWT)
       // Skip JWT format validation for Microsoft tokens
       console.log('🔍 Microsoft token format validation passed');
@@ -103,13 +115,33 @@ const authMiddleware = async (req, res, next) => {
       } catch (error) {
         console.error('❌ Microsoft token validation failed:', error);
 
-        // Check for specific JWT malformed error
+        // Check for specific JWT malformed error from Microsoft
         if (error.message && error.message.includes('JWT is not well formed')) {
-          console.error('🔑 JWT malformed error detected');
+          console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
+          
+          // Clean up the corrupted token immediately
+          await cleanupCorruptedToken(token);
+          
           return res.status(401).json({
-            error: 'Authentication token malformed',
-            details: 'Your authentication token is corrupted. Please sign out and sign in again.',
-            code: 'JWT_MALFORMED'
+            error: 'Authentication token corrupted',
+            details: 'Microsoft rejected the token as malformed. Your authentication token has been cleaned up. Please sign in again.',
+            code: 'JWT_MALFORMED_BY_MICROSOFT',
+            action: 'REAUTHENTICATE_REQUIRED'
+          });
+        }
+
+        // Check for invalid authentication token error
+        if (error.code === 'InvalidAuthenticationToken') {
+          console.error('🔑 Invalid authentication token - cleaning up');
+          
+          // Clean up the invalid token
+          await cleanupCorruptedToken(token);
+          
+          return res.status(401).json({
+            error: 'Invalid authentication token',
+            details: 'Microsoft rejected the authentication token. Please sign in again.',
+            code: 'INVALID_AUTH_TOKEN_BY_MICROSOFT',
+            action: 'REAUTHENTICATE_REQUIRED'
           });
         }
 
@@ -134,8 +166,9 @@ const authMiddleware = async (req, res, next) => {
 
         return res.status(401).json({
           error: 'Microsoft token validation failed',
-          details: 'Token may have expired. Please log in again.',
-          originalError: error.message
+          details: 'Token validation failed. Please sign in again.',
+          code: 'MICROSOFT_VALIDATION_FAILED',
+          action: 'REAUTHENTICATE_REQUIRED'
         });
       }
     }

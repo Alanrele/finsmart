@@ -140,7 +140,57 @@ api.interceptors.response.use(
     });
 
     if (error.response?.status === 401) {
-      console.warn('🔐 Unauthorized request detected - clearing auth and redirecting');
+      console.warn('🔐 Unauthorized request detected');
+      
+      // Check for specific JWT malformed errors
+      const errorData = error.response?.data;
+      const isJWTMalformed = 
+        errorData?.code === 'JWT_MALFORMED' || 
+        errorData?.code === 'JWT_MALFORMED_BY_MICROSOFT' ||
+        errorData?.code === 'INVALID_AUTH_TOKEN_BY_MICROSOFT' ||
+        errorData?.message?.includes('JWT is not well formed');
+
+      if (isJWTMalformed) {
+        console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
+        
+        // Get the corrupted token for cleanup
+        const authStorage = localStorage.getItem('auth-storage');
+        if (authStorage) {
+          try {
+            const authData = JSON.parse(authStorage);
+            const corruptedToken = authData.state?.token || authData.token;
+            
+            if (corruptedToken) {
+              // Call backend to clean up the corrupted token
+              fetch('/api/auth/cleanup-corrupted-token', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ token: corruptedToken })
+              }).then(response => response.json())
+                .then(data => {
+                  console.log('🧹 Token cleanup response:', data);
+                })
+                .catch(cleanupError => {
+                  console.error('❌ Token cleanup failed:', cleanupError);
+                });
+            }
+          } catch (parseError) {
+            console.error('❌ Error parsing auth data for cleanup:', parseError);
+          }
+        }
+
+        // Show specific error message for JWT issues
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.error('Token de autenticación corrupto. Limpiando automáticamente...');
+        });
+      } else {
+        // Show general session expired message
+        import('react-hot-toast').then(({ default: toast }) => {
+          toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        });
+      }
 
       // Limpiar el almacenamiento de autenticación
       localStorage.removeItem('auth-storage');
@@ -148,11 +198,6 @@ api.interceptors.response.use(
       // Importar y usar el store para hacer logout limpio
       import('../stores/authStore').then(({ default: useAuthStore }) => {
         useAuthStore.getState().logout();
-      });
-
-      // Mostrar notificación al usuario
-      import('react-hot-toast').then(({ default: toast }) => {
-        toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
       });
 
       // Redirigir al login después de un breve delay
@@ -174,7 +219,8 @@ export const authAPI = {
   verify: () => api.get('/auth/verify'),
   microsoftCallback: (data) => api.post('/auth/microsoft/callback', data),
   refresh: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
-  demoLogin: () => api.post('/auth/demo-login')
+  demoLogin: () => api.post('/auth/demo-login'),
+  cleanupCorruptedToken: (token) => api.post('/auth/cleanup-corrupted-token', { token })
 }
 
 // Graph API
