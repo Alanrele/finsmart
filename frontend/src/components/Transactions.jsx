@@ -5,6 +5,7 @@ import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
 import TransactionDetailModal from './TransactionDetailModal'
+import { formatCurrency, formatCurrencyAuto } from '../utils/formatters'
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([])
@@ -223,11 +224,11 @@ const Transactions = () => {
                       : 'text-red-600'
                   }`}>
                     {transaction.type === 'credit' || transaction.type === 'deposit' ? '+' : '-'}
-                    S/ {transaction.amount.toLocaleString()}
+                    {formatCurrencyAuto(transaction.amount)}
                   </p>
                   {transaction.balance && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Saldo: S/ {transaction.balance.toLocaleString()}
+                      Saldo: {formatCurrencyAuto(transaction.balance)}
                     </p>
                   )}
                 </div>

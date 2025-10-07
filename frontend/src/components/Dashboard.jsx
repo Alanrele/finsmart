@@ -30,6 +30,7 @@ import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
 import EmailSyncControl from './EmailSyncControl'
+import { formatCurrency, formatCurrencyAuto, formatNumber, formatPercentage } from '../utils/formatters'
 
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore()
@@ -160,7 +161,7 @@ const Dashboard = () => {
                 Gasto Total
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                S/ {summary?.totalSpending?.toLocaleString() || '0'}
+                {formatCurrencyAuto(summary?.totalSpending || 0)}
               </p>
               <div className="flex items-center mt-2">
                 {summary?.spendingChangePercentage >= 0 ? (
@@ -171,7 +172,7 @@ const Dashboard = () => {
                 <span className={`text-sm ml-1 ${
                   summary?.spendingChangePercentage >= 0 ? 'text-red-500' : 'text-green-500'
                 }`}>
-                  {Math.abs(summary?.spendingChangePercentage || 0).toFixed(1)}%
+                  {formatPercentage(summary?.spendingChangePercentage || 0)}
                 </span>
               </div>
             </div>
@@ -194,7 +195,7 @@ const Dashboard = () => {
                 Ingresos
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                S/ {summary?.totalIncome?.toLocaleString() || '0'}
+                {formatCurrencyAuto(summary?.totalIncome || 0)}
               </p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-4 h-4 text-green-500" />
@@ -224,7 +225,7 @@ const Dashboard = () => {
               <p className={`text-2xl font-bold ${
                 (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
-                S/ {summary?.balance?.toLocaleString() || '0'}
+                {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrencyAuto(summary?.balance || 0)}
               </p>
               <div className="flex items-center mt-2">
                 <Target className="w-4 h-4 text-gray-500" />
@@ -301,7 +302,7 @@ const Dashboard = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => `S/ ${value.toLocaleString()}`} />
+                <Tooltip formatter={(value) => formatCurrency(value)} />
               </RechartsPieChart>
             </ResponsiveContainer>
           ) : (
@@ -345,7 +346,7 @@ const Dashboard = () => {
                       : 'text-red-600'
                   }`}>
                     {transaction.type === 'credit' || transaction.type === 'deposit' ? '+' : '-'}
-                    S/ {transaction.amount.toLocaleString()}
+                    {formatCurrencyAuto(transaction.amount)}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
                     {transaction.category}
@@ -376,8 +377,8 @@ const Dashboard = () => {
             <LineChart data={spendingTrend}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
-              <YAxis formatter={(value) => `S/ ${value}`} />
-              <Tooltip formatter={(value) => [`S/ ${value.toLocaleString()}`, 'Gasto']} />
+              <YAxis formatter={(value) => `S/ ${formatNumber(value)}`} />
+              <Tooltip formatter={(value) => [formatCurrency(value), 'Gasto']} />
               <Line
                 type="monotone"
                 dataKey="amount"

@@ -14,26 +14,13 @@ import {
   Building,
   User
 } from 'lucide-react'
+import { formatCurrency, formatDateTime } from '../utils/formatters'
 
 const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
   if (!transaction) return null
 
   const formatDate = (date) => {
-    return new Date(date).toLocaleDateString('es-PE', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-PE', {
-      style: 'currency',
-      currency: 'PEN'
-    }).format(amount)
+    return formatDateTime(date)
   }
 
   const getTransactionTypeColor = (type) => {
