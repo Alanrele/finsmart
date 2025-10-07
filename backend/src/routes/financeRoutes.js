@@ -106,11 +106,18 @@ router.get('/dashboard', async (req, res) => {
     let totalIncome = 0;
 
     currentMonthTransactions.forEach(transaction => {
+      // Validar y limpiar el monto de la transacción
+      const amount = Number(transaction.amount) || 0;
+      const validAmount = isNaN(amount) ? 0 : Math.abs(amount);
+      
+      // Limitar montos extremadamente grandes (más de 1 millón)
+      const clampedAmount = Math.min(validAmount, 1000000);
+      
       if (transaction.type === 'credit' || transaction.type === 'deposit') {
-        totalIncome += transaction.amount;
+        totalIncome += clampedAmount;
       } else {
-        totalSpending += transaction.amount;
-        categorySpending[transaction.category] = (categorySpending[transaction.category] || 0) + transaction.amount;
+        totalSpending += clampedAmount;
+        categorySpending[transaction.category] = (categorySpending[transaction.category] || 0) + clampedAmount;
       }
     });
 
@@ -145,14 +152,25 @@ router.get('/dashboard', async (req, res) => {
     // Calculate balance
     const balance = totalIncome - totalSpending;
 
+    // Redondear todos los valores para evitar problemas de precisión
+    const roundToTwo = (num) => Math.round(num * 100) / 100;
+
+    // Log para debugging
+    console.log('📊 Dashboard summary:', {
+      totalSpending: roundToTwo(totalSpending),
+      totalIncome: roundToTwo(totalIncome),
+      balance: roundToTwo(balance),
+      transactionCount: currentMonthTransactions.length
+    });
+
     res.json({
       summary: {
-        totalSpending,
-        totalIncome,
-        balance,
+        totalSpending: roundToTwo(totalSpending),
+        totalIncome: roundToTwo(totalIncome),
+        balance: roundToTwo(balance),
         transactionCount: currentMonthTransactions.length,
-        spendingChange,
-        spendingChangePercentage: Math.round(spendingChangePercentage * 100) / 100
+        spendingChange: roundToTwo(spendingChange),
+        spendingChangePercentage: roundToTwo(spendingChangePercentage)
       },
       categorySpending,
       topCategories,

@@ -12,8 +12,8 @@ router.get('/health', async (req, res) => {
       openai: {
         configured: !!process.env.OPENAI_API_KEY,
         available: aiAnalysisService.isOpenAIAvailable(),
-        keyFormat: process.env.OPENAI_API_KEY ? 
-          (process.env.OPENAI_API_KEY.startsWith('sk-') ? 'valid-format' : 'invalid-format') : 
+        keyFormat: process.env.OPENAI_API_KEY ?
+          (process.env.OPENAI_API_KEY.startsWith('sk-') ? 'valid-format' : 'invalid-format') :
           'not-configured'
       },
       timestamp: new Date().toISOString()
@@ -22,8 +22,8 @@ router.get('/health', async (req, res) => {
     res.json({
       message: 'AI service health check',
       status,
-      recommendations: status.openai.available ? 
-        'AI services are fully operational' : 
+      recommendations: status.openai.available ?
+        'AI services are fully operational' :
         'AI services unavailable - check OpenAI API key configuration'
     });
   } catch (error) {

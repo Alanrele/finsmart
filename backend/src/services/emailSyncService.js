@@ -138,7 +138,7 @@ class EmailSyncService {
             .orderby('receivedDateTime desc')
             .top(20)
             .get();
-          
+
           // Filter BCP emails manually
           if (result.value) {
             const bcpDomains = ['@bcp.com.pe'];
@@ -150,7 +150,7 @@ class EmailSyncService {
           }
           return result;
         },
-        
+
         // Fallback 2: Minimal query without date filter
         async () => {
           console.log('🔍 Executing minimal query without date filter...');
@@ -160,12 +160,12 @@ class EmailSyncService {
             .orderby('receivedDateTime desc')
             .top(10)
             .get();
-          
+
           // Filter both by date and BCP manually
           if (result.value) {
             const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
             const bcpDomains = ['@bcp.com.pe'];
-            
+
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
@@ -177,7 +177,7 @@ class EmailSyncService {
           }
           return result;
         },
-        
+
         // Fallback 3: Absolute minimal query
         async () => {
           console.log('🔍 Executing absolute minimal query...');
@@ -185,12 +185,12 @@ class EmailSyncService {
             .api('/me/messages')
             .top(5)
             .get();
-          
+
           // Filter everything manually
           if (result.value) {
             const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
             const bcpDomains = ['@bcp.com.pe'];
-            
+
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
@@ -313,17 +313,17 @@ class EmailSyncService {
 
     } catch (error) {
       GraphErrorHandler.logError(error, `syncUserEmails for ${user.email}`);
-      
+
       const errorInfo = GraphErrorHandler.formatErrorForUser(error);
       console.log(`📊 Error category: ${errorInfo.type} - ${errorInfo.message}`);
-      
+
       // Handle authentication errors by disabling sync
       if (GraphErrorHandler.isAuthError(error)) {
         console.log(`🔒 Disabling sync for user ${user.email} due to authentication error`);
         user.syncEnabled = false;
         await user.save();
       }
-      
+
       throw error;
     }
   }

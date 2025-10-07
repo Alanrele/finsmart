@@ -30,7 +30,7 @@ import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
 import EmailSyncControl from './EmailSyncControl'
-import { formatCurrency, formatCurrencyAuto, formatNumber, formatPercentage } from '../utils/formatters'
+import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters'
 
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore()
@@ -161,7 +161,7 @@ const Dashboard = () => {
                 Gasto Total
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrencyAuto(summary?.totalSpending || 0)}
+                {formatCurrencyUltraCompact(summary?.totalSpending || 0)}
               </p>
               <div className="flex items-center mt-2">
                 {summary?.spendingChangePercentage >= 0 ? (
@@ -195,7 +195,7 @@ const Dashboard = () => {
                 Ingresos
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrencyAuto(summary?.totalIncome || 0)}
+                {formatCurrencyUltraCompact(summary?.totalIncome || 0)}
               </p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-4 h-4 text-green-500" />
@@ -225,7 +225,7 @@ const Dashboard = () => {
               <p className={`text-2xl font-bold ${
                 (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
-                {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrencyAuto(summary?.balance || 0)}
+                {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrencyUltraCompact(summary?.balance || 0)}
               </p>
               <div className="flex items-center mt-2">
                 <Target className="w-4 h-4 text-gray-500" />

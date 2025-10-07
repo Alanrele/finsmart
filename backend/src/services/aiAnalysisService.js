@@ -60,10 +60,10 @@ class AIAnalysisService {
       console.error(`❌ ${operation} failed: Invalid or expired OpenAI API key`);
       console.error('   Please update OPENAI_API_KEY in .env file');
       console.error('   Get a new API key from: https://platform.openai.com/account/api-keys');
-      
+
       // Disable OpenAI service for future requests
       this.openai = null;
-      
+
       throw new Error(`OpenAI authentication failed: API key is invalid or expired`);
     } else if (error.status === 429) {
       console.warn(`⚠️ ${operation} failed: Rate limit exceeded`);

@@ -1,11 +1,11 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  X, 
-  Calendar, 
-  DollarSign, 
-  Tag, 
-  MapPin, 
+import {
+  X,
+  Calendar,
+  DollarSign,
+  Tag,
+  MapPin,
   CreditCard,
   Hash,
   Clock,

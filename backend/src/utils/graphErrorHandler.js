@@ -10,11 +10,11 @@ class GraphErrorHandler {
     console.log(`   Code: ${error.code || 'Unknown'}`);
     console.log(`   Status: ${error.statusCode || 'Unknown'}`);
     console.log(`   Message: ${error.message || 'No message'}`);
-    
+
     if (error.requestId) {
       console.log(`   Request ID: ${error.requestId}`);
     }
-    
+
     if (error.headers) {
       console.log(`   Headers: ${JSON.stringify(Object.fromEntries(error.headers))}`);
     }
@@ -27,10 +27,10 @@ class GraphErrorHandler {
       'InternalServerError',
       'RequestTimeout'
     ];
-    
+
     const retryableStatuses = [429, 500, 502, 503, 504];
-    
-    return retryableCodes.includes(error.code) || 
+
+    return retryableCodes.includes(error.code) ||
            retryableStatuses.includes(error.statusCode);
   }
 
@@ -41,15 +41,15 @@ class GraphErrorHandler {
       'Unauthorized',
       'TokenExpired'
     ];
-    
+
     const authStatuses = [401, 403];
-    
-    return authCodes.includes(error.code) || 
+
+    return authCodes.includes(error.code) ||
            authStatuses.includes(error.statusCode);
   }
 
   static isComplexityError(error) {
-    return error.code === 'InefficientFilter' || 
+    return error.code === 'InefficientFilter' ||
            error.message?.toLowerCase().includes('too complex');
   }
 
@@ -67,7 +67,7 @@ class GraphErrorHandler {
 
   static formatErrorForUser(error) {
     const category = this.getErrorCategory(error);
-    
+
     switch (category) {
       case 'authentication':
         return {
@@ -76,7 +76,7 @@ class GraphErrorHandler {
           details: 'Su sesión de Microsoft ha expirado. Por favor, vuelva a conectar su cuenta.',
           action: 'reconnect'
         };
-        
+
       case 'complexity':
         return {
           type: 'complexity',
@@ -84,7 +84,7 @@ class GraphErrorHandler {
           details: 'Microsoft Graph está usando consultas simplificadas para evitar problemas de complejidad.',
           action: 'automatic'
         };
-        
+
       case 'retryable':
         return {
           type: 'temporary',
@@ -92,7 +92,7 @@ class GraphErrorHandler {
           details: 'Microsoft Graph está experimentando problemas temporales. Reintentando automáticamente.',
           action: 'retry'
         };
-        
+
       default:
         return {
           type: 'unknown',
@@ -105,7 +105,7 @@ class GraphErrorHandler {
 
   static async executeWithFallback(primaryQuery, fallbackQueries = []) {
     const maxRetries = 3;
-    
+
     // Try primary query with retries
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
@@ -115,31 +115,31 @@ class GraphErrorHandler {
         return result;
       } catch (error) {
         this.logError(error, 'Primary Query');
-        
+
         if (this.isComplexityError(error)) {
           console.log('⚠️ Complexity error detected, switching to fallback strategies...');
           break; // Don't retry complexity errors, go straight to fallbacks
         }
-        
+
         if (this.isAuthError(error)) {
           console.log('🔒 Authentication error detected, cannot retry');
           throw error; // Auth errors can't be fixed with retries
         }
-        
+
         if (this.isRetryableError(error) && attempt < maxRetries - 1) {
           const delay = this.getRetryDelay(attempt);
           console.log(`⏳ Retrying in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
-        
+
         if (attempt === maxRetries - 1) {
           console.log('❌ Primary query failed after all retries, trying fallbacks...');
           break;
         }
       }
     }
-    
+
     // Try fallback queries
     for (let i = 0; i < fallbackQueries.length; i++) {
       try {
@@ -149,18 +149,18 @@ class GraphErrorHandler {
         return result;
       } catch (error) {
         this.logError(error, `Fallback Query ${i + 1}`);
-        
+
         if (this.isAuthError(error)) {
           throw error; // Auth errors can't be fixed with different queries
         }
-        
+
         if (i === fallbackQueries.length - 1) {
           console.log('❌ All fallback queries failed');
           throw error;
         }
       }
     }
-    
+
     throw new Error('All queries failed');
   }
 }

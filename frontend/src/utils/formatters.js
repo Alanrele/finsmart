@@ -14,7 +14,7 @@ const CURRENCY = 'PEN'
  */
 export const formatCurrency = (amount, showSign = false) => {
   if (amount == null || isNaN(amount)) return 'S/ 0.00'
-  
+
   const absAmount = Math.abs(amount)
   const formatted = new Intl.NumberFormat(LOCALE, {
     style: 'currency',
@@ -22,11 +22,11 @@ export const formatCurrency = (amount, showSign = false) => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(absAmount)
-  
+
   if (showSign) {
     return amount >= 0 ? `+${formatted}` : `-${formatted}`
   }
-  
+
   return formatted
 }
 
@@ -37,9 +37,9 @@ export const formatCurrency = (amount, showSign = false) => {
  */
 export const formatNumber = (num) => {
   if (num == null || isNaN(num)) return '0'
-  
+
   const absNum = Math.abs(num)
-  
+
   if (absNum >= 1000000000) {
     return (absNum / 1000000000).toFixed(1) + 'B'
   } else if (absNum >= 1000000) {
@@ -47,7 +47,7 @@ export const formatNumber = (num) => {
   } else if (absNum >= 1000) {
     return (absNum / 1000).toFixed(1) + 'K'
   }
-  
+
   return absNum.toLocaleString(LOCALE)
 }
 
@@ -58,17 +58,20 @@ export const formatNumber = (num) => {
  */
 export const formatCurrencyCompact = (amount) => {
   if (amount == null || isNaN(amount)) return 'S/ 0.00'
-  
+
   const absAmount = Math.abs(amount)
-  
+
   if (absAmount >= 1000000000) {
-    return `S/ ${(absAmount / 1000000000).toFixed(1)}B`
+    const billions = absAmount / 1000000000
+    return `S/ ${billions < 10 ? billions.toFixed(2) : billions.toFixed(1)}B`
   } else if (absAmount >= 1000000) {
-    return `S/ ${(absAmount / 1000000).toFixed(1)}M`
+    const millions = absAmount / 1000000
+    return `S/ ${millions < 10 ? millions.toFixed(2) : millions.toFixed(1)}M`
   } else if (absAmount >= 1000) {
-    return `S/ ${(absAmount / 1000).toFixed(1)}K`
+    const thousands = absAmount / 1000
+    return `S/ ${thousands < 10 ? thousands.toFixed(1) : thousands.toFixed(0)}K`
   }
-  
+
   return formatCurrency(amount)
 }
 
@@ -80,7 +83,7 @@ export const formatCurrencyCompact = (amount) => {
  */
 export const formatPercentage = (percent, decimals = 1) => {
   if (percent == null || isNaN(percent)) return '0.0%'
-  
+
   return `${Math.abs(percent).toFixed(decimals)}%`
 }
 
@@ -91,11 +94,11 @@ export const formatPercentage = (percent, decimals = 1) => {
  */
 export const formatDate = (date) => {
   if (!date) return 'Sin fecha'
-  
+
   const dateObj = new Date(date)
-  
+
   if (isNaN(dateObj.getTime())) return 'Fecha inválida'
-  
+
   return dateObj.toLocaleDateString(LOCALE, {
     year: 'numeric',
     month: 'long',
@@ -110,11 +113,11 @@ export const formatDate = (date) => {
  */
 export const formatDateTime = (date) => {
   if (!date) return 'Sin fecha'
-  
+
   const dateObj = new Date(date)
-  
+
   if (isNaN(dateObj.getTime())) return 'Fecha inválida'
-  
+
   return dateObj.toLocaleDateString(LOCALE, {
     weekday: 'long',
     year: 'numeric',
@@ -131,7 +134,7 @@ export const formatDateTime = (date) => {
  * @returns {boolean} True si es muy grande
  */
 export const isLargeNumber = (amount) => {
-  return Math.abs(amount) >= 100000 // 100K+
+  return Math.abs(amount) >= 10000 // 10K+ - Umbral más bajo para mejor legibilidad
 }
 
 /**
@@ -140,8 +143,36 @@ export const isLargeNumber = (amount) => {
  * @returns {string} Cantidad formateada apropiadamente
  */
 export const formatCurrencyAuto = (amount) => {
-  if (isLargeNumber(amount)) {
-    return formatCurrencyCompact(amount)
+  if (amount == null || isNaN(amount)) return 'S/ 0.00'
+  
+  // Redondear números con muchos decimales para evitar problemas de precisión
+  const roundedAmount = Math.round(amount * 100) / 100
+  
+  if (isLargeNumber(roundedAmount)) {
+    return formatCurrencyCompact(roundedAmount)
   }
-  return formatCurrency(amount)
+  return formatCurrency(roundedAmount)
+}
+
+/**
+ * Formatea números extremadamente grandes de manera ultra-compacta
+ * @param {number} amount - Cantidad a formatear
+ * @returns {string} Cantidad formateada de manera ultra-compacta
+ */
+export const formatCurrencyUltraCompact = (amount) => {
+  if (amount == null || isNaN(amount)) return 'S/ 0'
+
+  const absAmount = Math.abs(amount)
+
+  if (absAmount >= 1000000000000) { // Trillones
+    return `S/ ${(absAmount / 1000000000000).toFixed(1)}T`
+  } else if (absAmount >= 1000000000) { // Miles de millones
+    return `S/ ${(absAmount / 1000000000).toFixed(1)}B`
+  } else if (absAmount >= 1000000) { // Millones
+    return `S/ ${(absAmount / 1000000).toFixed(1)}M`
+  } else if (absAmount >= 1000) { // Miles
+    return `S/ ${(absAmount / 1000).toFixed(0)}K`
+  }
+
+  return `S/ ${Math.round(absAmount)}`
 }
