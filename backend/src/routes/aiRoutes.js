@@ -76,19 +76,68 @@ router.post('/analyze', async (req, res) => {
     }
 
     const filter = { userId, ...dateFilter };
-    if (category) {
+    if (category && category !== 'all') {
       filter.category = category;
     }
 
+    console.log('🔍 AI Analyze - Searching with filter:', JSON.stringify(filter, null, 2));
+    console.log('🔍 AI Analyze - User ID:', userId);
+    console.log('🔍 AI Analyze - Date filter:', JSON.stringify(dateFilter, null, 2));
+
     const transactions = await Transaction.find(filter).sort({ date: -1 });
 
+    console.log('📊 AI Analyze - Found transactions:', transactions.length);
+    if (transactions.length > 0) {
+      console.log('📅 AI Analyze - Date range of found transactions:', {
+        oldest: transactions[transactions.length - 1].date,
+        newest: transactions[0].date
+      });
+    }
+
     if (transactions.length === 0) {
+      console.log('⚠️ AI Analyze - No transactions found, trying broader search...');
+      
+      // Try to find any transactions for this user regardless of date
+      const allUserTransactions = await Transaction.find({ userId }).sort({ date: -1 }).limit(10);
+      console.log('📊 AI Analyze - Total user transactions found:', allUserTransactions.length);
+      
+      if (allUserTransactions.length > 0) {
+        console.log('📅 AI Analyze - User has transactions but not in selected period');
+        console.log('📅 AI Analyze - Latest transaction date:', allUserTransactions[0].date);
+        console.log('📅 AI Analyze - Oldest checked transaction date:', allUserTransactions[allUserTransactions.length - 1].date);
+        
+        return res.json({
+          message: `No transactions found for ${period}. You have ${allUserTransactions.length} transactions in other periods.`,
+          analysis: {
+            summary: `No financial data available for ${period}, but you have ${allUserTransactions.length} transactions in other periods.`,
+            insights: [`Try selecting a different time period. Your latest transaction was on ${allUserTransactions[0].date.toDateString()}.`],
+            recommendations: [
+              {
+                type: 'period',
+                title: 'Adjust time period',
+                description: `No transactions found for ${period}. Try selecting 'year' or 'all time' to see your data.`,
+                action: 'Change the analysis period to see your transaction history'
+              }
+            ],
+            spending: { total: 0, categories: [] },
+            trends: []
+          }
+        });
+      }
+      
       return res.json({
         message: 'No transactions found for analysis',
         analysis: {
-          summary: 'No financial data available for the selected period.',
-          insights: [],
-          recommendations: [],
+          summary: 'No financial data available. Connect your bank account or sync your emails to start tracking.',
+          insights: ['Start by connecting your Microsoft account and enabling email sync to import your BCP transactions.'],
+          recommendations: [
+            {
+              type: 'setup',
+              title: 'Set up transaction sync',
+              description: 'Connect your email to automatically import BCP transaction notifications.',
+              action: 'Go to Settings and enable Email Sync'
+            }
+          ],
           spending: { total: 0, categories: [] },
           trends: []
         }
@@ -96,7 +145,39 @@ router.post('/analyze', async (req, res) => {
     }
 
     // Generate AI analysis
-    const analysis = await aiAnalysisService.generateFinancialAnalysis(transactions, period);
+    let analysis;
+    try {
+      analysis = await aiAnalysisService.generateFinancialAnalysis(transactions, period);
+    } catch (aiError) {
+      console.warn('AI analysis failed, using basic analysis:', aiError.message);
+      // Fallback to basic analysis
+      const totalSpending = transactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      const categories = transactions.reduce((acc, t) => {
+        acc[t.category] = (acc[t.category] || 0) + Math.abs(t.amount);
+        return acc;
+      }, {});
+
+      analysis = {
+        summary: `Found ${transactions.length} transactions with total of ${totalSpending.toLocaleString()} PEN`,
+        insights: [
+          `You have ${transactions.length} transactions in the selected ${period}`,
+          `Your most active category is ${Object.keys(categories).sort((a, b) => categories[b] - categories[a])[0] || 'other'}`
+        ],
+        recommendations: [
+          {
+            type: 'spending',
+            title: 'Review your spending patterns',
+            description: 'Analyze your transaction categories to find optimization opportunities',
+            action: 'Check which categories have the highest spending'
+          }
+        ],
+        spending: {
+          total: totalSpending,
+          categories: Object.entries(categories).map(([name, amount]) => ({ name, amount }))
+        },
+        trends: []
+      };
+    }
 
     res.json({
       message: 'Financial analysis completed',
