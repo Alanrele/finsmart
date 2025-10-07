@@ -119,8 +119,8 @@ const Dashboard = () => {
     : []
 
   console.log('📈 Chart data prepared:', { 
-    categoryDataLength: categoryData.length,
-    spendingTrendLength: spendingTrend.length 
+    categoryDataLength: categoryData?.length || 0,
+    spendingTrendLength: spendingTrend?.length || 0
   });
 
   return (

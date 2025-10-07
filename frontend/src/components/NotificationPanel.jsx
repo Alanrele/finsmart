@@ -52,7 +52,7 @@ const NotificationPanel = () => {
         className="fixed top-4 right-4 lg:hidden bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 z-40"
       >
         <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-        {notifications.length > 0 && (
+        {notifications && notifications.length > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {notifications.length}
           </span>
@@ -124,7 +124,7 @@ const NotificationPanel = () => {
                     Notificaciones
                   </h2>
                   <div className="flex items-center space-x-2">
-                    {notifications.length > 0 && (
+                    {notifications && notifications.length > 0 && (
                       <button
                         onClick={clearNotifications}
                         className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -143,7 +143,7 @@ const NotificationPanel = () => {
               </div>
 
               <div className="p-4">
-                {notifications.length === 0 ? (
+                {!notifications || notifications.length === 0 ? (
                   <div className="text-center py-8">
                     <Bell className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                     <p className="text-gray-500 dark:text-gray-400">
