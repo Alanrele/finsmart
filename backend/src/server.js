@@ -119,10 +119,31 @@ app.get('/api/debug/env', (req, res) => {
 
 // Serve static files from React build (for production)
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../public')));
+  // Serve static files with proper MIME types
+  app.use(express.static(path.join(__dirname, '../public'), {
+    maxAge: '1y', // Cache static assets for 1 year
+    setHeaders: (res, path, stat) => {
+      // Set proper MIME types for common file extensions
+      if (path.endsWith('.css')) {
+        res.setHeader('Content-Type', 'text/css');
+      } else if (path.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+      } else if (path.endsWith('.json')) {
+        res.setHeader('Content-Type', 'application/json');
+      } else if (path.endsWith('.woff') || path.endsWith('.woff2')) {
+        res.setHeader('Content-Type', 'font/woff2');
+      }
+    }
+  }));
 
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
+  // Handle React routing - ONLY for non-API and non-asset routes
+  app.get('*', (req, res, next) => {
+    // Don't handle API routes or asset files
+    if (req.path.startsWith('/api/') || 
+        req.path.startsWith('/assets/') || 
+        req.path.includes('.')) {
+      return next();
+    }
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
   });
 }
