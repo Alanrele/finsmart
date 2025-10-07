@@ -212,6 +212,42 @@ router.post('/sync-emails', async (req, res) => {
 // Get user's email folders
 router.get('/folders', async (req, res) => {
   try {
+    const userId = req.user._id;
+    
+    // Check if it's a demo user - return demo folders
+    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+      console.log('🎭 Returning demo Microsoft Graph folders');
+      return res.json({
+        folders: [
+          {
+            id: 'demo-inbox',
+            displayName: 'Inbox',
+            totalItemCount: 142,
+            unreadItemCount: 8
+          },
+          {
+            id: 'demo-sent',
+            displayName: 'Sent Items',
+            totalItemCount: 89,
+            unreadItemCount: 0
+          },
+          {
+            id: 'demo-financial',
+            displayName: 'Financial',
+            totalItemCount: 24,
+            unreadItemCount: 2
+          },
+          {
+            id: 'demo-receipts',
+            displayName: 'Receipts',
+            totalItemCount: 67,
+            unreadItemCount: 3
+          }
+        ],
+        demoMode: true
+      });
+    }
+
     const user = await User.findById(req.user._id);
 
     if (!user.accessToken) {
@@ -241,6 +277,19 @@ router.get('/folders', async (req, res) => {
 // Get connection status
 router.get('/status', async (req, res) => {
   try {
+    const userId = req.user._id;
+    
+    // Check if it's a demo user - return demo status
+    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+      console.log('🎭 Returning demo Microsoft Graph status');
+      return res.json({
+        isConnected: true,
+        lastSync: new Date(Date.now() - 86400000).toISOString(), // yesterday
+        tokenExpiry: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
+        demoMode: true
+      });
+    }
+
     const user = await User.findById(req.user._id);
 
     const isConnected = !!(user.accessToken && user.tokenExpiry && user.tokenExpiry > new Date());
