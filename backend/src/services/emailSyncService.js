@@ -1,6 +1,9 @@
 const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
+const mongoose = require('mongoose');
 const { Client } = require('@microsoft/microsoft-graph-client');
+// const TransactionExtractor = require('./transactionExtractor'); // TODO: Create if needed
+const GraphErrorHandler = require('../utils/graphErrorHandler');
 const emailParserService = require('./emailParserService');
 const azureOcrService = require('./azureOcrService');
 
@@ -109,18 +112,100 @@ class EmailSyncService {
         "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
       ];
 
-      const filter = `(${bcpFilters.join(' or ')}) and receivedDateTime ge ${last24Hours}`;
-      const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
-      const orderBy = 'receivedDateTime desc';
-      const top = 50;
+      let messages;
 
-      const messages = await graphClient
-        .api('/me/messages')
-        .filter(filter)
-        .select(select)
-        .orderby(orderBy)
-        .top(top)
-        .get();
+      // Define query strategies from most specific to least specific
+      const primaryQuery = async () => {
+        const filter = `(${bcpFilters.join(' or ')}) and receivedDateTime ge ${last24Hours}`;
+        console.log('🔍 Executing complex query with multiple filters...');
+        return await graphClient
+          .api('/me/messages')
+          .filter(filter)
+          .select('id,subject,body,receivedDateTime,from,hasAttachments')
+          .orderby('receivedDateTime desc')
+          .top(50)
+          .get();
+      };
+
+      const fallbackQueries = [
+        // Fallback 1: Simplified date-only filter
+        async () => {
+          console.log('🔍 Executing simplified query with date filter only...');
+          const result = await graphClient
+            .api('/me/messages')
+            .filter(`receivedDateTime ge ${last24Hours}`)
+            .select('id,subject,body,receivedDateTime,from,hasAttachments')
+            .orderby('receivedDateTime desc')
+            .top(20)
+            .get();
+          
+          // Filter BCP emails manually
+          if (result.value) {
+            const bcpDomains = ['@bcp.com.pe'];
+            result.value = result.value.filter(msg => {
+              const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
+              return bcpDomains.some(domain => fromAddress.includes(domain));
+            });
+            console.log(`📧 Manually filtered to ${result.value.length} BCP emails`);
+          }
+          return result;
+        },
+        
+        // Fallback 2: Minimal query without date filter
+        async () => {
+          console.log('🔍 Executing minimal query without date filter...');
+          const result = await graphClient
+            .api('/me/messages')
+            .select('id,subject,body,receivedDateTime,from,hasAttachments')
+            .orderby('receivedDateTime desc')
+            .top(10)
+            .get();
+          
+          // Filter both by date and BCP manually
+          if (result.value) {
+            const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const bcpDomains = ['@bcp.com.pe'];
+            
+            result.value = result.value.filter(msg => {
+              const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
+              const receivedDate = new Date(msg.receivedDateTime);
+              const isBcp = bcpDomains.some(domain => fromAddress.includes(domain));
+              const isRecent = receivedDate >= last24HoursDate;
+              return isBcp && isRecent;
+            });
+            console.log(`📧 Manually filtered to ${result.value.length} recent BCP emails`);
+          }
+          return result;
+        },
+        
+        // Fallback 3: Absolute minimal query
+        async () => {
+          console.log('🔍 Executing absolute minimal query...');
+          const result = await graphClient
+            .api('/me/messages')
+            .top(5)
+            .get();
+          
+          // Filter everything manually
+          if (result.value) {
+            const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
+            const bcpDomains = ['@bcp.com.pe'];
+            
+            result.value = result.value.filter(msg => {
+              const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
+              const receivedDate = new Date(msg.receivedDateTime);
+              const isBcp = bcpDomains.some(domain => fromAddress.includes(domain));
+              const isRecent = receivedDate >= last24HoursDate;
+              return isBcp && isRecent;
+            });
+            console.log(`📧 Manually filtered to ${result.value.length} recent BCP emails from minimal set`);
+          }
+          return result;
+        }
+      ];
+
+      // Execute query with automatic fallback handling
+      messages = await GraphErrorHandler.executeWithFallback(primaryQuery, fallbackQueries);
 
       console.log(`📨 Found ${messages.value.length} recent emails for ${user.email}`);
 
@@ -227,7 +312,18 @@ class EmailSyncService {
       return newTransactionsCount;
 
     } catch (error) {
-      console.error(`❌ Error syncing user ${user.email}:`, error);
+      GraphErrorHandler.logError(error, `syncUserEmails for ${user.email}`);
+      
+      const errorInfo = GraphErrorHandler.formatErrorForUser(error);
+      console.log(`📊 Error category: ${errorInfo.type} - ${errorInfo.message}`);
+      
+      // Handle authentication errors by disabling sync
+      if (GraphErrorHandler.isAuthError(error)) {
+        console.log(`🔒 Disabling sync for user ${user.email} due to authentication error`);
+        user.syncEnabled = false;
+        await user.save();
+      }
+      
       throw error;
     }
   }
