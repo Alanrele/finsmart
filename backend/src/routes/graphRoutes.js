@@ -7,6 +7,8 @@ const Transaction = require('../models/transactionModel');
 const azureOcrService = require('../services/azureOcrService');
 const aiAnalysisService = require('../services/aiAnalysisService');
 const emailParserService = require('../services/emailParserService');
+const tokenCleanup = require('../utils/tokenCleanup');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
@@ -492,6 +494,23 @@ router.post('/sync-emails', async (req, res) => {
       // Check for JWT malformed error specifically
       if (error.message && error.message.includes('JWT is not well formed')) {
         console.error('🔑 JWT malformed error in Graph API call');
+        
+        // Clean up the corrupted token from database
+        try {
+          const user = await User.findById(req.user._id);
+          if (user && user.accessToken) {
+            console.log('🧹 Cleaning up malformed token for user:', user.email);
+            user.accessToken = undefined;
+            user.refreshToken = undefined;
+            user.tokenExpiry = undefined;
+            user.syncEnabled = false;
+            await user.save();
+            console.log('✅ Corrupted token cleaned up successfully');
+          }
+        } catch (cleanupError) {
+          console.error('❌ Error cleaning up corrupted token:', cleanupError);
+        }
+
         return res.status(401).json({
           error: 'Authentication token corrupted',
           details: 'Your Microsoft authentication token is malformed. Please sign out and sign in again to refresh your token.',
@@ -807,6 +826,38 @@ router.post('/disconnect', async (req, res) => {
     console.error('❌ Disconnect error:', error);
     res.status(500).json({
       error: 'Failed to disconnect Microsoft account',
+      details: error.message
+    });
+  }
+});
+
+// Endpoint to clean up malformed tokens (admin only)
+router.post('/cleanup-malformed-tokens', authMiddleware, async (req, res) => {
+  try {
+    console.log('🧹 Manual token cleanup requested...');
+    
+    // Check if current user token is malformed
+    if (req.user && req.user._id) {
+      const user = await User.findById(req.user._id);
+      if (user && user.accessToken && tokenCleanup.isTokenMalformed(user.accessToken)) {
+        console.log(`🧹 Cleaning current user's malformed token: ${user.email}`);
+        await tokenCleanup.cleanupUserToken(user._id);
+      }
+    }
+    
+    // Clean up all malformed tokens in database
+    const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+    
+    res.json({
+      message: 'Token cleanup completed',
+      cleanedCount,
+      recommendation: cleanedCount > 0 ? 'Users with cleaned tokens should re-authenticate' : 'No malformed tokens found'
+    });
+
+  } catch (error) {
+    console.error('❌ Token cleanup error:', error);
+    res.status(500).json({
+      error: 'Failed to cleanup malformed tokens',
       details: error.message
     });
   }

@@ -20,6 +20,7 @@ const logger = require('./middleware/logger');
 
 // Import services
 const EmailSyncService = require('./services/emailSyncService');
+const tokenCleanup = require('./utils/tokenCleanup');
 
 // Import helmet config
 const { productionHelmetConfig, developmentHelmetConfig } = require('./config/helmet');
@@ -58,7 +59,16 @@ const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart')
-.then(() => console.log('Connected to MongoDB'))
+.then(async () => {
+  console.log('Connected to MongoDB');
+  
+  // Clean up malformed tokens on startup
+  console.log('🧹 Performing token cleanup...');
+  const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+  if (cleanedCount > 0) {
+    console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
+  }
+})
 .catch(err => console.error('MongoDB connection error:', err));
 
 // Middleware

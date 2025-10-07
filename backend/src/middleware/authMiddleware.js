@@ -28,12 +28,25 @@ const authMiddleware = async (req, res, next) => {
     if (token.length > 50 && typeof token === 'string') {
       console.log('🔑 Microsoft token detected, processing...');
 
-      // Additional token validation
+      // Enhanced token validation
       if (token.includes('undefined') || token.includes('null') || token === 'undefined' || token === 'null') {
         console.error('❌ Malformed token detected (contains undefined/null)');
+        await cleanupCorruptedToken(token);
         return res.status(401).json({ 
           error: 'Invalid authentication token', 
-          details: 'Token is malformed or corrupted. Please re-authenticate.'
+          details: 'Token is malformed or corrupted. Please re-authenticate.',
+          code: 'TOKEN_CORRUPTED'
+        });
+      }
+
+      // Check for JWT format (should have dots separating sections)
+      if (!token.includes('.') || token.split('.').length < 2) {
+        console.error('❌ JWT malformed token detected (no proper format)');
+        await cleanupCorruptedToken(token);
+        return res.status(401).json({ 
+          error: 'JWT token malformed', 
+          details: 'Authentication token is not properly formatted. Please sign out and sign in again.',
+          code: 'JWT_MALFORMED'
         });
       }
 
@@ -154,6 +167,33 @@ const authMiddleware = async (req, res, next) => {
   } catch (error) {
     console.error('❌ Auth middleware error:', error);
     res.status(401).json({ error: 'Token is not valid.' });
+  }
+};
+
+// Helper function to cleanup corrupted tokens from database
+const cleanupCorruptedToken = async (corruptedToken) => {
+  try {
+    console.log('🧹 Cleaning up corrupted token from database...');
+    
+    // Find users with this corrupted token and clear it
+    const result = await User.updateMany(
+      { accessToken: corruptedToken },
+      { 
+        $unset: { 
+          accessToken: 1,
+          refreshToken: 1,
+          tokenExpiry: 1
+        },
+        lastSync: new Date(),
+        syncEnabled: false
+      }
+    );
+
+    if (result.modifiedCount > 0) {
+      console.log(`🧹 Cleaned up corrupted token for ${result.modifiedCount} user(s)`);
+    }
+  } catch (cleanupError) {
+    console.error('❌ Error cleaning up corrupted token:', cleanupError);
   }
 };
 
