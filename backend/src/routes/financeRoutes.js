@@ -175,9 +175,18 @@ router.get('/transactions', [
   query('limit').optional().isInt({ min: 1, max: 100 }),
   query('search').optional().isString(),
   query('category').optional().isString(),
-  query('type').optional().isIn(['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit']),
-  query('startDate').optional().isISO8601(),
-  query('endDate').optional().isISO8601()
+  query('type').optional().custom(value => {
+    if (!value || value === '') return true;
+    return ['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit', 'income', 'expense'].includes(value);
+  }),
+  query('startDate').optional().custom(value => {
+    if (!value || value === '') return true;
+    return !isNaN(Date.parse(value));
+  }),
+  query('endDate').optional().custom(value => {
+    if (!value || value === '') return true;
+    return !isNaN(Date.parse(value));
+  })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -242,7 +251,7 @@ router.get('/transactions', [
       ];
 
       // Apply demo filters
-      if (req.query.search) {
+      if (req.query.search && req.query.search.trim() !== '') {
         const searchTerm = req.query.search.toLowerCase();
         demoTransactions = demoTransactions.filter(t => 
           t.description.toLowerCase().includes(searchTerm) ||
@@ -250,13 +259,13 @@ router.get('/transactions', [
         );
       }
 
-      if (req.query.category) {
+      if (req.query.category && req.query.category.trim() !== '') {
         demoTransactions = demoTransactions.filter(t => 
           t.category.toLowerCase() === req.query.category.toLowerCase()
         );
       }
 
-      if (req.query.type) {
+      if (req.query.type && req.query.type.trim() !== '') {
         demoTransactions = demoTransactions.filter(t => t.type === req.query.type);
       }
 
@@ -279,27 +288,27 @@ router.get('/transactions', [
     // Build filter
     const filter = { userId };
 
-    if (req.query.search) {
+    if (req.query.search && req.query.search.trim() !== '') {
       filter.$or = [
         { description: { $regex: req.query.search, $options: 'i' } },
         { category: { $regex: req.query.search, $options: 'i' } }
       ];
     }
 
-    if (req.query.category) {
+    if (req.query.category && req.query.category.trim() !== '') {
       filter.category = req.query.category;
     }
 
-    if (req.query.type) {
+    if (req.query.type && req.query.type.trim() !== '') {
       filter.type = req.query.type;
     }
 
-    if (req.query.startDate || req.query.endDate) {
+    if ((req.query.startDate && req.query.startDate.trim() !== '') || (req.query.endDate && req.query.endDate.trim() !== '')) {
       filter.date = {};
-      if (req.query.startDate) {
+      if (req.query.startDate && req.query.startDate.trim() !== '') {
         filter.date.$gte = new Date(req.query.startDate);
       }
-      if (req.query.endDate) {
+      if (req.query.endDate && req.query.endDate.trim() !== '') {
         filter.date.$lte = new Date(req.query.endDate);
       }
     }

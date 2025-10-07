@@ -76,6 +76,39 @@ router.post('/connect', async (req, res) => {
 // Sync emails from BCP
 router.post('/sync-emails', async (req, res) => {
   try {
+    const userId = req.user._id;
+    
+    // Check if it's a demo user - return demo data
+    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+      console.log('🎭 Returning demo email sync data');
+      return res.json({
+        message: 'Emails synchronized successfully',
+        processed: 8,
+        newTransactions: 3,
+        emails: [
+          {
+            id: 'demo-email-1',
+            subject: 'Movimiento en tu Cuenta BCP - Compra por S/125.50',
+            date: new Date(Date.now() - 86400000).toISOString(),
+            processed: true
+          },
+          {
+            id: 'demo-email-2', 
+            subject: 'Transferencia recibida - S/750.00',
+            date: new Date(Date.now() - 86400000 * 2).toISOString(),
+            processed: true
+          },
+          {
+            id: 'demo-email-3',
+            subject: 'Pago de servicios - S/35.75', 
+            date: new Date(Date.now() - 86400000 * 3).toISOString(),
+            processed: true
+          }
+        ],
+        demoMode: true
+      });
+    }
+
     const user = await User.findById(req.user._id);
 
     if (!user.accessToken) {
