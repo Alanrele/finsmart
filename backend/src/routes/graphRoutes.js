@@ -180,14 +180,14 @@ router.post('/sync-emails', async (req, res) => {
         // Parse email content using your sophisticated parser
         console.log('📧 Parsing email content for message:', message.id);
         const parsedData = emailParserService.parseEmailContent(emailContent);
-        
+
         console.log('📊 Parsed data:', parsedData);
 
         if (parsedData && parsedData.amount) {
           // Create transaction from parsed data
           const transactionData = emailParserService.createTransactionFromEmail(
-            parsedData, 
-            user._id, 
+            parsedData,
+            user._id,
             {
               id: message.id,
               subject: message.subject,
@@ -255,16 +255,16 @@ router.post('/sync-emails', async (req, res) => {
 router.post('/test-email-parser', async (req, res) => {
   try {
     const { emailContent } = req.body;
-    
+
     if (!emailContent) {
       return res.status(400).json({ error: 'Email content is required' });
     }
-    
+
     console.log('🧪 Testing email parser with content length:', emailContent.length);
-    
+
     // Parse the email content
     const parsedData = emailParserService.parseEmailContent(emailContent);
-    
+
     // Create a demo transaction object
     const transactionData = emailParserService.createTransactionFromEmail(
       parsedData,
@@ -275,19 +275,19 @@ router.post('/test-email-parser', async (req, res) => {
         receivedDateTime: new Date().toISOString()
       }
     );
-    
+
     res.json({
       success: true,
       parsedData,
       transactionData,
       message: 'Email parsing completed successfully'
     });
-    
+
   } catch (error) {
     console.error('Email parser test error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to parse email content',
-      details: error.message 
+      details: error.message
     });
   }
 });

@@ -23,11 +23,32 @@ const { productionHelmetConfig, developmentHelmetConfig } = require('./config/he
 
 const app = express();
 const server = http.createServer(app);
+
+// Configuración específica de Socket.io para Railway
+const isRailwayProduction = process.env.RAILWAY_ENVIRONMENT === 'production' || 
+                           process.env.NODE_ENV === 'production'
+
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    credentials: true
-  }
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:3001", 
+      "https://finsmart-production.up.railway.app",
+      process.env.FRONTEND_URL
+    ].filter(Boolean),
+    credentials: true,
+    methods: ["GET", "POST"]
+  },
+  // Configuración optimizada para Railway
+  transports: isRailwayProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
+  allowEIO3: true, // Compatibilidad con versiones anteriores
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 30000,
+  maxHttpBufferSize: 1e6, // 1MB
+  // Configuración específica para Railway
+  allowUpgrades: !isRailwayProduction, // Deshabilitar upgrades en Railway
+  cookie: false // Deshabilitar cookies para Railway
 });
 
 const PORT = process.env.PORT || 5000;
@@ -80,6 +101,8 @@ app.use('/api/finance', authMiddleware, financeRoutes);
 
 // Health check endpoint (before static files)
 app.get('/health', (req, res) => {
+  const connectedSockets = io.engine.clientsCount || 0;
+  
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -87,12 +110,22 @@ app.get('/health', (req, res) => {
     env: process.env.NODE_ENV,
     mongodb: process.env.MONGODB_URI ? 'configured' : 'missing',
     openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
-    azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing'
+    azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing',
+    // Información de Socket.io para diagnóstico
+    socketio: {
+      connected_clients: connectedSockets,
+      transports: isRailwayProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
+      railway_mode: isRailwayProduction
+    }
   });
 });
 
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    socketio_clients: io.engine.clientsCount || 0
+  });
 });
 
 // Debug endpoint (development only)
@@ -139,8 +172,8 @@ if (process.env.NODE_ENV === 'production') {
   // Handle React routing - ONLY for non-API and non-asset routes
   app.get('*', (req, res, next) => {
     // Don't handle API routes or asset files
-    if (req.path.startsWith('/api/') || 
-        req.path.startsWith('/assets/') || 
+    if (req.path.startsWith('/api/') ||
+        req.path.startsWith('/assets/') ||
         req.path.includes('.')) {
       return next();
     }
@@ -148,17 +181,26 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Socket.io connection handling
+// Socket.io connection handling con logging mejorado
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  console.log(`✅ Socket connected: ${socket.id} via ${socket.conn.transport.name}`);
+  
+  // Log cuando cambia el transporte
+  socket.conn.on('upgrade', () => {
+    console.log(`🔄 Socket ${socket.id} upgraded to ${socket.conn.transport.name}`);
+  });
 
   socket.on('join-user-room', (userId) => {
     socket.join(`user-${userId}`);
-    console.log(`User ${userId} joined room user-${userId}`);
+    console.log(`👤 User ${userId} joined room user-${userId} (socket: ${socket.id})`);
   });
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+  socket.on('disconnect', (reason) => {
+    console.log(`❌ Socket disconnected: ${socket.id}, reason: ${reason}`);
+  });
+
+  socket.on('error', (error) => {
+    console.error(`🚨 Socket error for ${socket.id}:`, error);
   });
 });
 

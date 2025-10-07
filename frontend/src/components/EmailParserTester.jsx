@@ -86,7 +86,7 @@ const EmailParserTester = () => {
             <textarea
               value={emailContent}
               onChange={(e) => setEmailContent(e.target.value)}
-              className="w-full h-40 p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+              className="w-full h-40 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
                        bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                        focus:ring-2 focus:ring-blue-500 focus:border-transparent
                        placeholder-gray-500 dark:placeholder-gray-400"
@@ -101,7 +101,7 @@ const EmailParserTester = () => {
             >
               Usar email de ejemplo
             </button>
-            
+
             <button
               onClick={handleTest}
               disabled={loading || !emailContent.trim()}
@@ -183,14 +183,14 @@ const EmailParserTester = () => {
                     {result.transactionData?.currency} {result.transactionData?.amount}
                   </div>
                 </div>
-                
+
                 <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                   <div className="font-medium text-green-900 dark:text-green-100">Tipo</div>
                   <div className="text-lg font-semibold text-green-700 dark:text-green-300 capitalize">
                     {result.transactionData?.type}
                   </div>
                 </div>
-                
+
                 <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
                   <div className="font-medium text-purple-900 dark:text-purple-100">Categoría</div>
                   <div className="text-lg font-semibold text-purple-700 dark:text-purple-300">

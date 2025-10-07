@@ -61,7 +61,7 @@ After deployment, you need to configure secrets and environment variables:
    ```bash
    # Get the Key Vault name
    az keyvault list --resource-group rg-production --query '[0].name' -o tsv
-   
+
    # Add secrets
    az keyvault secret set --vault-name <keyvault-name> --name mongodb-uri --value "YOUR_MONGODB_CONNECTION_STRING"
    az keyvault secret set --vault-name <keyvault-name> --name openai-api-key --value "YOUR_OPENAI_API_KEY"
@@ -141,21 +141,21 @@ graph TB
         FE[Frontend Container App<br/>React + Nginx]
         BE[Backend Container App<br/>Node.js + Express]
     end
-    
+
     subgraph "Supporting Services"
         ACR[Container Registry]
         KV[Key Vault]
         AI[Application Insights]
         LAW[Log Analytics]
     end
-    
+
     subgraph "External Services"
         MONGO[MongoDB Atlas]
         OPENAI[OpenAI API]
         GRAPH[Microsoft Graph]
         OCR[Azure OCR]
     end
-    
+
     FE --> BE
     ACR --> FE
     ACR --> BE

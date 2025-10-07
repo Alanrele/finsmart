@@ -7,6 +7,12 @@ class SocketService {
   }
 
   connect(userId, token) {
+    // Opción para deshabilitar Socket.io en producción si es necesario
+    if (import.meta.env.VITE_DISABLE_SOCKET === 'true') {
+      console.log('🚫 Socket.io disabled via environment variable')
+      return null
+    }
+
     if (this.socket?.connected) {
       this.disconnect()
     }
@@ -31,25 +37,34 @@ class SocketService {
     console.log('🔌 Socket.IO connecting to:', serverUrl)
     console.log('🌐 Current hostname:', window.location.hostname)
 
+    // Configuración específica para Railway (limita WebSockets en plan gratuito)
+    const isRailwayProduction = serverUrl.includes('railway.app')
+    const transportConfig = isRailwayProduction 
+      ? ['polling', 'websocket'] // Railway: usar polling primero, WebSocket como upgrade
+      : ['websocket', 'polling'] // Desarrollo: preferir WebSocket
+
     this.socket = io(serverUrl, {
       auth: {
         token
       },
-      transports: ['websocket', 'polling'],
+      transports: transportConfig,
       // Configuración para manejar problemas de conexión
       timeout: 20000,
       forceNew: true,
       reconnection: true,
-      reconnectionDelay: 1000,
+      reconnectionDelay: 2000,
       reconnectionAttempts: 3,
       maxReconnectionAttempts: 3,
       // Configuración específica para Railway
-      upgrade: true,
-      rememberUpgrade: false
+      upgrade: !isRailwayProduction, // Deshabilitar upgrade en Railway
+      rememberUpgrade: false,
+      // Configuración adicional para Railway
+      autoConnect: true,
+      forceBase64: isRailwayProduction
     })
 
     this.socket.on('connect', () => {
-      console.log('✅ Connected to socket server')
+      console.log('✅ Connected to socket server via', this.socket.io.engine.transport.name)
       this.socket.emit('join-user-room', userId)
     })
 
@@ -59,15 +74,28 @@ class SocketService {
 
     this.socket.on('connect_error', (error) => {
       console.error('🔌 Socket connection error:', error.message)
-      // Si falla WebSocket, intentar con polling solamente
-      if (error.message.includes('websocket')) {
-        console.log('🔄 Retrying with polling transport only...')
+      
+      // Manejo específico para Railway
+      if (isRailwayProduction && error.message.includes('websocket')) {
+        console.log('🚀 Railway detected - using polling transport only')
+        this.socket.io.opts.transports = ['polling']
+        this.socket.io.opts.upgrade = false
+      } else if (error.message.includes('websocket')) {
+        console.log('🔄 WebSocket failed, falling back to polling...')
         this.socket.io.opts.transports = ['polling']
       }
     })
 
     this.socket.on('reconnect_failed', () => {
       console.error('🚫 Socket reconnection failed completely')
+      // En Railway, intentar reiniciar con polling
+      if (isRailwayProduction) {
+        console.log('🔄 Attempting manual reconnection with polling...')
+        setTimeout(() => {
+          this.socket.io.opts.transports = ['polling']
+          this.socket.connect()
+        }, 5000)
+      }
     })
 
     // Set up default listeners

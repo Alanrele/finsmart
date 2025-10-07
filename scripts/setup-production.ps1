@@ -4,7 +4,7 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$EnvironmentName,
-    
+
     [Parameter(Mandatory=$true)]
     [string]$ResourceGroupName
 )

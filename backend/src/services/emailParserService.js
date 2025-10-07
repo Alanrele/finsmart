@@ -140,16 +140,16 @@ function parseEmailContent(fullText) {
  */
 function classifyTransactionType(parsedData) {
     const { operationType, sendingType, paymentType, merchant, beneficiary, amount } = parsedData;
-    
+
     // Determinar si es ingreso o gasto
     let type = 'expense'; // Por defecto es gasto
     let category = 'Other';
-    
+
     if (operationType) {
         const opType = operationType.toLowerCase();
-        
+
         // Ingresos
-        if (opType.includes('depósito') || opType.includes('deposito') || 
+        if (opType.includes('depósito') || opType.includes('deposito') ||
             opType.includes('transferencia recibida') || opType.includes('abono')) {
             type = 'income';
             category = 'Transfer';
@@ -174,11 +174,11 @@ function classifyTransactionType(parsedData) {
             category = 'Cash';
         }
     }
-    
+
     // Categorización más específica basada en el beneficiario o comercio
     if (merchant || beneficiary) {
         const entity = (merchant || beneficiary).toLowerCase();
-        
+
         if (entity.includes('supermercado') || entity.includes('market') || entity.includes('tienda')) {
             category = 'Food';
         } else if (entity.includes('gasolina') || entity.includes('grifo') || entity.includes('combustible')) {
@@ -193,7 +193,7 @@ function classifyTransactionType(parsedData) {
             category = 'Entertainment';
         }
     }
-    
+
     return { type, category };
 }
 
@@ -202,7 +202,7 @@ function classifyTransactionType(parsedData) {
  */
 function createTransactionFromEmail(parsedData, userId, emailData) {
     const { type, category } = classifyTransactionType(parsedData);
-    
+
     // Generar descripción
     let description = 'Transacción bancaria';
     if (parsedData.merchant) {
@@ -212,7 +212,7 @@ function createTransactionFromEmail(parsedData, userId, emailData) {
     } else if (parsedData.operationType) {
         description = parsedData.operationType;
     }
-    
+
     return {
         userId,
         amount: Math.abs(parsedData.amount || 0),
