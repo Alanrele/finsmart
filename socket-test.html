@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket.io Test - FinSmart</title>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>Socket.io Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="transport">Transport: Unknown</div>
+    <div id="logs"></div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const transportDiv = document.getElementById('transport');
+        const logsDiv = document.getElementById('logs');
+
+        function log(message) {
+            console.log(message);
+            logsDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        // Test con configuración optimizada para Railway
+        const socket = io('https://finsmart-production.up.railway.app', {
+            transports: ['polling', 'websocket'], // Polling primero
+            upgrade: false, // Sin upgrades automáticos
+            rememberUpgrade: false,
+            forceBase64: true,
+            timeout: 20000,
+            reconnection: true,
+            reconnectionDelay: 2000,
+            reconnectionAttempts: 3
+        });
+
+        socket.on('connect', () => {
+            statusDiv.innerHTML = '✅ Connected!';
+            transportDiv.innerHTML = `Transport: ${socket.io.engine.transport.name}`;
+            log(`Connected via ${socket.io.engine.transport.name}`);
+        });
+
+        socket.on('disconnect', (reason) => {
+            statusDiv.innerHTML = '❌ Disconnected';
+            log(`Disconnected: ${reason}`);
+        });
+
+        socket.on('connect_error', (error) => {
+            statusDiv.innerHTML = '🚨 Connection Error';
+            log(`Connection error: ${error.message}`);
+        });
+
+        socket.io.engine.on('upgrade', () => {
+            transportDiv.innerHTML = `Transport: ${socket.io.engine.transport.name} (upgraded)`;
+            log(`Upgraded to ${socket.io.engine.transport.name}`);
+        });
+
+        socket.io.engine.on('upgradeError', (error) => {
+            log(`Upgrade error: ${error.message}`);
+        });
+    </script>
+</body>
+</html>
