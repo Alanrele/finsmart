@@ -25,8 +25,17 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // Check if it's a Microsoft token (typical pattern)
-    if (token.length > 100 && !token.includes('.')) {
+    if (token.length > 50 && typeof token === 'string') {
       console.log('🔑 Microsoft token detected, processing...');
+
+      // Additional token validation
+      if (token.includes('undefined') || token.includes('null') || token === 'undefined' || token === 'null') {
+        console.error('❌ Malformed token detected (contains undefined/null)');
+        return res.status(401).json({ 
+          error: 'Invalid authentication token', 
+          details: 'Token is malformed or corrupted. Please re-authenticate.'
+        });
+      }
 
       try {
         // Try to get user info from Microsoft Graph using the token
@@ -87,6 +96,16 @@ const authMiddleware = async (req, res, next) => {
 
       } catch (error) {
         console.error('❌ Microsoft token validation failed:', error);
+
+        // Check for specific JWT malformed error
+        if (error.message && error.message.includes('JWT is not well formed')) {
+          console.error('🔑 JWT malformed error detected');
+          return res.status(401).json({
+            error: 'Authentication token malformed',
+            details: 'Your authentication token is corrupted. Please sign out and sign in again.',
+            code: 'JWT_MALFORMED'
+          });
+        }
 
         // Try to find existing user by email from token header if possible
         try {

@@ -21,8 +21,27 @@ class CustomAuthProvider {
   }
 }
 
-// Get Graph client for user
+// Get Graph client for user with token validation
 const getGraphClient = (accessToken) => {
+  // Validate token format
+  if (!accessToken || typeof accessToken !== 'string') {
+    throw new Error('Invalid access token: Token is null or not a string');
+  }
+
+  // Check if token looks like a valid Microsoft access token
+  if (accessToken.length < 50) {
+    throw new Error('Invalid access token: Token too short');
+  }
+
+  // Check for common malformed token patterns
+  if (accessToken.includes('undefined') || accessToken.includes('null')) {
+    throw new Error('Invalid access token: Token contains undefined/null values');
+  }
+
+  // Basic JWT format validation (Microsoft tokens can be JWT or opaque)
+  // Microsoft Graph tokens can be either JWT (with dots) or opaque tokens (without dots)
+  console.log('🔍 Token validation - Length:', accessToken.length, 'Format:', accessToken.includes('.') ? 'JWT' : 'Opaque');
+
   const authProvider = new CustomAuthProvider(accessToken);
   return Client.initWithMiddleware({ authProvider });
 };
@@ -71,6 +90,70 @@ router.post('/connect', async (req, res) => {
   } catch (error) {
     console.error('Connect error:', error);
     res.status(500).json({ error: 'Failed to connect Microsoft account' });
+  }
+});
+
+// Verify token status
+router.get('/verify-token', async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user || !user.accessToken) {
+      return res.status(401).json({
+        error: 'No Microsoft token found',
+        details: 'Please connect your Microsoft account first',
+        tokenStatus: 'missing'
+      });
+    }
+
+    // Check token format
+    if (user.accessToken.includes('undefined') || user.accessToken.includes('null')) {
+      return res.status(401).json({
+        error: 'Token is corrupted',
+        details: 'Authentication token contains invalid data. Please re-authenticate.',
+        tokenStatus: 'corrupted'
+      });
+    }
+
+    // Test the token by calling Microsoft Graph
+    try {
+      const graphClient = getGraphClient(user.accessToken);
+      const profile = await graphClient.api('/me').get();
+
+      res.json({
+        tokenStatus: 'valid',
+        profile: {
+          displayName: profile.displayName,
+          email: profile.mail || profile.userPrincipalName
+        },
+        tokenExpiry: user.tokenExpiry
+      });
+    } catch (graphError) {
+      console.error('Token verification failed:', graphError);
+
+      if (graphError.message && graphError.message.includes('JWT is not well formed')) {
+        return res.status(401).json({
+          error: 'Token format error',
+          details: 'JWT token is malformed. Please re-authenticate.',
+          tokenStatus: 'malformed',
+          action: 'REAUTHENTICATE'
+        });
+      }
+
+      return res.status(401).json({
+        error: 'Token validation failed',
+        details: 'Microsoft token is invalid or expired',
+        tokenStatus: 'invalid',
+        action: 'REAUTHENTICATE'
+      });
+    }
+
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({
+      error: 'Token verification failed',
+      details: error.message
+    });
   }
 });
 
@@ -406,6 +489,17 @@ router.post('/sync-emails', async (req, res) => {
 
     // Handle specific Microsoft Graph errors
     if (error.code === 'InvalidAuthenticationToken' || error.code === 'Forbidden') {
+      // Check for JWT malformed error specifically
+      if (error.message && error.message.includes('JWT is not well formed')) {
+        console.error('🔑 JWT malformed error in Graph API call');
+        return res.status(401).json({
+          error: 'Authentication token corrupted',
+          details: 'Your Microsoft authentication token is malformed. Please sign out and sign in again to refresh your token.',
+          code: 'JWT_MALFORMED',
+          action: 'REAUTHENTICATE'
+        });
+      }
+
       return res.status(401).json({
         error: 'Microsoft authentication expired',
         details: 'Please reconnect your Microsoft account',
