@@ -25,6 +25,7 @@ import AuthDebugPanel from './components/AuthDebugPanel'
 import ConnectivityStatus from './components/ConnectivityStatus'
 import SSLErrorNotification from './components/SSLErrorNotification'
 import DemoModeBanner from './components/DemoModeBanner'
+import AuthStorageDebug from './components/AuthStorageDebug'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -85,35 +86,35 @@ function App() {
   // Backend health check and offline mode activation
   useEffect(() => {
     let errorCount = 0;
-    
+
     const checkBackendHealth = async () => {
       try {
-        const baseUrl = window.location.hostname.includes('railway.app') 
+        const baseUrl = window.location.hostname.includes('railway.app')
           ? `${window.location.protocol}//${window.location.hostname}`
           : 'http://localhost:5000';
-        
+
         const response = await fetch(`${baseUrl}/health`, {
           method: 'GET',
           timeout: 3000 // Reducir timeout para detectar problemas más rápido
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
-        
+
         console.log('✅ Backend is healthy');
         errorCount = 0; // Reset error count on success
         return true;
       } catch (error) {
         errorCount++;
         console.warn(`❌ Backend health check failed (${errorCount}/3):`, error.message);
-        
+
         // Activar modo offline después de 2 errores consecutivos
         if (errorCount >= 2 && !offlineMode) {
           console.log('🔧 Activando modo offline debido a problemas del backend');
           createOfflineMode();
           setOfflineMode(true);
-          
+
           // Mostrar notificación específica según el tipo de error
           if (error.message.includes('CERT') || error.message.includes('SSL') || error.message.includes('fetch')) {
             toast.error('🔒 Problema SSL detectado - Modo demo activado', {
@@ -126,7 +127,7 @@ function App() {
             });
           }
         }
-        
+
         return false;
       }
     };
@@ -194,12 +195,26 @@ function App() {
               avatar: null
             }
 
-            // Create a demo token for development
-            const token = `demo-token-${Date.now()}`
+            // Get the actual access token from MSAL
+            let accessToken = null;
+            try {
+              const tokenRequest = {
+                scopes: ['User.Read'],
+                account: response.account
+              };
+              
+              const tokenResponse = await instance.acquireTokenSilent(tokenRequest);
+              accessToken = tokenResponse.accessToken;
+              console.log('🔑 Got real access token from MSAL');
+            } catch (tokenError) {
+              console.warn('⚠️ Could not get access token, using demo token:', tokenError);
+              // Fallback to demo token if we can't get a real one
+              accessToken = `demo-token-${Date.now()}`;
+            }
 
             // Ensure login is processed
-            console.log('🔐 Setting auth state:', userInfo)
-            login(userInfo, token)
+            console.log('🔐 Setting auth state with token:', { userInfo, hasToken: !!accessToken })
+            login(userInfo, accessToken)
 
             // Wait a bit for state to update
             setTimeout(() => {
@@ -275,10 +290,10 @@ function App() {
     <div className="App min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
       {/* Demo Mode Banner */}
       <DemoModeBanner isActive={offlineMode} />
-      
+
       <DebugAuth />
       <DebugMSAL />
-      
+
       {/* Main content with padding if demo mode is active */}
       <div className={offlineMode ? 'pt-10' : ''}>
       <Routes>
@@ -369,12 +384,15 @@ function App() {
 
       {/* Debug Panel - solo en desarrollo */}
       {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
-      
+
       {/* Connectivity Status - siempre visible cuando hay problemas */}
       <ConnectivityStatus offlineMode={offlineMode} />
-      
+
       {/* SSL Error Notification - detecta automáticamente problemas de certificado */}
       <SSLErrorNotification />
+      
+      {/* Auth Storage Debug - para diagnosticar problemas de tokens */}
+      <AuthStorageDebug />
       </div>
     </div>
   )

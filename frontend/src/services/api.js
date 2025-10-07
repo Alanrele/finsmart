@@ -59,34 +59,92 @@ checkBackendHealth().then(isHealthy => {
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('auth-storage')
-    if (token) {
+    console.log('🔐 API Request interceptor - checking for token...');
+    
+    // Intentar obtener el token del localStorage
+    const authStorage = localStorage.getItem('auth-storage');
+    
+    if (authStorage) {
       try {
-        const authData = JSON.parse(token)
-        if (authData.state?.token) {
-          config.headers.Authorization = `Bearer ${authData.state.token}`
+        const authData = JSON.parse(authStorage);
+        console.log('🔍 Auth data found:', { 
+          hasState: !!authData.state, 
+          hasToken: !!authData.state?.token,
+          isAuthenticated: authData.state?.isAuthenticated 
+        });
+        
+        if (authData.state?.token && authData.state?.isAuthenticated) {
+          config.headers.Authorization = `Bearer ${authData.state.token}`;
+          console.log('✅ Authorization header added');
+        } else {
+          console.warn('⚠️ No valid token found in auth storage');
         }
       } catch (error) {
-        console.error('Error parsing auth token:', error)
+        console.error('❌ Error parsing auth token:', error);
       }
+    } else {
+      console.warn('⚠️ No auth storage found');
     }
-    return config
+    
+    console.log('📤 API Request:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      hasAuth: !!config.headers.Authorization,
+      headers: config.headers
+    });
+    
+    return config;
   },
   (error) => {
-    return Promise.reject(error)
+    console.error('❌ Request interceptor error:', error);
+    return Promise.reject(error);
   }
 )
 
 // Response interceptor to handle errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('✅ API Response:', {
+      status: response.status,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase()
+    });
+    return response;
+  },
   (error) => {
+    console.error('❌ API Error:', {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      data: error.response?.data
+    });
+
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('auth-storage')
-      window.location.href = '/login'
+      console.warn('🔐 Unauthorized request detected - clearing auth and redirecting');
+      
+      // Limpiar el almacenamiento de autenticación
+      localStorage.removeItem('auth-storage');
+      
+      // Importar y usar el store para hacer logout limpio
+      import('../stores/authStore').then(({ default: useAuthStore }) => {
+        useAuthStore.getState().logout();
+      });
+      
+      // Mostrar notificación al usuario
+      import('react-hot-toast').then(({ default: toast }) => {
+        toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
+      });
+      
+      // Redirigir al login después de un breve delay
+      setTimeout(() => {
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }, 1000);
     }
-    return Promise.reject(error)
+    
+    return Promise.reject(error);
   }
 )
 

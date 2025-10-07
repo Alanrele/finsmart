@@ -1,7 +1,7 @@
 // Modo offline para desarrollo y fallback
 export const createOfflineMode = () => {
   console.log('🔧 Activando modo offline/demo');
-  
+
   // Mock data para el dashboard
   const mockDashboardData = {
     totalBalance: 15750.50,
@@ -85,16 +85,32 @@ export const createOfflineMode = () => {
   window.fetch = async (url, options) => {
     console.log('🎭 Intercepting API call:', url);
     
-    // Simular delay de red
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Verificar si hay un token válido - si lo hay, intentar la llamada real primero
+    const hasValidToken = localStorage.getItem('auth-storage') && 
+                         !localStorage.getItem('auth-storage').includes('demo-token');
     
-    if (url.includes('/api/finance/dashboard')) {
+    if (hasValidToken && !url.includes('/health')) {
+      console.log('🔑 Valid token found, trying real API first...');
+      try {
+        const response = await originalFetch(url, options);
+        if (response.ok) {
+          console.log('✅ Real API call succeeded, using real data');
+          return response;
+        }
+        console.log('⚠️ Real API failed, falling back to mock data');
+      } catch (error) {
+        console.log('❌ Real API error, falling back to mock data:', error.message);
+      }
+    }
+    
+    // Simular delay de red
+    await new Promise(resolve => setTimeout(resolve, 500));    if (url.includes('/api/finance/dashboard')) {
       return new Response(JSON.stringify(mockDashboardData), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     if (url.includes('/api/finance/transactions')) {
       return new Response(JSON.stringify({
         transactions: mockTransactions,
@@ -106,14 +122,14 @@ export const createOfflineMode = () => {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     if (url.includes('/api/ai/')) {
       return new Response(JSON.stringify(mockAIInsights), {
         status: 200,
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     if (url.includes('/health')) {
       return new Response(JSON.stringify({
         status: 'OFFLINE_MODE',
@@ -123,7 +139,7 @@ export const createOfflineMode = () => {
         headers: { 'Content-Type': 'application/json' }
       });
     }
-    
+
     // Para otras llamadas, usar fetch original
     try {
       return await originalFetch(url, options);

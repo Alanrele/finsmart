@@ -10,15 +10,15 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
     // Verificar estado del backend
     const checkBackend = async () => {
       try {
-        const baseUrl = window.location.hostname.includes('railway.app') 
+        const baseUrl = window.location.hostname.includes('railway.app')
           ? `${window.location.protocol}//${window.location.hostname}`
           : 'http://localhost:5000';
-        
+
         const response = await fetch(`${baseUrl}/health`, {
           method: 'GET',
           timeout: 5000
         });
-        
+
         setBackendStatus(response.ok ? 'online' : 'offline');
       } catch (error) {
         console.warn('Backend check failed:', error);
@@ -29,10 +29,10 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
     // Verificar estado del socket
     const checkSocket = () => {
       // Intentar detectar errores de WebSocket desde los logs del navegador
-      const hasWebSocketErrors = window.console && 
-        window.console.memory && 
+      const hasWebSocketErrors = window.console &&
+        window.console.memory &&
         JSON.stringify(window.console).includes('WebSocket');
-      
+
       if (hasWebSocketErrors) {
         setSocketStatus('error');
       }
@@ -109,7 +109,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
           ✕
         </button>
       </div>
-      
+
       <div className="space-y-3 text-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
               {offlineMode && 'La aplicación funciona con datos de demostración. '}
               {!offlineMode && 'Las funcionalidades pueden estar limitadas.'}
             </p>
-            
+
             <div className="mt-2 text-xs text-yellow-700">
               <strong>{offlineMode ? 'Características del modo demo:' : 'Posibles soluciones:'}</strong>
               <ul className="list-disc list-inside mt-1 space-y-1">

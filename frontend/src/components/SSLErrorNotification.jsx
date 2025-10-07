@@ -9,16 +9,16 @@ const SSLErrorNotification = () => {
   useEffect(() => {
     // Interceptar errores de red para detectar problemas SSL
     const originalFetch = window.fetch;
-    
+
     window.fetch = async (...args) => {
       try {
         return await originalFetch(...args);
       } catch (error) {
-        if (error.message.includes('CERT') || 
-            error.message.includes('SSL') || 
+        if (error.message.includes('CERT') ||
+            error.message.includes('SSL') ||
             error.message.includes('TLS') ||
             error.name === 'TypeError' && args[0]?.includes('railway.app')) {
-          
+
           setSSLErrors(prev => prev + 1);
           setLastError(new Date());
           setIsVisible(true);
@@ -79,10 +79,10 @@ const SSLErrorNotification = () => {
         <div className="flex-1">
           <h3 className="font-bold text-sm mb-2">Problema de Certificado SSL</h3>
           <p className="text-xs mb-3 opacity-90">
-            Railway está teniendo problemas temporales con el certificado SSL. 
+            Railway está teniendo problemas temporales con el certificado SSL.
             Esto es normal en deployments nuevos y se resolverá automáticamente.
           </p>
-          
+
           <div className="text-xs mb-3 bg-red-600 bg-opacity-50 rounded p-2">
             <strong>Errores detectados:</strong> {sslErrors}<br />
             <strong>Último error:</strong> {lastError?.toLocaleTimeString()}
@@ -111,7 +111,7 @@ const SSLErrorNotification = () => {
           </div>
         </div>
       </div>
-      
+
       <div className="mt-3 text-xs opacity-75 border-t border-white border-opacity-20 pt-2">
         💡 <strong>Tip:</strong> El modo demo está activo automáticamente para que puedas usar la app mientras se resuelve.
       </div>
