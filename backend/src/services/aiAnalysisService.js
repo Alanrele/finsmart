@@ -3,14 +3,26 @@ const OpenAI = require('openai');
 class AIAnalysisService {
   constructor() {
     this.openai = null;
-    this.initialize();
+    this.isInitialized = false;
+    this.initialize().then(() => {
+      this.isInitialized = true;
+    }).catch(error => {
+      console.error('❌ AI service initialization failed:', error);
+      this.isInitialized = true; // Mark as initialized even if failed
+    });
   }
 
-  initialize() {
+  async initialize() {
     const apiKey = process.env.OPENAI_API_KEY;
 
-    if (!apiKey) {
-      console.warn('OpenAI API key not provided. AI analysis functionality will be disabled.');
+    if (!apiKey || apiKey === 'your-openai-api-key-here' || apiKey.length < 20) {
+      console.log('⚠️ OpenAI API key not properly configured. Using fallback analysis only.');
+      return;
+    }
+
+    // Check if API key looks valid (should start with sk- and be reasonable length)
+    if (!apiKey.startsWith('sk-')) {
+      console.log('⚠️ OpenAI API key format invalid. Using fallback analysis only.');
       return;
     }
 
@@ -18,15 +30,22 @@ class AIAnalysisService {
       this.openai = new OpenAI({
         apiKey: apiKey
       });
-      console.log('OpenAI service initialized successfully');
+      
+      console.log('✅ OpenAI service initialized (validation will happen on first use)');
+      
     } catch (error) {
-      console.error('Failed to initialize OpenAI service:', error);
+      console.warn('⚠️ Failed to initialize OpenAI service. Using fallback analysis only.', error.message);
+      this.openai = null;
     }
   }
 
+  isOpenAIAvailable() {
+    return this.openai !== null && this.isInitialized;
+  }
+
   async extractTransactionData(emailContent) {
-    if (!this.openai) {
-      throw new Error('OpenAI service not initialized');
+    if (!this.isOpenAIAvailable()) {
+      throw new Error('OpenAI service not available');
     }
 
     try {
@@ -98,7 +117,7 @@ Si no puedes extraer información válida, devuelve null.
   }
 
   async generateFinancialAnalysis(transactions, period = 'month') {
-    if (!this.openai) {
+    if (!this.isOpenAIAvailable()) {
       throw new Error('OpenAI service not initialized');
     }
 
@@ -167,7 +186,7 @@ Devuelve un objeto JSON con esta estructura:
   }
 
   async generateChatResponse(userMessage, transactions) {
-    if (!this.openai) {
+    if (!this.isOpenAIAvailable()) {
       throw new Error('OpenAI service not initialized');
     }
 
@@ -211,7 +230,7 @@ Responde de manera conversacional, amigable y útil. Usa los datos de transaccio
   }
 
   async generateSpendingInsights(trends, monthlyData) {
-    if (!this.openai) {
+    if (!this.isOpenAIAvailable()) {
       throw new Error('OpenAI service not initialized');
     }
 
@@ -267,7 +286,7 @@ Devuelve un array de strings con insights concretos y accionables.
   }
 
   async generateRecommendations(transactions) {
-    if (!this.openai) {
+    if (!this.isOpenAIAvailable()) {
       throw new Error('OpenAI service not initialized');
     }
 
@@ -332,7 +351,7 @@ Devuelve un array de objetos con esta estructura:
   }
 
   async predictSpending(transactions) {
-    if (!this.openai) {
+    if (!this.isOpenAIAvailable()) {
       throw new Error('OpenAI service not initialized');
     }
 
@@ -395,7 +414,7 @@ Devuelve un objeto JSON con esta estructura:
   }
 
   async categorizeTransaction(rawText) {
-    if (!this.openai) {
+    if (!this.isOpenAIAvailable()) {
       throw new Error('OpenAI service not initialized');
     }
 
