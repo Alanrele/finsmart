@@ -77,25 +77,42 @@ router.post('/connect', async (req, res) => {
 // Sync emails from BCP
 router.post('/sync-emails', async (req, res) => {
   try {
+    console.log('🔄 Starting email sync process...');
+    console.log('👤 Request user:', req.user);
+    
     const userId = req.user._id;
 
     // Only block demo users, allow real Microsoft users
     if (userId === 'demo-user-id') {
+      console.log('❌ Demo user blocked from sync');
       return res.status(400).json({
         error: 'Real Microsoft Graph connection required',
         details: 'Please connect with a real Microsoft account to sync emails'
       });
     }
 
-    const user = await User.findById(req.user._id);
+    console.log('🔍 Looking up user in database with ID:', userId);
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      console.log('❌ User not found in database:', userId);
+      return res.status(404).json({
+        error: 'User not found',
+        details: 'Please ensure you are properly authenticated'
+      });
+    }
+
+    console.log('✅ User found:', { email: user.email, hasToken: !!user.accessToken });
 
     if (!user.accessToken) {
+      console.log('❌ User has no access token');
       return res.status(400).json({
         error: 'Microsoft account not connected',
         details: 'Please connect your Microsoft account first'
       });
     }
 
+    console.log('🔗 Creating Graph client...');
     const graphClient = getGraphClient(user.accessToken);
 
     // Get emails from BCP notifications with expanded date range
@@ -170,54 +187,94 @@ router.post('/sync-emails', async (req, res) => {
 
         // Parse email content
         console.log('🔍 Parsing email:', message.subject);
-        const parsedData = emailParserService.parseEmailContent(emailContent);
+        
+        let parsedData;
+        try {
+          parsedData = emailParserService.parseEmailContent(emailContent);
+          console.log('📊 Parsed result:', { 
+            hasAmount: !!parsedData?.amount, 
+            amount: parsedData?.amount,
+            type: parsedData?.type 
+          });
+        } catch (parseError) {
+          console.error('❌ Email parsing failed:', parseError);
+          skippedEmails.push({
+            subject: message.subject,
+            reason: `Parsing error: ${parseError.message}`
+          });
+          continue;
+        }
 
         if (parsedData && parsedData.amount && parsedData.amount > 0) {
-          // Create transaction from parsed data
-          const transactionData = emailParserService.createTransactionFromEmail(
-            parsedData,
-            user._id,
-            {
-              id: message.id,
+          console.log('💰 Creating transaction from parsed data...');
+          
+          let transactionData;
+          try {
+            transactionData = emailParserService.createTransactionFromEmail(
+              parsedData,
+              user._id,
+              {
+                id: message.id,
+                subject: message.subject,
+                receivedDateTime: message.receivedDateTime
+              }
+            );
+            console.log('📝 Transaction data created:', {
+              amount: transactionData.amount,
+              type: transactionData.type,
+              description: transactionData.description
+            });
+          } catch (createError) {
+            console.error('❌ Transaction creation failed:', createError);
+            skippedEmails.push({
               subject: message.subject,
-              receivedDateTime: message.receivedDateTime
-            }
-          );
+              reason: `Transaction creation error: ${createError.message}`
+            });
+            continue;
+          }
 
           // Create transaction record
-          const transaction = new Transaction({
-            ...transactionData,
-            messageId: message.id,
-            rawText: emailContent.substring(0, 1000), // Store first 1000 chars for debugging
-            isProcessed: true,
-            createdAt: new Date(message.receivedDateTime)
-          });
-
-          await transaction.save();
-          processedTransactions.push(transaction);
-
-          console.log('✅ Transaction created:', {
-            messageId: message.id,
-            amount: transaction.amount,
-            type: transaction.type,
-            description: transaction.description,
-            date: transaction.date
-          });
-
-          // Emit real-time update to connected client
-          if (io) {
-            io.to(`user-${user._id}`).emit('new-transaction', {
-              ...transaction.toObject(),
-              isNew: true
+          try {
+            const transaction = new Transaction({
+              ...transactionData,
+              messageId: message.id,
+              rawText: emailContent.substring(0, 1000), // Store first 1000 chars for debugging
+              isProcessed: true,
+              createdAt: new Date(message.receivedDateTime)
             });
 
-            // Also emit general notification
-            io.to(`user-${user._id}`).emit('notification', {
-              type: 'success',
-              title: 'Nueva Transacción Detectada',
-              message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
-              priority: 'high',
-              timestamp: new Date()
+            await transaction.save();
+            processedTransactions.push(transaction);
+
+            console.log('✅ Transaction created:', {
+              messageId: message.id,
+              amount: transaction.amount,
+              type: transaction.type,
+              description: transaction.description,
+              date: transaction.date
+            });
+
+            // Emit real-time update to connected client
+            if (io) {
+              io.to(`user-${user._id}`).emit('new-transaction', {
+                ...transaction.toObject(),
+                isNew: true
+              });
+
+              // Also emit general notification
+              io.to(`user-${user._id}`).emit('notification', {
+                type: 'success',
+                title: 'Nueva Transacción Detectada',
+                message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
+                priority: 'high',
+                timestamp: new Date()
+              });
+            }
+          } catch (saveError) {
+            console.error('❌ Transaction save failed:', saveError);
+            skippedEmails.push({
+              subject: message.subject,
+              reason: `Database save error: ${saveError.message}`
             });
           }
         } else {
@@ -275,18 +332,44 @@ router.post('/sync-emails', async (req, res) => {
     res.json(response);
 
   } catch (error) {
-    console.error('❌ Sync emails error:', error);
+    console.error('❌ Sync emails error:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    });
 
-    if (error.code === 'InvalidAuthenticationToken') {
+    // Handle specific Microsoft Graph errors
+    if (error.code === 'InvalidAuthenticationToken' || error.code === 'Forbidden') {
       return res.status(401).json({
         error: 'Microsoft authentication expired',
-        details: 'Please reconnect your Microsoft account'
+        details: 'Please reconnect your Microsoft account',
+        code: error.code
+      });
+    }
+
+    // Handle database connection errors
+    if (error.name === 'MongooseError' || error.name === 'MongoError') {
+      return res.status(503).json({
+        error: 'Database connection error',
+        details: 'Please try again later',
+        code: error.code
+      });
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.message,
+        code: error.code
       });
     }
 
     res.status(500).json({
       error: 'Failed to sync emails',
-      details: error.message
+      details: error.message,
+      type: error.name || 'Unknown error'
     });
   }
 });
