@@ -164,7 +164,9 @@ export const graphAPI = {
   getStatus: () => api.get('/graph/status'),
   getFolders: () => api.get('/graph/folders'),
   disconnect: () => api.post('/graph/disconnect'),
-  testEmailParser: (emailContent) => api.post('/graph/test-email-parser', { emailContent })
+  testEmailParser: (emailContent) => api.post('/graph/test-email-parser', { emailContent }),
+  getSyncStatus: () => api.get('/graph/sync-status'),
+  toggleSync: (enabled) => api.post('/graph/sync-toggle', { enabled })
 }
 
 // Finance API

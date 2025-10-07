@@ -79,34 +79,11 @@ router.post('/sync-emails', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
+    // For demo/Microsoft users, still require proper Graph connection
     if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
-      console.log('🎭 Returning demo email sync data');
-      return res.json({
-        message: 'Emails synchronized successfully',
-        processed: 8,
-        newTransactions: 3,
-        emails: [
-          {
-            id: 'demo-email-1',
-            subject: 'Movimiento en tu Cuenta BCP - Compra por S/125.50',
-            date: new Date(Date.now() - 86400000).toISOString(),
-            processed: true
-          },
-          {
-            id: 'demo-email-2',
-            subject: 'Transferencia recibida - S/750.00',
-            date: new Date(Date.now() - 86400000 * 2).toISOString(),
-            processed: true
-          },
-          {
-            id: 'demo-email-3',
-            subject: 'Pago de servicios - S/35.75',
-            date: new Date(Date.now() - 86400000 * 3).toISOString(),
-            processed: true
-          }
-        ],
-        demoMode: true
+      return res.status(400).json({
+        error: 'Real Microsoft Graph connection required',
+        details: 'Please connect with a real Microsoft account to sync emails'
       });
     }
 
@@ -121,11 +98,20 @@ router.post('/sync-emails', async (req, res) => {
 
     const graphClient = getGraphClient(user.accessToken);
 
-    // Get emails from BCP notifications
-    const filter = "from/emailAddress/address eq 'notificaciones@bcp.com.pe' or from/emailAddress/address eq 'bcp@bcp.com.pe'";
+    // Get emails from BCP notifications with expanded date range
+    const bcpFilters = [
+      "from/emailAddress/address eq 'notificaciones@bcp.com.pe'",
+      "from/emailAddress/address eq 'bcp@bcp.com.pe'",
+      "from/emailAddress/address eq 'alertas@bcp.com.pe'",
+      "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
+    ];
+    
+    const filter = bcpFilters.join(' or ');
     const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
     const orderBy = 'receivedDateTime desc';
-    const top = 50;
+    const top = 100; // Increased to get more historical emails
+
+    console.log('📧 Fetching emails with filter:', filter);
 
     const messages = await graphClient
       .api('/me/messages')
@@ -135,7 +121,10 @@ router.post('/sync-emails', async (req, res) => {
       .top(top)
       .get();
 
+    console.log(`📨 Found ${messages.value.length} emails from BCP`);
+
     const processedTransactions = [];
+    const skippedEmails = [];
     const io = req.app.get('io');
 
     for (const message of messages.value) {
@@ -147,43 +136,43 @@ router.post('/sync-emails', async (req, res) => {
         });
 
         if (existingTransaction) {
-          continue; // Skip already processed message
+          console.log(`⏭️ Skipping already processed email: ${message.subject}`);
+          continue;
         }
 
         let emailContent = '';
 
-        // Extract content from email body (keeping HTML for better parsing)
+        // Extract content from email body
         if (message.body.contentType === 'html') {
-          emailContent = message.body.content; // Keep HTML for cheerio parsing
+          emailContent = message.body.content;
         } else {
           emailContent = message.body.content;
         }
 
-        // Process attachments if any (images for OCR)
+        // Process attachments for OCR if any
         if (message.hasAttachments) {
-          const attachments = await graphClient
-            .api(`/me/messages/${message.id}/attachments`)
-            .get();
+          try {
+            const attachments = await graphClient
+              .api(`/me/messages/${message.id}/attachments`)
+              .get();
 
-          for (const attachment of attachments.value) {
-            if (attachment.contentType && attachment.contentType.startsWith('image/')) {
-              try {
+            for (const attachment of attachments.value) {
+              if (attachment.contentType && attachment.contentType.startsWith('image/')) {
+                console.log('🖼️ Processing image attachment with OCR');
                 const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                emailContent += '\n' + ocrText;
-              } catch (ocrError) {
-                console.error('OCR processing failed:', ocrError);
+                emailContent += '\n\nOCR Content:\n' + ocrText;
               }
             }
+          } catch (attachmentError) {
+            console.error('❌ Error processing attachments:', attachmentError);
           }
         }
 
-        // Parse email content using your sophisticated parser
-        console.log('📧 Parsing email content for message:', message.id);
+        // Parse email content
+        console.log('🔍 Parsing email:', message.subject);
         const parsedData = emailParserService.parseEmailContent(emailContent);
 
-        console.log('📊 Parsed data:', parsedData);
-
-        if (parsedData && parsedData.amount) {
+        if (parsedData && parsedData.amount && parsedData.amount > 0) {
           // Create transaction from parsed data
           const transactionData = emailParserService.createTransactionFromEmail(
             parsedData,
@@ -199,30 +188,52 @@ router.post('/sync-emails', async (req, res) => {
           const transaction = new Transaction({
             ...transactionData,
             messageId: message.id,
-            rawText: emailContent,
-            isProcessed: true
+            rawText: emailContent.substring(0, 1000), // Store first 1000 chars for debugging
+            isProcessed: true,
+            createdAt: new Date(message.receivedDateTime)
           });
 
           await transaction.save();
           processedTransactions.push(transaction);
 
-          console.log('✅ Transaction created from email:', {
+          console.log('✅ Transaction created:', {
             messageId: message.id,
             amount: transaction.amount,
             type: transaction.type,
-            description: transaction.description
+            description: transaction.description,
+            date: transaction.date
           });
 
-          // Emit real-time update
+          // Emit real-time update to connected client
           if (io) {
-            io.to(`user-${user._id}`).emit('new-transaction', transaction);
+            io.to(`user-${user._id}`).emit('new-transaction', {
+              ...transaction.toObject(),
+              isNew: true
+            });
+            
+            // Also emit general notification
+            io.to(`user-${user._id}`).emit('notification', {
+              type: 'success',
+              title: 'Nueva Transacción Detectada',
+              message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
+              priority: 'high',
+              timestamp: new Date()
+            });
           }
         } else {
-          console.log('⚠️ No valid transaction data found in email:', message.subject);
+          skippedEmails.push({
+            subject: message.subject,
+            reason: 'No valid transaction data found'
+          });
+          console.log('⚠️ No transaction data in email:', message.subject);
         }
 
       } catch (messageError) {
-        console.error(`Error processing message ${message.id}:`, messageError);
+        console.error(`❌ Error processing message ${message.id}:`, messageError);
+        skippedEmails.push({
+          subject: message.subject,
+          reason: messageError.message
+        });
       }
     }
 
@@ -230,15 +241,41 @@ router.post('/sync-emails', async (req, res) => {
     user.lastSync = new Date();
     await user.save();
 
-    res.json({
-      message: 'Email sync completed',
+    // Setup periodic sync if this is the first successful sync
+    if (processedTransactions.length > 0 && !user.syncEnabled) {
+      user.syncEnabled = true;
+      await user.save();
+      console.log('🔄 Enabled periodic sync for user');
+    }
+
+    const response = {
+      message: 'Email sync completed successfully',
       processedCount: processedTransactions.length,
       totalEmails: messages.value.length,
-      transactions: processedTransactions
+      skippedCount: skippedEmails.length,
+      transactions: processedTransactions.map(t => ({
+        id: t._id,
+        amount: t.amount,
+        type: t.type,
+        description: t.description,
+        date: t.date,
+        account: t.account
+      })),
+      skippedEmails: skippedEmails.slice(0, 5), // Show first 5 skipped for debugging
+      syncEnabled: user.syncEnabled,
+      lastSync: user.lastSync
+    };
+
+    console.log('📊 Sync summary:', {
+      processed: processedTransactions.length,
+      total: messages.value.length,
+      skipped: skippedEmails.length
     });
 
+    res.json(response);
+
   } catch (error) {
-    console.error('Sync emails error:', error);
+    console.error('❌ Sync emails error:', error);
 
     if (error.code === 'InvalidAuthenticationToken') {
       return res.status(401).json({
@@ -247,7 +284,97 @@ router.post('/sync-emails', async (req, res) => {
       });
     }
 
-    res.status(500).json({ error: 'Failed to sync emails' });
+    res.status(500).json({ 
+      error: 'Failed to sync emails',
+      details: error.message 
+    });
+  }
+});
+
+// Enable/Disable periodic sync for user
+router.post('/sync-toggle', async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const userId = req.user._id;
+
+    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+      return res.status(400).json({
+        error: 'Real Microsoft Graph connection required',
+        details: 'Demo users cannot enable sync'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.accessToken) {
+      return res.status(400).json({
+        error: 'Microsoft account not connected',
+        details: 'Please connect your Microsoft account first'
+      });
+    }
+
+    user.syncEnabled = enabled;
+    await user.save();
+
+    console.log(`🔄 Sync ${enabled ? 'enabled' : 'disabled'} for user: ${user.email}`);
+
+    res.json({
+      message: `Email sync ${enabled ? 'enabled' : 'disabled'} successfully`,
+      syncEnabled: user.syncEnabled,
+      lastSync: user.lastSync
+    });
+
+  } catch (error) {
+    console.error('❌ Sync toggle error:', error);
+    res.status(500).json({ 
+      error: 'Failed to toggle sync',
+      details: error.message 
+    });
+  }
+});
+
+// Get sync status for user
+router.get('/sync-status', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+      return res.json({
+        syncEnabled: false,
+        lastSync: null,
+        isDemo: true,
+        message: 'Connect a real Microsoft account to enable sync'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get recent transactions count
+    const recentTransactions = await Transaction.countDocuments({
+      userId: user._id,
+      createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
+    });
+
+    res.json({
+      syncEnabled: user.syncEnabled || false,
+      lastSync: user.lastSync,
+      hasConnection: !!user.accessToken,
+      recentTransactions,
+      email: user.email
+    });
+
+  } catch (error) {
+    console.error('❌ Sync status error:', error);
+    res.status(500).json({ 
+      error: 'Failed to get sync status',
+      details: error.message 
+    });
   }
 });
 

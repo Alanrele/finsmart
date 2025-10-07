@@ -60,6 +60,10 @@ const userSchema = new mongoose.Schema({
   lastSync: {
     type: Date
   },
+  syncEnabled: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now

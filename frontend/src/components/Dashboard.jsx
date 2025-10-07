@@ -29,6 +29,7 @@ import useAppStore from '../stores/appStore'
 import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
+import EmailSyncControl from './EmailSyncControl'
 
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore()
@@ -388,6 +389,9 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </motion.div>
       )}
+
+      {/* Email Sync Control */}
+      <EmailSyncControl />
     </div>
   )
 }

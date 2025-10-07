@@ -18,6 +18,9 @@ const authMiddleware = require('./middleware/authMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./middleware/logger');
 
+// Import services
+const EmailSyncService = require('./services/emailSyncService');
+
 // Import helmet config
 const { productionHelmetConfig, developmentHelmetConfig } = require('./config/helmet');
 
@@ -230,6 +233,20 @@ io.on('connection', (socket) => {
 
 // Make io available to routes
 app.set('io', io);
+
+// Initialize Email Sync Service
+const emailSyncService = new EmailSyncService(io);
+
+// Start periodic email sync in production (every 15 minutes)
+if (process.env.NODE_ENV === 'production') {
+  emailSyncService.startPeriodicSync(15);
+  console.log('📧 Periodic email sync started (15 minutes interval)');
+} else {
+  console.log('📧 Periodic email sync disabled in development mode');
+}
+
+// Make emailSyncService available to routes
+app.set('emailSyncService', emailSyncService);
 
 // Error handling middleware
 app.use(errorHandler);
