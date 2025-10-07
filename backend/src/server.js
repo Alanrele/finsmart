@@ -61,7 +61,7 @@ const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart')
 .then(async () => {
   console.log('Connected to MongoDB');
-  
+
   // Clean up malformed tokens on startup
   console.log('🧹 Performing token cleanup...');
   const cleanedCount = await tokenCleanup.cleanupMalformedTokens();

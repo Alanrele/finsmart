@@ -32,7 +32,7 @@ const AuthDebugger = () => {
           'Content-Type': 'application/json'
         }
       });
-      
+
       setApiTest({
         status: response.status,
         statusText: response.statusText,
@@ -49,13 +49,12 @@ const AuthDebugger = () => {
 
   const enableDemoMode = async () => {
     try {
-      console.log('🎭 Activating demo mode...');
       const response = await authAPI.demoLogin();
-      
+
       if (response.data) {
         authStore.login(response.data.user, response.data.token);
         toast.success('Modo demo activado exitosamente');
-        
+
         // Refresh the page to apply new auth state
         setTimeout(() => {
           window.location.reload();
@@ -89,7 +88,7 @@ const AuthDebugger = () => {
       fontSize: '12px'
     }}>
       <h4>🔧 Auth Debugger</h4>
-      
+
       <div style={{ marginBottom: '10px' }}>
         <strong>Auth Store:</strong>
         <br />
@@ -119,7 +118,7 @@ const AuthDebugger = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-        <button 
+        <button
           onClick={enableDemoMode}
           style={{
             padding: '5px 10px',
@@ -132,8 +131,8 @@ const AuthDebugger = () => {
         >
           Enable Demo Mode
         </button>
-        
-        <button 
+
+        <button
           onClick={clearAuth}
           style={{
             padding: '5px 10px',
@@ -147,7 +146,7 @@ const AuthDebugger = () => {
           Clear Auth
         </button>
 
-        <button 
+        <button
           onClick={testApiConnection}
           style={{
             padding: '5px 10px',

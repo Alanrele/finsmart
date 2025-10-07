@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const { cleanupUserToken } = require('../utils/tokenCleanup');
 
 // Track recently cleaned up tokens to prevent infinite loops
 const recentlyCleanedTokens = new Set();
@@ -14,13 +15,9 @@ const authMiddleware = async (req, res, next) => {
     }
 
     console.log('🔑 Auth middleware - Token received:', token.substring(0, 20) + '...');
-    console.log('🔍 Token length:', token.length);
-    console.log('🔍 Token type:', typeof token);
-    console.log('🔍 Token first 50 chars:', token.substring(0, 50));
-    console.log('🔍 Token last 10 chars:', token.substring(token.length - 10));
 
     // Check if this token was recently cleaned up to prevent loops
-    const tokenHash = token.substring(0, 30); // Use first 30 chars as hash
+    const tokenHash = token.substring(0, 30);
     if (recentlyCleanedTokens.has(tokenHash)) {
       console.error('🔄 Token was recently cleaned up - preventing loop');
       return res.status(401).json({
@@ -51,19 +48,20 @@ const authMiddleware = async (req, res, next) => {
       // Enhanced token validation for obviously corrupted tokens
       if (token.includes('undefined') || token.includes('null') || token === 'undefined' || token === 'null') {
         console.error('❌ Malformed token detected (contains undefined/null)');
-        await cleanupCorruptedToken(token);
-        return res.status(401).json({ 
-          error: 'Invalid authentication token', 
+        await addToCleanupCache(tokenHash);
+        await cleanupUserByToken(token);
+        return res.status(401).json({
+          error: 'Invalid authentication token',
           details: 'Token is malformed or corrupted. Please re-authenticate.',
           code: 'TOKEN_CORRUPTED'
         });
       }
 
       // Additional pre-validation for Microsoft tokens
-      // Check for common patterns that indicate corruption
       if (token.length < 20 || token.includes(' ') || token.includes('\n') || token.includes('\r')) {
         console.error('❌ Suspicious token format detected - likely corrupted');
-        await cleanupCorruptedToken(token);
+        await addToCleanupCache(tokenHash);
+        await cleanupUserByToken(token);
         return res.status(401).json({
           error: 'Suspicious token format',
           details: 'Token appears to be corrupted. Please re-authenticate.',
@@ -71,8 +69,6 @@ const authMiddleware = async (req, res, next) => {
         });
       }
 
-      // Microsoft Graph tokens can have different formats (not always JWT)
-      // Skip JWT format validation for Microsoft tokens
       console.log('🔍 Microsoft token format validation passed');
 
       try {
@@ -138,16 +134,8 @@ const authMiddleware = async (req, res, next) => {
         // Check for specific JWT malformed error from Microsoft
         if (error.message && error.message.includes('JWT is not well formed')) {
           console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
-          
-          // Add to recently cleaned tokens cache to prevent loops
-          const tokenHash = token.substring(0, 30);
-          recentlyCleanedTokens.add(tokenHash);
-          setTimeout(() => {
-            recentlyCleanedTokens.delete(tokenHash);
-          }, CLEANUP_CACHE_DURATION);
-          
-          // Clean up the corrupted token immediately
-          await cleanupCorruptedToken(token);
+          await addToCleanupCache(tokenHash);
+          await cleanupUserByToken(token);
           
           return res.status(401).json({
             error: 'Authentication token corrupted',
@@ -160,16 +148,8 @@ const authMiddleware = async (req, res, next) => {
         // Check for invalid authentication token error
         if (error.code === 'InvalidAuthenticationToken') {
           console.error('🔑 Invalid authentication token - cleaning up');
-          
-          // Add to recently cleaned tokens cache to prevent loops
-          const tokenHash = token.substring(0, 30);
-          recentlyCleanedTokens.add(tokenHash);
-          setTimeout(() => {
-            recentlyCleanedTokens.delete(tokenHash);
-          }, CLEANUP_CACHE_DURATION);
-          
-          // Clean up the invalid token
-          await cleanupCorruptedToken(token);
+          await addToCleanupCache(tokenHash);
+          await cleanupUserByToken(token);
           
           return res.status(401).json({
             error: 'Invalid authentication token',
@@ -230,27 +210,22 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
-// Helper function to cleanup corrupted tokens from database
-const cleanupCorruptedToken = async (corruptedToken) => {
+// Helper functions
+const addToCleanupCache = (tokenHash) => {
+  recentlyCleanedTokens.add(tokenHash);
+  setTimeout(() => {
+    recentlyCleanedTokens.delete(tokenHash);
+  }, CLEANUP_CACHE_DURATION);
+};
+
+const cleanupUserByToken = async (token) => {
   try {
     console.log('🧹 Cleaning up corrupted token from database...');
-    console.log('🔍 Corrupted token preview:', corruptedToken.substring(0, 30) + '...');
     
-    // First, let's see how many users have this token
-    const usersWithToken = await User.find({ accessToken: corruptedToken });
-    console.log(`🔍 Found ${usersWithToken.length} user(s) with this corrupted token`);
-    
-    if (usersWithToken.length > 0) {
-      usersWithToken.forEach(user => {
-        console.log(`🔍 User with corrupted token: ${user.email}`);
-      });
-    }
-    
-    // Find users with this corrupted token and clear it
     const result = await User.updateMany(
-      { accessToken: corruptedToken },
-      { 
-        $unset: { 
+      { accessToken: token },
+      {
+        $unset: {
           accessToken: 1,
           refreshToken: 1,
           tokenExpiry: 1
@@ -262,33 +237,7 @@ const cleanupCorruptedToken = async (corruptedToken) => {
 
     if (result.modifiedCount > 0) {
       console.log(`🧹 Successfully cleaned up corrupted token for ${result.modifiedCount} user(s)`);
-    } else {
-      console.log('🧹 No users found with this specific corrupted token');
     }
-    
-    // Also clean up any tokens that might be similar or partial matches
-    const partialResult = await User.updateMany(
-      { 
-        accessToken: { 
-          $regex: corruptedToken.substring(0, 20),
-          $options: 'i' 
-        }
-      },
-      { 
-        $unset: { 
-          accessToken: 1,
-          refreshToken: 1,
-          tokenExpiry: 1
-        },
-        lastSync: new Date(),
-        syncEnabled: false
-      }
-    );
-    
-    if (partialResult.modifiedCount > 0) {
-      console.log(`🧹 Additional cleanup: found ${partialResult.modifiedCount} user(s) with similar tokens`);
-    }
-    
   } catch (cleanupError) {
     console.error('❌ Error cleaning up corrupted token:', cleanupError);
   }

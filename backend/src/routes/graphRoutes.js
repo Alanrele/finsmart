@@ -25,24 +25,10 @@ class CustomAuthProvider {
 
 // Get Graph client for user with token validation
 const getGraphClient = (accessToken) => {
-  // Validate token format
-  if (!accessToken || typeof accessToken !== 'string') {
-    throw new Error('Invalid access token: Token is null or not a string');
+  // Basic validation - detailed validation is handled in authMiddleware
+  if (!accessToken || typeof accessToken !== 'string' || accessToken.length < 20) {
+    throw new Error('Invalid access token');
   }
-
-  // Check if token looks like a valid Microsoft access token
-  if (accessToken.length < 50) {
-    throw new Error('Invalid access token: Token too short');
-  }
-
-  // Check for common malformed token patterns
-  if (accessToken.includes('undefined') || accessToken.includes('null')) {
-    throw new Error('Invalid access token: Token contains undefined/null values');
-  }
-
-  // Basic JWT format validation (Microsoft tokens can be JWT or opaque)
-  // Microsoft Graph tokens can be either JWT (with dots) or opaque tokens (without dots)
-  console.log('🔍 Token validation - Length:', accessToken.length, 'Format:', accessToken.includes('.') ? 'JWT' : 'Opaque');
 
   const authProvider = new CustomAuthProvider(accessToken);
   return Client.initWithMiddleware({ authProvider });
@@ -213,7 +199,7 @@ router.post('/sync-emails', async (req, res) => {
         .api('/me/messages')
         .top(25) // Very small number
         .get();
-      
+
       console.log('✅ Ultra-minimal query successful');
     } catch (graphError) {
       if (graphError.code === 'InefficientFilter') {
@@ -224,7 +210,7 @@ router.post('/sync-emails', async (req, res) => {
           messages = await graphClient
             .api('/me/messages')
             .get();
-          
+
           console.log('✅ Absolute minimum query successful');
           // Limit results manually if we get too many
           if (messages.value && messages.value.length > 20) {
@@ -494,7 +480,7 @@ router.post('/sync-emails', async (req, res) => {
       // Check for JWT malformed error specifically
       if (error.message && error.message.includes('JWT is not well formed')) {
         console.error('🔑 JWT malformed error in Graph API call');
-        
+
         // Clean up the corrupted token from database
         try {
           const user = await User.findById(req.user._id);
@@ -835,7 +821,7 @@ router.post('/disconnect', async (req, res) => {
 router.post('/cleanup-malformed-tokens', authMiddleware, async (req, res) => {
   try {
     console.log('🧹 Manual token cleanup requested...');
-    
+
     // Check if current user token is malformed
     if (req.user && req.user._id) {
       const user = await User.findById(req.user._id);
@@ -844,10 +830,10 @@ router.post('/cleanup-malformed-tokens', authMiddleware, async (req, res) => {
         await tokenCleanup.cleanupUserToken(user._id);
       }
     }
-    
+
     // Clean up all malformed tokens in database
     const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
-    
+
     res.json({
       message: 'Token cleanup completed',
       cleanedCount,

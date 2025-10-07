@@ -239,7 +239,7 @@ router.post('/demo-login', async (req, res) => {
 
     // Check if demo user exists, create if not
     let demoUser = await User.findOne({ email: 'demo@example.com' });
-    
+
     if (!demoUser) {
       console.log('🎭 Creating demo user...');
       demoUser = new User({
@@ -272,9 +272,9 @@ router.post('/demo-login', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Demo login error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Demo login failed',
-      details: error.message 
+      details: error.message
     });
   }
 });
@@ -283,7 +283,7 @@ router.post('/demo-login', async (req, res) => {
 router.post('/cleanup-corrupted-token', async (req, res) => {
   try {
     const { token } = req.body;
-    
+
     if (!token) {
       return res.status(400).json({
         error: 'Token required',
@@ -292,12 +292,12 @@ router.post('/cleanup-corrupted-token', async (req, res) => {
     }
 
     console.log('🧹 Manual token cleanup requested for token:', token.substring(0, 20) + '...');
-    
+
     // Find and clean up users with this corrupted token
     const result = await User.updateMany(
       { accessToken: token },
-      { 
-        $unset: { 
+      {
+        $unset: {
           accessToken: 1,
           refreshToken: 1,
           tokenExpiry: 1
@@ -309,7 +309,7 @@ router.post('/cleanup-corrupted-token', async (req, res) => {
 
     if (result.modifiedCount > 0) {
       console.log(`🧹 Cleaned up corrupted token for ${result.modifiedCount} user(s)`);
-      
+
       res.json({
         message: 'Corrupted token cleaned up successfully',
         usersAffected: result.modifiedCount,
@@ -336,21 +336,21 @@ router.post('/cleanup-corrupted-token', async (req, res) => {
 router.post('/cleanup-all-corrupted-tokens', async (req, res) => {
   try {
     console.log('🧹 Manual cleanup of ALL corrupted tokens requested');
-    
+
     // Import the tokenCleanup utility
     const tokenCleanup = require('../utils/tokenCleanup');
-    
+
     // Run comprehensive cleanup
     const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
-    
+
     console.log(`🧹 Comprehensive cleanup completed: ${cleanedCount} tokens cleaned`);
-    
+
     res.json({
       message: 'Comprehensive token cleanup completed',
       tokensCleanedUp: cleanedCount,
       recommendation: 'All users with corrupted tokens should sign in again'
     });
-    
+
   } catch (error) {
     console.error('❌ Comprehensive cleanup failed:', error);
     res.status(500).json({

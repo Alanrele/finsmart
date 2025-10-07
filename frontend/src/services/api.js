@@ -4,22 +4,11 @@ import { getRailwayConfig } from '../config/railway'
 // Configurar URL del backend para producción y desarrollo
 const getApiBaseUrl = () => {
   const railwayConfig = getRailwayConfig();
-
-  console.log('🌐 API Config - Railway Environment:', {
-    isDevelopment: railwayConfig.isDevelopment,
-    isProduction: railwayConfig.isProduction,
-    hostname: railwayConfig.hostname,
-    apiUrl: railwayConfig.apiUrl
-  });
-
   // Agregar /api al final para el backend
   return `${railwayConfig.apiUrl}/api`;
 }
 
 const API_BASE_URL = getApiBaseUrl()
-
-console.log('🔗 API Base URL:', API_BASE_URL)
-console.log('🌐 Current hostname:', window.location.hostname)
 
 // Create axios instance
 const api = axios.create({
@@ -50,7 +39,6 @@ const checkBackendHealth = async () => {
 
 // Verificar salud del backend al inicializar
 checkBackendHealth().then(isHealthy => {
-  console.log('🏥 Backend health status:', isHealthy ? '✅ Healthy' : '❌ Unhealthy');
   if (!isHealthy) {
     console.warn('⚠️ Backend no está disponible. Las funcionalidades pueden estar limitadas.');
   }
@@ -59,22 +47,12 @@ checkBackendHealth().then(isHealthy => {
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    console.log('🔐 API Request interceptor - checking for token...');
-
     // Intentar obtener el token del localStorage (Zustand structure)
     const authStorage = localStorage.getItem('auth-storage');
 
     if (authStorage) {
       try {
         const authData = JSON.parse(authStorage);
-        console.log('🔍 Auth data found:', {
-          hasState: !!authData.state,
-          hasToken: !!authData.state?.token,
-          isAuthenticated: authData.state?.isAuthenticated,
-          // Also check direct structure for backward compatibility
-          hasDirectToken: !!authData.token,
-          directIsAuthenticated: authData.isAuthenticated
-        });
 
         // Try Zustand structure first (state.token)
         let token = null;
@@ -83,34 +61,20 @@ api.interceptors.request.use(
         if (authData.state?.token && authData.state?.isAuthenticated) {
           token = authData.state.token;
           isAuthenticated = authData.state.isAuthenticated;
-          console.log('✅ Using Zustand structure token');
-        } 
+        }
         // Fallback to direct structure
         else if (authData.token && authData.isAuthenticated) {
           token = authData.token;
           isAuthenticated = authData.isAuthenticated;
-          console.log('✅ Using direct structure token');
         }
 
         if (token && isAuthenticated) {
           config.headers.Authorization = `Bearer ${token}`;
-          console.log('✅ Authorization header added');
-        } else {
-          console.warn('⚠️ No valid token found in auth storage');
         }
       } catch (error) {
         console.error('❌ Error parsing auth token:', error);
       }
-    } else {
-      console.warn('⚠️ No auth storage found');
     }
-
-    console.log('📤 API Request:', {
-      method: config.method?.toUpperCase(),
-      url: config.url,
-      hasAuth: !!config.headers.Authorization,
-      baseURL: config.baseURL
-    });
 
     return config;
   },
@@ -123,46 +87,29 @@ api.interceptors.request.use(
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => {
-    console.log('✅ API Response:', {
-      status: response.status,
-      url: response.config.url,
-      method: response.config.method?.toUpperCase()
-    });
     return response;
   },
   (error) => {
-    console.error('❌ API Error:', {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      url: error.config?.url,
-      method: error.config?.method?.toUpperCase(),
-      data: error.response?.data
-    });
-
     if (error.response?.status === 401) {
-      console.warn('🔐 Unauthorized request detected');
-      
       // Check for specific JWT malformed errors
       const errorData = error.response?.data;
-      const isJWTMalformed = 
-        errorData?.code === 'JWT_MALFORMED' || 
+      const isJWTMalformed =
+        errorData?.code === 'JWT_MALFORMED' ||
         errorData?.code === 'JWT_MALFORMED_BY_MICROSOFT' ||
         errorData?.code === 'INVALID_AUTH_TOKEN_BY_MICROSOFT' ||
         errorData?.message?.includes('JWT is not well formed');
 
       if (isJWTMalformed) {
         console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
-        
+
         // Get the corrupted token for cleanup
         const authStorage = localStorage.getItem('auth-storage');
         if (authStorage) {
           try {
             const authData = JSON.parse(authStorage);
             const corruptedToken = authData.state?.token || authData.token;
-            
+
             if (corruptedToken) {
-              console.log('🧹 Calling backend cleanup for corrupted token:', corruptedToken.substring(0, 20) + '...');
-              
               // Call backend to clean up the corrupted token using full API URL
               fetch(`${API_BASE_URL}/auth/cleanup-corrupted-token`, {
                 method: 'POST',
@@ -170,24 +117,13 @@ api.interceptors.response.use(
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ token: corruptedToken })
-              }).then(response => {
-                console.log('🧹 Cleanup response status:', response.status);
-                return response.json();
-              })
-                .then(data => {
-                  console.log('🧹 Token cleanup response:', data);
-                })
-                .catch(cleanupError => {
-                  console.error('❌ Token cleanup failed:', cleanupError);
-                });
-            } else {
-              console.warn('⚠️ No corrupted token found for cleanup');
+              }).catch(cleanupError => {
+                console.error('❌ Token cleanup failed:', cleanupError);
+              });
             }
           } catch (parseError) {
             console.error('❌ Error parsing auth data for cleanup:', parseError);
           }
-        } else {
-          console.warn('⚠️ No auth storage found for cleanup');
         }
 
         // Show specific error message for JWT issues
