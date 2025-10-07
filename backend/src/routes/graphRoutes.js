@@ -115,28 +115,34 @@ router.post('/sync-emails', async (req, res) => {
     console.log('🔗 Creating Graph client...');
     const graphClient = getGraphClient(user.accessToken);
 
-    // Get emails from BCP notifications with expanded date range
-    const bcpFilters = [
-      "from/emailAddress/address eq 'notificaciones@bcp.com.pe'",
-      "from/emailAddress/address eq 'bcp@bcp.com.pe'",
-      "from/emailAddress/address eq 'alertas@bcp.com.pe'",
-      "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
-    ];
-
-    const filter = bcpFilters.join(' or ');
+    // Define BCP email domains for filtering
+    const bcpDomains = ['bcp.com.pe'];
+    
+    // Simplified approach: Get recent emails and filter in memory to avoid complex Graph queries
     const select = 'id,subject,body,receivedDateTime,from,hasAttachments';
     const orderBy = 'receivedDateTime desc';
-    const top = 100; // Increased to get more historical emails
+    const top = 200; // Get more emails to filter in memory
 
-    console.log('📧 Fetching emails with filter:', filter);
+    console.log('📧 Fetching recent emails without complex filter');
 
     const messages = await graphClient
       .api('/me/messages')
-      .filter(filter)
       .select(select)
       .orderby(orderBy)
       .top(top)
       .get();
+
+    console.log(`📨 Retrieved ${messages.value.length} total emails, filtering for BCP emails`);
+
+    // Filter BCP emails in memory
+    const bcpEmails = messages.value.filter(message => {
+      const fromEmail = message.from?.emailAddress?.address?.toLowerCase() || '';
+      return bcpDomains.some(domain => fromEmail.includes(domain));
+    });
+
+    console.log(`🏦 Found ${bcpEmails.length} emails from BCP domains`);
+
+    const messages_filtered = { value: bcpEmails };
 
     console.log(`📨 Found ${messages.value.length} emails from BCP`);
 
@@ -144,7 +150,7 @@ router.post('/sync-emails', async (req, res) => {
     const skippedEmails = [];
     const io = req.app.get('io');
 
-    for (const message of messages.value) {
+    for (const message of messages_filtered.value) {
       try {
         // Check if message already processed
         const existingTransaction = await Transaction.findOne({
