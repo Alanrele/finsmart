@@ -28,7 +28,7 @@ const authMiddleware = async (req, res, next) => {
     if (token.length > 50 && typeof token === 'string') {
       console.log('🔑 Microsoft token detected, processing...');
 
-      // Enhanced token validation
+      // Enhanced token validation for obviously corrupted tokens
       if (token.includes('undefined') || token.includes('null') || token === 'undefined' || token === 'null') {
         console.error('❌ Malformed token detected (contains undefined/null)');
         await cleanupCorruptedToken(token);
@@ -39,16 +39,9 @@ const authMiddleware = async (req, res, next) => {
         });
       }
 
-      // Check for JWT format (should have dots separating sections)
-      if (!token.includes('.') || token.split('.').length < 2) {
-        console.error('❌ JWT malformed token detected (no proper format)');
-        await cleanupCorruptedToken(token);
-        return res.status(401).json({ 
-          error: 'JWT token malformed', 
-          details: 'Authentication token is not properly formatted. Please sign out and sign in again.',
-          code: 'JWT_MALFORMED'
-        });
-      }
+      // Microsoft Graph tokens can have different formats (not always JWT)
+      // Skip JWT format validation for Microsoft tokens
+      console.log('🔍 Microsoft token format validation passed');
 
       try {
         // Try to get user info from Microsoft Graph using the token

@@ -19,6 +19,7 @@ const cleanupMalformedTokens = async () => {
       const token = user.accessToken;
       
       // Check for malformed tokens
+      // Note: Microsoft Graph tokens may not follow JWT format (no dots)
       const isMalformed = 
         !token || 
         typeof token !== 'string' ||
@@ -26,10 +27,12 @@ const cleanupMalformedTokens = async () => {
         token.includes('null') || 
         token === 'undefined' || 
         token === 'null' ||
-        !token.includes('.') ||
-        token.split('.').length < 2;
+        token.length < 10; // Very short tokens are likely corrupted
       
-      if (isMalformed) {
+      // Skip Microsoft Graph tokens (they may not have dots)
+      const isMicrosoftGraphToken = token.startsWith('EwB') || token.startsWith('eyJ') || (token.length > 100 && !token.includes('.'));
+      
+      if (isMalformed && !isMicrosoftGraphToken) {
         console.log(`🧹 Cleaning malformed token for user: ${user.email}`);
         
         // Clear all token-related fields
@@ -63,11 +66,19 @@ const cleanupMalformedTokens = async () => {
 
 /**
  * Check if a specific token is malformed
+ * Note: Microsoft Graph tokens may not follow JWT format
  */
 const isTokenMalformed = (token) => {
   if (!token || typeof token !== 'string') return true;
   if (token.includes('undefined') || token.includes('null')) return true;
   if (token === 'undefined' || token === 'null') return true;
+  if (token.length < 10) return true; // Very short tokens are likely corrupted
+  
+  // Microsoft Graph tokens are valid even without dots
+  const isMicrosoftGraphToken = token.startsWith('EwB') || token.startsWith('eyJ') || (token.length > 100 && !token.includes('.'));
+  if (isMicrosoftGraphToken) return false;
+  
+  // For JWT tokens, check format
   if (!token.includes('.') || token.split('.').length < 2) return true;
   return false;
 };
