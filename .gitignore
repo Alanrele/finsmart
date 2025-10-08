@@ -16,6 +16,8 @@ build/
 .env.test.local
 .env.production.local
 .env.production
+.env.prod
+backend/.env.prod
 
 # Real API keys file (NEVER commit)
 CLAVES_REALES.md
