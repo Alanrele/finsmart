@@ -22,21 +22,44 @@ const AuthCallback = () => {
         if (response && response.account) {
           console.log('✅ AuthCallback - Login successful:', response.account.username)
 
-          // Success - user is authenticated
-          const userInfo = {
-            _id: response.account.localAccountId,
-            firstName: response.account.idTokenClaims?.given_name || 'Usuario',
-            lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
-            email: response.account.username,
-            avatar: null
+          // Get access token for Microsoft Graph
+          const tokenRequest = {
+            scopes: ['https://graph.microsoft.com/Mail.Read', 'https://graph.microsoft.com/User.Read'],
+            account: response.account
           }
 
-          // Create a demo token for development
-          const token = `demo-token-${Date.now()}`
+          try {
+            const tokenResponse = await instance.acquireTokenSilent(tokenRequest)
+            const accessToken = tokenResponse.accessToken
+            console.log('🔑 AuthCallback - Access token obtained')
 
-          login(userInfo, token)
-          toast.success('✅ Autenticación exitosa con Microsoft')
-          navigate('/dashboard')
+            // Success - user is authenticated
+            const userInfo = {
+              _id: response.account.localAccountId,
+              firstName: response.account.idTokenClaims?.given_name || 'Usuario',
+              lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
+              email: response.account.username,
+              avatar: null
+            }
+
+            login(userInfo, accessToken)
+            toast.success('✅ Autenticación exitosa con Microsoft')
+            navigate('/dashboard')
+          } catch (tokenError) {
+            console.error('❌ AuthCallback - Error getting access token:', tokenError)
+            // Fallback to demo token if token acquisition fails
+            const token = `demo-token-${Date.now()}`
+            const userInfo = {
+              _id: response.account.localAccountId,
+              firstName: response.account.idTokenClaims?.given_name || 'Usuario',
+              lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
+              email: response.account.username,
+              avatar: null
+            }
+            login(userInfo, token)
+            toast.success('✅ Autenticación exitosa con Microsoft (modo demo)')
+            navigate('/dashboard')
+          }
         } else {
           console.log('⚠️ AuthCallback - No response, redirecting to login')
           navigate('/login')
