@@ -177,7 +177,8 @@ export const graphAPI = {
   disconnect: () => api.post('/graph/disconnect'),
   testEmailParser: (emailContent) => api.post('/graph/test-email-parser', { emailContent }),
   getSyncStatus: () => api.get('/graph/sync-status'),
-  toggleSync: (enabled) => api.post('/graph/sync-toggle', { enabled })
+  toggleSync: (enabled) => api.post('/graph/sync-toggle', { enabled }),
+  reprocessEmails: (options = {}) => api.post('/graph/reprocess-emails', options)
 }
 
 // Finance API

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
 import { graphAPI, handleApiError } from '../services/api'
+import { socketService } from '../services/socket'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 
@@ -19,10 +20,27 @@ const OutlookConnect = () => {
   const { isGraphConnected, setGraphConnection, lastSync } = useAppStore()
   const [loading, setLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [reprocessLoading, setReprocessLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
 
   useEffect(() => {
     checkConnectionStatus()
+  }, [])
+
+  // Handle reprocess completion
+  useEffect(() => {
+    const handleReprocessCompleted = (data) => {
+      toast.success(
+        `Reprocesamiento completado: ${data.updated} actualizadas, ${data.errors} errores, ${data.skipped} omitidas`
+      )
+      setReprocessLoading(false)
+    }
+
+    socketService.on('reprocess-completed', handleReprocessCompleted)
+
+    return () => {
+      socketService.off('reprocess-completed', handleReprocessCompleted)
+    }
   }, [])
 
   const checkConnectionStatus = async () => {
@@ -100,6 +118,31 @@ const OutlookConnect = () => {
       toast.error(errorInfo.message)
     } finally {
       setSyncLoading(false)
+    }
+  }
+
+  const handleReprocess = async () => {
+    if (!isGraphConnected) {
+      toast.error('Primero debes conectar tu cuenta de Outlook')
+      return
+    }
+
+    setReprocessLoading(true)
+
+    try {
+      const response = await graphAPI.reprocessEmails()
+
+      toast.success(
+        'Reprocesamiento iniciado. Recibirás una notificación cuando termine.'
+      )
+
+      // The actual completion will be handled via WebSocket
+
+    } catch (error) {
+      const errorInfo = handleApiError(error)
+      toast.error(errorInfo.message)
+    } finally {
+      setReprocessLoading(false)
     }
   }
 
@@ -212,6 +255,19 @@ const OutlookConnect = () => {
               </button>
 
               <button
+                onClick={handleReprocess}
+                disabled={reprocessLoading}
+                className="btn-outline flex items-center justify-center space-x-2"
+              >
+                {reprocessLoading ? (
+                  <div className="loading-spinner w-4 h-4" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4" />
+                )}
+                <span>Reprocesar Correos</span>
+              </button>
+
+              <button
                 onClick={handleDisconnect}
                 disabled={loading}
                 className="btn-secondary flex items-center justify-center space-x-2"
@@ -279,6 +335,31 @@ const OutlookConnect = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Reprocessing Info */}
+      {isGraphConnected && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="card bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+        >
+          <div className="flex items-start space-x-3">
+            <RefreshCw className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-blue-800 dark:text-blue-200">
+                Reprocesamiento de Correos
+              </h4>
+              <div className="text-sm text-blue-700 dark:text-blue-300 mt-1 space-y-1">
+                <p>• Mejora la precisión de las transacciones ya procesadas</p>
+                <p>• Aplica algoritmos mejorados de extracción de datos</p>
+                <p>• Corrige errores de clasificación anteriores</p>
+                <p>• Procesa todos los correos históricos de una vez</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Security Info */}
       <motion.div

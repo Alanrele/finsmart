@@ -167,6 +167,12 @@ class SocketService {
       this.emit('sync-completed', data)
     })
 
+    // Reprocess completed
+    this.socket.on('reprocess-completed', (data) => {
+      console.log('Reprocess completed:', data)
+      this.emit('reprocess-completed', data)
+    })
+
     // AI analysis completed
     this.socket.on('analysis-completed', (analysis) => {
       console.log('AI analysis completed:', analysis)
