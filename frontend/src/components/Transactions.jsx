@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown } from 'lucide-react'
+import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react'
 import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
@@ -12,6 +12,7 @@ const Transactions = () => {
   const [loading, setLoading] = useState(true)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [extensionWarningShown, setExtensionWarningShown] = useState(false)
   const [filters, setFilters] = useState({
     search: '',
     category: '',
@@ -24,7 +25,33 @@ const Transactions = () => {
 
   useEffect(() => {
     loadTransactions()
-  }, [filters])
+
+    // Check for potential browser extension conflicts
+    const checkForExtensionConflicts = () => {
+      // Common signs of extension interference
+      const extensionIndicators = [
+        window.chrome && window.chrome.runtime && window.chrome.runtime.onMessage,
+        window.postMessage && typeof window.postMessage === 'function',
+        document.querySelector('[data-extension]'),
+        document.querySelector('[id*="extension"]'),
+        document.querySelector('[class*="extension"]')
+      ]
+
+      const hasExtensions = extensionIndicators.some(indicator => !!indicator)
+
+      if (hasExtensions && !extensionWarningShown) {
+        console.warn('🚨 Potential browser extension interference detected')
+        toast('💡 Si experimentas errores, considera desactivar extensiones del navegador', {
+          duration: 5000,
+          icon: '⚠️'
+        })
+        setExtensionWarningShown(true)
+      }
+    }
+
+    // Check after a short delay to allow extensions to load
+    setTimeout(checkForExtensionConflicts, 2000)
+  }, [filters, extensionWarningShown])
 
   const loadTransactions = async () => {
     try {
@@ -33,6 +60,23 @@ const Transactions = () => {
       console.log('📊 Transactions response:', response.data); // Debug log
       setTransactions(response.data.transactions || [])
     } catch (error) {
+      // Check if this is an extension-related error
+      const isExtensionError = error.message && (
+        error.message.includes('message channel closed') ||
+        error.message.includes('listener indicated an asynchronous response') ||
+        error.message.includes('Extension context invalidated')
+      )
+
+      if (isExtensionError) {
+        console.warn('🚫 Extension error caught in transactions:', error.message)
+        toast.error('Error de extensión del navegador detectado. Intenta recargar la página.', {
+          duration: 5000
+        })
+        // Don't set empty array for extension errors - retry silently
+        setTimeout(() => loadTransactions(), 2000)
+        return
+      }
+
       const errorInfo = handleApiError(error)
       toast.error(errorInfo.message)
       console.error('❌ Error loading transactions:', error); // Debug log
