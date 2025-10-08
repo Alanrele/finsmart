@@ -131,6 +131,20 @@ const authMiddleware = async (req, res, next) => {
       } catch (error) {
         console.error('❌ Microsoft token validation failed:', error);
 
+        // Check for token expiration errors
+        if (error.message?.includes('401') ||
+            error.message?.includes('InvalidAuthenticationToken') ||
+            error.message?.includes('expired') ||
+            error.message?.includes('token is expired')) {
+          console.log('🔄 Microsoft token expired - returning specific error for frontend refresh');
+          return res.status(401).json({
+            error: 'Token expired',
+            code: 'TOKEN_EXPIRED',
+            message: 'Microsoft access token has expired. Please refresh the page and sign in again.',
+            action: 'REFRESH_TOKEN'
+          });
+        }
+
         // Check for specific JWT malformed error from Microsoft
         if (error.message && error.message.includes('JWT is not well formed')) {
           console.error('🔑 JWT malformed error detected - cleaning up corrupted token');

@@ -70,10 +70,15 @@ api.interceptors.request.use(
 
         if (token && isAuthenticated) {
           config.headers.Authorization = `Bearer ${token}`;
+          console.log('🔑 API Request - Token added to headers:', token.substring(0, 20) + '...');
+        } else {
+          console.warn('⚠️ API Request - No valid token found in storage');
         }
       } catch (error) {
         console.error('❌ Error parsing auth token:', error);
       }
+    } else {
+      console.warn('⚠️ API Request - No auth storage found');
     }
 
     return config;
@@ -89,18 +94,61 @@ api.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
+      console.error('🚨 401 Error detected:', error.response?.data);
+
       // Check for specific JWT malformed errors
       const errorData = error.response?.data;
       const isJWTMalformed =
         errorData?.code === 'JWT_MALFORMED' ||
         errorData?.code === 'JWT_MALFORMED_BY_MICROSOFT' ||
         errorData?.code === 'INVALID_AUTH_TOKEN_BY_MICROSOFT' ||
-        errorData?.message?.includes('JWT is not well formed');
+        errorData?.message?.includes('JWT is not well formed') ||
+        errorData?.message?.includes('IDX14100');
 
       if (isJWTMalformed) {
-        console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
+        console.error('🔑 JWT malformed error detected - attempting token refresh');
+
+        // Try to refresh Microsoft token
+        try {
+          const { default: useAuthStore } = await import('../stores/authStore');
+          const { user } = useAuthStore.getState();
+
+          if (user && user.email && !user.email.includes('demo')) {
+            console.log('🔄 Attempting to refresh Microsoft token');
+
+            // Import MSAL instance
+            const { PublicClientApplication } = await import('@azure/msal-browser');
+            const msalConfig = await import('../config/msalConfig').then(m => m.msalConfig);
+            const msalInstance = new PublicClientApplication(msalConfig);
+
+            const tokenRequest = {
+              scopes: ['https://graph.microsoft.com/Mail.Read', 'https://graph.microsoft.com/User.Read'],
+              account: msalInstance.getAllAccounts()[0]
+            };
+
+            const tokenResponse = await msalInstance.acquireTokenSilent(tokenRequest);
+            const newAccessToken = tokenResponse.accessToken;
+
+            console.log('✅ Token refreshed successfully');
+
+            // Update the token in the store
+            useAuthStore.getState().login(user, newAccessToken);
+
+            // Retry the original request with the new token
+            const originalRequest = error.config;
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+            console.log('🔄 Retrying request with refreshed token');
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          console.error('❌ Token refresh failed:', refreshError);
+        }
+
+        // If refresh failed or not applicable, clean up corrupted token
+        console.error('🔑 Token refresh failed - cleaning up corrupted token');
 
         // Get the corrupted token for cleanup
         const authStorage = localStorage.getItem('auth-storage');
@@ -128,7 +176,7 @@ api.interceptors.response.use(
 
         // Show specific error message for JWT issues
         import('react-hot-toast').then(({ default: toast }) => {
-          toast.error('Token de autenticación corrupto. Limpiando automáticamente...');
+          toast.error('Token de autenticación expirado. Renovando automáticamente...');
         });
       } else {
         // Show general session expired message
