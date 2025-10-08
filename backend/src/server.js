@@ -213,6 +213,103 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Socket.io connection handling con logging mejorado
+io.use(async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+    const userId = socket.handshake.auth?.userId;
+
+    console.log('🔌 Socket.IO handshake - Token:', token ? 'present' : 'missing');
+    console.log('🔌 Socket.IO handshake - UserId:', userId || 'missing');
+
+    if (!token) {
+      console.log('❌ Socket.IO handshake - No token provided');
+      return next(new Error('Authentication error: No token provided'));
+    }
+
+    // Validar token usando el mismo middleware de autenticación
+    const jwt = require('jsonwebtoken');
+    const User = require('./models/userModel');
+
+    // Check if it's a demo token
+    if (token.startsWith('demo-token-')) {
+      console.log('🎭 Socket.IO - Demo token detected, allowing connection');
+      socket.user = {
+        _id: 'demo-user-id',
+        firstName: 'Demo',
+        lastName: 'User',
+        email: 'demo@example.com'
+      };
+      return next();
+    }
+
+    try {
+      // Try to verify as JWT token first
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('✅ Socket.IO - JWT token verified for user:', decoded.userId);
+
+      // Find user in database
+      const user = await User.findById(decoded.userId);
+      if (!user) {
+        console.log('❌ Socket.IO - User not found for JWT token');
+        return next(new Error('Authentication error: User not found'));
+      }
+
+      socket.user = user;
+      return next();
+
+    } catch (jwtError) {
+      console.log('🔄 Socket.IO - JWT verification failed, trying Microsoft token');
+
+      // If JWT fails, try Microsoft token validation
+      try {
+        const { Client } = require('@microsoft/microsoft-graph-client');
+
+        class CustomAuthProvider {
+          constructor(accessToken) {
+            this.accessToken = accessToken;
+          }
+          async getAccessToken() {
+            return this.accessToken;
+          }
+        }
+
+        const authProvider = new CustomAuthProvider(token);
+        const graphClient = Client.initWithMiddleware({ authProvider });
+
+        // Get user profile from Microsoft Graph
+        const profile = await graphClient.api('/me').get();
+        console.log('✅ Socket.IO - Microsoft token verified for:', profile.mail || profile.userPrincipalName);
+
+        // Find user in database
+        let user = await User.findOne({
+          $or: [
+            { email: profile.mail },
+            { email: profile.userPrincipalName }
+          ]
+        });
+
+        if (!user) {
+          console.log('❌ Socket.IO - User not found for Microsoft token');
+          return next(new Error('Authentication error: User not found'));
+        }
+
+        socket.user = user;
+        return next();
+
+      } catch (microsoftError) {
+        console.error('❌ Socket.IO - Both JWT and Microsoft token validation failed');
+        console.error('JWT Error:', jwtError.message);
+        console.error('Microsoft Error:', microsoftError.message);
+        return next(new Error('Authentication error: Invalid token'));
+      }
+    }
+
+  } catch (error) {
+    console.error('❌ Socket.IO handshake error:', error);
+    return next(new Error('Authentication error: ' + error.message));
+  }
+});
+
 io.on('connection', (socket) => {
   console.log(`✅ Socket connected: ${socket.id} via ${socket.conn.transport.name}`);
 
