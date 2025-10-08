@@ -391,7 +391,7 @@ class EmailSyncService {
         try {
           const query = graphClient
             .api('/me/messages')
-            .filter(`(${bcpFilters.join(' or ')}) and receivedDateTime ge ${oneYearAgo}`)
+            .filter(`receivedDateTime ge ${oneYearAgo}`)
             .select('id,subject,body,receivedDateTime,from,hasAttachments')
             .orderby('receivedDateTime desc')
             .top(pageSize);
@@ -403,8 +403,21 @@ class EmailSyncService {
           const response = await query.get();
 
           if (response.value && response.value.length > 0) {
-            allEmails = allEmails.concat(response.value);
-            console.log(`� Fetched ${response.value.length} emails (total: ${allEmails.length})`);
+            // Filter BCP emails client-side to avoid complex Graph queries
+            const bcpEmails = response.value.filter(message => {
+              const fromAddress = message.from?.emailAddress?.address?.toLowerCase();
+              return fromAddress && (
+                fromAddress.includes('bcp.com.pe') ||
+                fromAddress.includes('bcp.com') ||
+                fromAddress.includes('notificaciones@bcp.com.pe') ||
+                fromAddress.includes('alertas@bcp.com.pe') ||
+                fromAddress.includes('movimientos@bcp.com.pe') ||
+                fromAddress.includes('bcp@bcp.com.pe')
+              );
+            });
+
+            allEmails = allEmails.concat(bcpEmails);
+            console.log(`📨 Fetched ${response.value.length} emails, ${bcpEmails.length} BCP emails (total BCP: ${allEmails.length})`);
           }
 
           skipToken = response['@odata.nextLink'] ? new URL(response['@odata.nextLink']).searchParams.get('$skipToken') : null;
