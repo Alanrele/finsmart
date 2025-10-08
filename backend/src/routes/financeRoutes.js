@@ -2,94 +2,42 @@ const express = require('express');
 const { query, body, validationResult } = require('express-validator');
 const Transaction = require('../models/transactionModel');
 const User = require('../models/userModel');
+const mongoose = require('mongoose');
 
 const router = express.Router();
 
 // Get user's financial dashboard
 router.get('/dashboard', async (req, res) => {
   try {
+    console.log('📊 Dashboard endpoint called');
+    console.log('👤 User from auth middleware:', req.user);
+
+    if (!req.user || !req.user._id) {
+      console.error('❌ No user found in request');
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
     const userId = req.user._id;
+    console.log('🆔 User ID:', userId);
 
-    console.log('📊 Dashboard endpoint called for user:', userId);
-
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
-      console.log('🎭 Returning demo dashboard data');
-      return res.json({
-        summary: {
-          totalBalance: 15750.50,
-          monthlyIncome: 8500.00,
-          monthlyExpenses: 3200.75,
-          totalSavings: 12549.75
-        },
-        categorySpending: [
-          { category: 'Food', amount: 1200.50, percentage: 37.5 },
-          { category: 'Transportation', amount: 580.25, percentage: 18.1 },
-          { category: 'Entertainment', amount: 420.80, percentage: 13.1 },
-          { category: 'Utilities', amount: 380.30, percentage: 11.9 },
-          { category: 'Shopping', amount: 320.15, percentage: 10.0 },
-          { category: 'Others', amount: 296.75, percentage: 9.4 }
-        ],
-        topCategories: [
-          { category: 'Food', amount: 1200.50 },
-          { category: 'Transportation', amount: 580.25 },
-          { category: 'Entertainment', amount: 420.80 },
-          { category: 'Utilities', amount: 380.30 },
-          { category: 'Shopping', amount: 320.15 }
-        ],
-        recentTransactions: [
-          {
-            _id: 'demo1',
-            description: 'Salario - Trabajo Principal',
-            amount: 8500.00,
-            type: 'income',
-            category: 'Salary',
-            date: new Date().toISOString(),
-            isAI: false
-          },
-          {
-            _id: 'demo2',
-            description: 'Supermercado Metro',
-            amount: -285.50,
-            type: 'expense',
-            category: 'Food',
-            date: new Date(Date.now() - 86400000).toISOString(),
-            isAI: false
-          },
-          {
-            _id: 'demo3',
-            description: 'Netflix Suscripción',
-            amount: -15.99,
-            type: 'expense',
-            category: 'Entertainment',
-            date: new Date(Date.now() - 2 * 86400000).toISOString(),
-            isAI: false
-          },
-          {
-            _id: 'demo4',
-            description: 'Transferencia Ahorros',
-            amount: -1000.00,
-            type: 'transfer',
-            category: 'Savings',
-            date: new Date(Date.now() - 3 * 86400000).toISOString(),
-            isAI: false
-          },
-          {
-            _id: 'demo5',
-            description: 'Pago Servicios Públicos',
-            amount: -125.30,
-            type: 'expense',
-            category: 'Utilities',
-            date: new Date(Date.now() - 4 * 86400000).toISOString(),
-            isAI: false
-          }
-        ]
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      // If not connected, we can't proceed. Return an error.
+      console.error('❌ MongoDB not connected. Cannot fetch dashboard data.');
+      return res.status(503).json({ 
+        error: 'Servicio no disponible',
+        message: 'La conexión con la base de datos no está disponible en este momento.'
       });
     }
+
+
 
     const now = new Date();
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
+
+    // Redondear todos los valores para evitar problemas de precisión
+    const roundToTwo = (num) => Math.round(num * 100) / 100;
 
     // Get current month transactions
     const currentMonthTransactions = await Transaction.find({
@@ -109,10 +57,10 @@ router.get('/dashboard', async (req, res) => {
       // Validar y limpiar el monto de la transacción
       const amount = Number(transaction.amount) || 0;
       const validAmount = isNaN(amount) ? 0 : Math.abs(amount);
-      
+
       // Limitar montos extremadamente grandes (más de 1 millón)
       const clampedAmount = Math.min(validAmount, 1000000);
-      
+
       if (transaction.type === 'credit' || transaction.type === 'deposit') {
         totalIncome += clampedAmount;
       } else {
@@ -144,58 +92,99 @@ router.get('/dashboard', async (req, res) => {
     const spendingChangePercentage = previousMonthSpending > 0 ? (spendingChange / previousMonthSpending) * 100 : 0;
 
     // Get top spending categories with percentages
-    const topCategories = Object.entries(categorySpending)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
-      .map(([category, amount]) => ({
-        category,
-        amount: roundToTwo(amount),
-        percentage: totalSpending > 0 ? roundToTwo((amount / totalSpending) * 100) : 0
-      }));
+    let topCategories = [];
+    try {
+      topCategories = Object.entries(categorySpending)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([category, amount]) => ({
+          category,
+          amount: roundToTwo(amount),
+          percentage: totalSpending > 0 ? roundToTwo((amount / totalSpending) * 100) : 0
+        }));
+    } catch (error) {
+      console.error('Error processing topCategories:', error);
+      topCategories = [];
+    }
 
     // Create categorySpending array with percentages for pie chart
-    const categorySpendingArray = Object.entries(categorySpending)
-      .sort(([,a], [,b]) => b - a)
-      .map(([category, amount]) => ({
-        category,
-        amount: roundToTwo(amount),
-        percentage: totalSpending > 0 ? roundToTwo((amount / totalSpending) * 100) : 0
-      }));
+    let categorySpendingArray = [];
+    try {
+      console.log('🔍 Processing categorySpendingArray...');
+      console.log('Total spending:', totalSpending);
+      console.log('Category spending:', categorySpending);
 
-    // If no categories or all categories are very small, add "Other" category
-    if (categorySpendingArray.length === 0 || totalSpending === 0) {
-      categorySpendingArray.push({
+      categorySpendingArray = Object.entries(categorySpending)
+        .sort(([,a], [,b]) => b - a)
+        .map(([category, amount]) => {
+          const percentage = totalSpending > 0 ? roundToTwo((amount / totalSpending) * 100) : 0;
+          console.log(`Category ${category}: amount=${amount}, percentage=${percentage}`);
+          return {
+            category,
+            amount: roundToTwo(amount),
+            percentage
+          };
+        });
+
+      console.log('CategorySpendingArray after mapping:', categorySpendingArray);
+
+      // If no categories or all categories are very small, add "Other" category
+      if (categorySpendingArray.length === 0 || totalSpending === 0) {
+        console.log('Adding "Otros" category due to no spending or categories');
+        categorySpendingArray.push({
+          category: 'Otros',
+          amount: 0,
+          percentage: 100
+        });
+      } else if (categorySpendingArray.length > 5) {
+        console.log('Grouping remaining categories into "Other"');
+        // Group remaining categories into "Other"
+        const top5Total = categorySpendingArray.slice(0, 5).reduce((sum, cat) => {
+          const amount = cat?.amount || 0;
+          console.log(`Adding to top5Total: ${amount}`);
+          return sum + amount;
+        }, 0);
+
+        console.log('Top 5 total:', top5Total);
+        console.log('Total spending:', totalSpending);
+
+        const otherAmount = totalSpending - top5Total;
+        console.log('Other amount calculated:', otherAmount);
+
+        if (otherAmount > 0) {
+          console.log('Adding "Otros" category with positive amount');
+          categorySpendingArray.splice(5); // Keep only top 5
+          categorySpendingArray.push({
+            category: 'Otros',
+            amount: roundToTwo(otherAmount),
+            percentage: roundToTwo((otherAmount / totalSpending) * 100)
+          });
+        } else {
+          console.log('Other amount is not positive, skipping "Otros" category');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error processing categorySpendingArray:', error);
+      console.error('Stack trace:', error.stack);
+      categorySpendingArray = [{
         category: 'Otros',
         amount: 0,
         percentage: 100
-      });
-    } else if (categorySpendingArray.length > 5) {
-      // Group remaining categories into "Other"
-      const top5Total = categorySpendingArray.slice(0, 5).reduce((sum, cat) => sum + cat.amount, 0);
-      const otherAmount = totalSpending - top5Total;
-
-      if (otherAmount > 0) {
-        categorySpendingArray.splice(5); // Keep only top 5
-        categorySpendingArray.push({
-          category: 'Otros',
-          amount: roundToTwo(otherAmount),
-          percentage: roundToTwo((otherAmount / totalSpending) * 100)
-        });
-      }
+      }];
     }
 
     // Calculate balance
     const balance = totalIncome - totalSpending;
-
-    // Redondear todos los valores para evitar problemas de precisión
-    const roundToTwo = (num) => Math.round(num * 100) / 100;
 
     // Log para debugging
     console.log('📊 Dashboard summary:', {
       totalSpending: roundToTwo(totalSpending),
       totalIncome: roundToTwo(totalIncome),
       balance: roundToTwo(balance),
-      transactionCount: currentMonthTransactions.length
+      transactionCount: currentMonthTransactions.length,
+      categorySpendingKeys: Object.keys(categorySpending),
+      categorySpendingArrayLength: categorySpendingArray.length,
+      topCategoriesLength: topCategories.length
     });
 
     res.json({
@@ -222,175 +211,89 @@ router.get('/dashboard', async (req, res) => {
   }
 });
 
-// Get transactions with filters
+// Get all transactions with filtering, sorting, and pagination
 router.get('/transactions', [
-  query('page').optional().isInt({ min: 1 }),
-  query('limit').optional().isInt({ min: 1, max: 100 }),
-  query('search').optional().isString(),
-  query('category').optional().isString(),
-  query('type').optional().custom(value => {
-    if (!value || value === '') return true;
-    return ['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit', 'income', 'expense'].includes(value);
-  }),
-  query('startDate').optional().custom(value => {
-    if (!value || value === '') return true;
-    return !isNaN(Date.parse(value));
-  }),
-  query('endDate').optional().custom(value => {
-    if (!value || value === '') return true;
-    return !isNaN(Date.parse(value));
-  })
+    query('page').optional().isInt({ min: 1 }).toInt(),
+    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+    query('sortBy').optional().isString().isIn(['date', 'amount', 'category']),
+    query('sortOrder').optional().isString().isIn(['asc', 'desc']),
+    query('search').optional().isString(),
+    query('category').optional().isString(),
+    query('type').optional().isString().isIn(['income', 'expense']),
+    query('isAI').optional().isBoolean()
 ], async (req, res) => {
-  try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        error: 'Validation failed',
-        details: errors.array()
-      });
+        return res.status(400).json({ errors: errors.array() });
     }
 
-    const userId = req.user._id;
-
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
-      console.log('🎭 Returning demo transactions data');
-      let demoTransactions = [
-        {
-          _id: 'demo-trans-1',
-          description: 'Salario - Trabajo Principal',
-          amount: 8500.00,
-          type: 'income',
-          category: 'Salary',
-          date: new Date(Date.now() - 86400000).toISOString(), // yesterday
-          isAI: false
-        },
-        {
-          _id: 'demo-trans-2',
-          description: 'Supermercado Central',
-          amount: -125.50,
-          type: 'expense',
-          category: 'Food',
-          date: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
-          isAI: true
-        },
-        {
-          _id: 'demo-trans-3',
-          description: 'Transferencia a Ahorros',
-          amount: -1000.00,
-          type: 'transfer',
-          category: 'Savings',
-          date: new Date(Date.now() - 86400000 * 3).toISOString(), // 3 days ago
-          isAI: false
-        },
-        {
-          _id: 'demo-trans-4',
-          description: 'Pago Uber',
-          amount: -35.75,
-          type: 'expense',
-          category: 'Transportation',
-          date: new Date(Date.now() - 86400000 * 4).toISOString(), // 4 days ago
-          isAI: true
-        },
-        {
-          _id: 'demo-trans-5',
-          description: 'Freelance Payment',
-          amount: 750.00,
-          type: 'income',
-          category: 'Freelance',
-          date: new Date(Date.now() - 86400000 * 5).toISOString(), // 5 days ago
-          isAI: false
+    try {
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ error: 'User not authenticated' });
         }
-      ];
+        const userId = req.user._id;
 
-      // Apply demo filters
-      if (req.query.search && req.query.search.trim() !== '') {
-        const searchTerm = req.query.search.toLowerCase();
-        demoTransactions = demoTransactions.filter(t =>
-          t.description.toLowerCase().includes(searchTerm) ||
-          t.category.toLowerCase().includes(searchTerm)
-        );
-      }
-
-      if (req.query.category && req.query.category.trim() !== '') {
-        demoTransactions = demoTransactions.filter(t =>
-          t.category.toLowerCase() === req.query.category.toLowerCase()
-        );
-      }
-
-      if (req.query.type && req.query.type.trim() !== '') {
-        demoTransactions = demoTransactions.filter(t => t.type === req.query.type);
-      }
-
-      return res.json({
-        transactions: demoTransactions,
-        pagination: {
-          currentPage: 1,
-          totalPages: 1,
-          totalCount: demoTransactions.length,
-          hasNext: false,
-          hasPrev: false
+        // Check if MongoDB is connected
+        if (mongoose.connection.readyState !== 1) {
+            console.error('❌ MongoDB not connected. Cannot fetch transactions.');
+            return res.status(503).json({ 
+                error: 'Servicio no disponible',
+                message: 'La conexión con la base de datos no está disponible en este momento.'
+            });
         }
-      });
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        const sortBy = req.query.sortBy || 'date';
+        const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
+        let query = { userId };
+
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            query.$or = [
+                { description: searchRegex },
+                { category: searchRegex }
+            ];
+        }
+
+        if (req.query.category) {
+            query.category = req.query.category;
+        }
+
+        if (req.query.type) {
+            if (req.query.type === 'income') {
+                query.type = { $in: ['income', 'deposit', 'credit'] };
+            } else { // expense
+                query.type = { $in: ['expense', 'debit', 'payment', 'withdrawal'] };
+            }
+        }
+
+        if (req.query.isAI) {
+            query.isAI = req.query.isAI === 'true';
+        }
+
+        const totalCount = await Transaction.countDocuments(query);
+        const transactions = await Transaction.find(query)
+            .sort({ [sortBy]: sortOrder })
+            .skip(skip)
+            .limit(limit);
+
+        res.json({
+            transactions,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalCount / limit),
+                totalCount,
+                hasNext: page * limit < totalCount,
+                hasPrev: page > 1
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const skip = (page - 1) * limit;
-
-    // Build filter
-    const filter = { userId };
-
-    if (req.query.search && req.query.search.trim() !== '') {
-      filter.$or = [
-        { description: { $regex: req.query.search, $options: 'i' } },
-        { category: { $regex: req.query.search, $options: 'i' } }
-      ];
-    }
-
-    if (req.query.category && req.query.category.trim() !== '') {
-      filter.category = req.query.category;
-    }
-
-    if (req.query.type && req.query.type.trim() !== '') {
-      filter.type = req.query.type;
-    }
-
-    if ((req.query.startDate && req.query.startDate.trim() !== '') || (req.query.endDate && req.query.endDate.trim() !== '')) {
-      filter.date = {};
-      if (req.query.startDate && req.query.startDate.trim() !== '') {
-        filter.date.$gte = new Date(req.query.startDate);
-      }
-      if (req.query.endDate && req.query.endDate.trim() !== '') {
-        filter.date.$lte = new Date(req.query.endDate);
-      }
-    }
-
-    // Get transactions with pagination
-    const transactions = await Transaction.find(filter)
-      .sort({ date: -1 })
-      .skip(skip)
-      .limit(limit);
-
-    // Get total count for pagination
-    const totalCount = await Transaction.countDocuments(filter);
-    const totalPages = Math.ceil(totalCount / limit);
-
-    res.json({
-      transactions,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalCount,
-        hasNext: page < totalPages,
-        hasPrev: page > 1
-      }
-    });
-
-  } catch (error) {
-    console.error('Get transactions error:', error);
-    res.status(500).json({ error: 'Failed to get transactions' });
-  }
 });
 
 // Get spending by category

@@ -8,9 +8,11 @@ const CLEANUP_CACHE_DURATION = 300000; // 5 minutes
 
 const authMiddleware = async (req, res, next) => {
   try {
+    console.log('🔐 Auth middleware called for path:', req.path);
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
+      console.log('❌ No token provided');
       return res.status(401).json({ error: 'Access denied. No token provided.' });
     }
 
@@ -26,19 +28,6 @@ const authMiddleware = async (req, res, next) => {
         code: 'TOKEN_RECENTLY_CLEANED',
         action: 'REAUTHENTICATE_REQUIRED'
       });
-    }
-
-    // Check if it's a demo token
-    if (token.startsWith('demo-token-')) {
-      console.log('🎭 Demo token detected, allowing access');
-      // Create a demo user for the request
-      req.user = {
-        _id: 'demo-user-id',
-        firstName: 'Demo',
-        lastName: 'User',
-        email: 'demo@example.com'
-      };
-      return next();
     }
 
     // Check if it's a Microsoft token (typical pattern)

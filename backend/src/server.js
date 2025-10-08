@@ -5,9 +5,17 @@ const mongoose = require('mongoose');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
-require('dotenv').config();
+// Global error handler
+process.on('uncaughtException', (err) => {
+  console.error('❌ Uncaught Exception:', err);
+  console.error('Stack trace:', err.stack);
+  process.exit(1);
+});
 
-// Import routes
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
 const authRoutes = require('./routes/authRoutes');
 const graphRoutes = require('./routes/graphRoutes');
 const aiRoutes = require('./routes/aiRoutes');
@@ -28,32 +36,12 @@ const { productionHelmetConfig, developmentHelmetConfig } = require('./config/he
 const app = express();
 const server = http.createServer(app);
 
-// Configuración específica de Socket.io para Railway
-const isRailwayProduction = process.env.RAILWAY_ENVIRONMENT === 'production' ||
-                           process.env.NODE_ENV === 'production'
-
-const io = socketIo(server, {
-  cors: {
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://finsmart-production.up.railway.app",
-      process.env.FRONTEND_URL
-    ].filter(Boolean),
-    credentials: true,
-    methods: ["GET", "POST"]
-  },
-  // Configuración optimizada para Railway
-  transports: isRailwayProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
-  allowEIO3: true, // Compatibilidad con versiones anteriores
-  pingTimeout: 60000,
-  pingInterval: 25000,
-  upgradeTimeout: 30000,
-  maxHttpBufferSize: 1e6, // 1MB
-  // Configuración específica para Railway
-  allowUpgrades: !isRailwayProduction, // Deshabilitar upgrades en Railway
-  cookie: false // Deshabilitar cookies para Railway
-});
+// Dummy io object for debugging
+const io = {
+  engine: { clientsCount: 0 },
+  use: () => {},
+  on: () => {}
+};
 
 const PORT = process.env.PORT || 5000;
 
@@ -62,18 +50,26 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart'
 .then(async () => {
   console.log('Connected to MongoDB');
 
-  // Clean up malformed tokens on startup
-  console.log('🧹 Performing token cleanup...');
-  const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
-  if (cleanedCount > 0) {
-    console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
+  // Only run token cleanup if MongoDB is connected
+  if (mongoose.connection.readyState === 1) {
+    console.log('🧹 Performing token cleanup...');
+    const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+    if (cleanedCount > 0) {
+      console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
+    }
+  } else {
+    console.log('🧹 Skipping token cleanup - MongoDB not connected');
   }
 })
-.catch(err => console.error('MongoDB connection error:', err));
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  console.log('⚠️ Continuing without MongoDB connection for debugging purposes');
+  // Don't exit the process, just log the error
+});
 
 // Middleware
 const isProduction = process.env.NODE_ENV === 'production';
-app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig));
+// app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig)); // Temporarily disabled for debugging
 
 // CORS configuration for production
 const corsOptions = {
@@ -101,10 +97,10 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions)); // Temporarily disabled for debugging
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(logger);
+// app.use(logger); // Temporarily disabled for debugging
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -114,7 +110,7 @@ app.use('/api/finance', authMiddleware, financeRoutes);
 
 // Health check endpoint (before static files)
 app.get('/health', (req, res) => {
-  const connectedSockets = io.engine.clientsCount || 0;
+  // const connectedSockets = io.engine.clientsCount || 0;
 
   res.status(200).json({
     status: 'OK',
@@ -124,12 +120,12 @@ app.get('/health', (req, res) => {
     mongodb: process.env.MONGODB_URI ? 'configured' : 'missing',
     openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
     azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing',
-    // Información de Socket.io para diagnóstico
-    socketio: {
-      connected_clients: connectedSockets,
-      transports: isRailwayProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
-      railway_mode: isRailwayProduction
-    }
+    // Información de Socket.io para diagnóstico - DISABLED
+    // socketio: {
+    //   connected_clients: connectedSockets,
+    //   transports: isRailwayProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
+    //   railway_mode: isRailwayProduction
+    // }
   });
 });
 
@@ -137,7 +133,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    socketio_clients: io.engine.clientsCount || 0
+    // socketio_clients: io.engine.clientsCount || 0
   });
 });
 
@@ -346,13 +342,13 @@ app.set('io', io);
 // Initialize Email Sync Service
 const emailSyncService = new EmailSyncService(io);
 
-// Start periodic email sync in production (every 15 minutes)
-if (process.env.NODE_ENV === 'production') {
-  emailSyncService.startPeriodicSync(15);
-  console.log('📧 Periodic email sync started (15 minutes interval)');
-} else {
-  console.log('📧 Periodic email sync disabled in development mode');
-}
+// Start periodic email sync in production (every 15 minutes) - DISABLED FOR DEBUGGING
+// if (process.env.NODE_ENV === 'production') {
+//   emailSyncService.startPeriodicSync(15);
+//   console.log('📧 Periodic email sync started (15 minutes interval)');
+// } else {
+//   console.log('📧 Periodic email sync disabled in development mode');
+// }
 
 // Make emailSyncService available to routes
 app.set('emailSyncService', emailSyncService);
