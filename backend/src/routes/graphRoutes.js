@@ -7,6 +7,7 @@ const Transaction = require('../models/transactionModel');
 const azureOcrService = require('../services/azureOcrService');
 const aiAnalysisService = require('../services/aiAnalysisService');
 const emailParserService = require('../services/emailParserService');
+const EmailSyncService = require('../services/emailSyncService');
 const tokenCleanup = require('../utils/tokenCleanup');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -847,6 +848,57 @@ router.post('/cleanup-malformed-tokens', authMiddleware, async (req, res) => {
     console.error('❌ Token cleanup error:', error);
     res.status(500).json({
       error: 'Failed to cleanup malformed tokens',
+      details: error.message
+    });
+  }
+});
+
+// Reprocess all past emails for improved transaction data
+router.post('/reprocess-emails', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    console.log('🔄 Starting email reprocessing for user:', userId);
+
+    // Check if it's a demo user
+    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+      console.log('❌ Demo user blocked from reprocessing');
+      return res.status(403).json({
+        error: 'Demo accounts cannot reprocess emails',
+        details: 'Please connect with a real Microsoft account to reprocess emails'
+      });
+    }
+
+    // Get EmailSyncService instance from app
+    const emailSyncService = req.app.get('emailSyncService');
+    if (!emailSyncService) {
+      console.error('❌ EmailSyncService not available');
+      return res.status(500).json({
+        error: 'Email sync service not available',
+        details: 'Please try again later'
+      });
+    }
+
+    // Start reprocessing in background
+    emailSyncService.reprocessAllEmails(userId, {
+      batchSize: req.body.batchSize || 10
+    }).then(result => {
+      console.log('✅ Reprocessing completed:', result);
+    }).catch(error => {
+      console.error('❌ Reprocessing failed:', error);
+    });
+
+    // Return immediate response
+    res.json({
+      message: 'Email reprocessing started successfully',
+      details: 'This process may take several minutes depending on the number of emails. You will receive real-time updates via WebSocket.',
+      status: 'processing'
+    });
+
+  } catch (error) {
+    console.error('❌ Error starting email reprocessing:', error);
+    res.status(500).json({
+      error: 'Failed to start email reprocessing',
       details: error.message
     });
   }

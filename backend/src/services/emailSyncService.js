@@ -354,6 +354,192 @@ class EmailSyncService {
       interval: this.syncInterval ? 'Active' : 'Inactive'
     };
   }
+
+  // Reprocess all past emails for a user to update with new information
+  async reprocessAllEmails(userId, options = {}) {
+    try {
+      const user = await User.findById(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (!user.accessToken) {
+        throw new Error('Microsoft account not connected');
+      }
+
+      console.log(`🔄 Starting reprocessing of all emails for user: ${user.email}`);
+
+      const graphClient = this.getGraphClient(user.accessToken);
+
+      // Get all existing transactions for this user
+      const existingTransactions = await Transaction.find({ userId: user._id });
+      console.log(`📊 Found ${existingTransactions.length} existing transactions to reprocess`);
+
+      let updatedCount = 0;
+      let errorCount = 0;
+      let skippedCount = 0;
+
+      // Process transactions in batches to avoid rate limiting
+      const batchSize = options.batchSize || 10;
+      for (let i = 0; i < existingTransactions.length; i += batchSize) {
+        const batch = existingTransactions.slice(i, i + batchSize);
+        console.log(`🔄 Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(existingTransactions.length/batchSize)}`);
+
+        for (const transaction of batch) {
+          try {
+            // Skip if no messageId (shouldn't happen but safety check)
+            if (!transaction.messageId) {
+              console.log(`⚠️ Skipping transaction ${transaction._id} - no messageId`);
+              skippedCount++;
+              continue;
+            }
+
+            // Get the original email from Microsoft Graph
+            const message = await graphClient
+              .api(`/me/messages/${transaction.messageId}`)
+              .select('id,subject,body,receivedDateTime,from,hasAttachments')
+              .get();
+
+            if (!message) {
+              console.log(`⚠️ Email ${transaction.messageId} not found, skipping`);
+              skippedCount++;
+              continue;
+            }
+
+            // Extract content
+            let emailContent = '';
+            if (message.body.contentType === 'html') {
+              emailContent = message.body.content;
+            } else {
+              emailContent = message.body.content;
+            }
+
+            // Process attachments if any
+            if (message.hasAttachments) {
+              try {
+                const attachments = await graphClient
+                  .api(`/me/messages/${message.id}/attachments`)
+                  .get();
+
+                for (const attachment of attachments.value) {
+                  if (attachment.contentType && attachment.contentType.startsWith('image/')) {
+                    const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
+                    emailContent += '\n\nOCR Content:\n' + ocrText;
+                  }
+                }
+              } catch (attachmentError) {
+                console.error('❌ Error processing attachments during reprocess:', attachmentError);
+              }
+            }
+
+            // Re-parse email content with current algorithms
+            const newParsedData = emailParserService.parseEmailContent(emailContent);
+
+            if (newParsedData && newParsedData.amount && newParsedData.amount > 0) {
+              // Create updated transaction data
+              const updatedTransactionData = emailParserService.createTransactionFromEmail(
+                newParsedData,
+                user._id,
+                {
+                  id: message.id,
+                  subject: message.subject,
+                  receivedDateTime: message.receivedDateTime
+                }
+              );
+
+              // Check if there are meaningful changes
+              const hasChanges = this.hasMeaningfulChanges(transaction, updatedTransactionData, newParsedData);
+
+              if (hasChanges) {
+                // Update the transaction
+                transaction.amount = updatedTransactionData.amount;
+                transaction.type = updatedTransactionData.type;
+                transaction.category = updatedTransactionData.category;
+                transaction.subcategory = updatedTransactionData.subcategory;
+                transaction.description = updatedTransactionData.description;
+                transaction.merchant = updatedTransactionData.merchant;
+                transaction.location = updatedTransactionData.location;
+                transaction.rawText = emailContent.substring(0, 1000);
+                transaction.lastUpdated = new Date();
+                transaction.reprocessCount = (transaction.reprocessCount || 0) + 1;
+
+                await transaction.save();
+                updatedCount++;
+
+                console.log(`✅ Updated transaction ${transaction._id}:`, {
+                  oldAmount: transaction.amount,
+                  newAmount: updatedTransactionData.amount,
+                  type: transaction.type,
+                  description: transaction.description
+                });
+
+                // Emit real-time update
+                if (this.io) {
+                  this.io.to(`user-${user._id}`).emit('transaction-updated', {
+                    ...transaction.toObject(),
+                    fromReprocess: true
+                  });
+                }
+              } else {
+                console.log(`⏭️ No changes needed for transaction ${transaction._id}`);
+                skippedCount++;
+              }
+            } else {
+              console.log(`⚠️ Could not re-parse email ${transaction.messageId}`);
+              errorCount++;
+            }
+
+          } catch (error) {
+            console.error(`❌ Error reprocessing transaction ${transaction._id}:`, error);
+            errorCount++;
+          }
+        }
+
+        // Small delay between batches
+        if (i + batchSize < existingTransactions.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+
+      // Update user's last reprocess time
+      user.lastReprocess = new Date();
+      await user.save();
+
+      const result = {
+        totalProcessed: existingTransactions.length,
+        updated: updatedCount,
+        errors: errorCount,
+        skipped: skippedCount,
+        success: true
+      };
+
+      console.log(`✅ Reprocessing completed for ${user.email}:`, result);
+
+      // Emit completion notification
+      if (this.io) {
+        this.io.to(`user-${user._id}`).emit('reprocess-completed', result);
+      }
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error in reprocessAllEmails:', error);
+      throw error;
+    }
+  }
+
+  // Helper function to check if reprocessing resulted in meaningful changes
+  hasMeaningfulChanges(existingTransaction, newData, newParsedData) {
+    // Check for significant changes
+    const amountChanged = Math.abs(existingTransaction.amount - newData.amount) > 0.01;
+    const typeChanged = existingTransaction.type !== newData.type;
+    const categoryChanged = existingTransaction.category !== newData.category;
+    const merchantChanged = existingTransaction.merchant !== newData.merchant;
+    const descriptionChanged = existingTransaction.description !== newData.description;
+
+    // Consider it a meaningful change if any key field changed
+    return amountChanged || typeChanged || categoryChanged || merchantChanged || descriptionChanged;
+  }
 }
 
 module.exports = EmailSyncService;
