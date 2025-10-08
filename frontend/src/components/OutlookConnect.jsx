@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
 import { graphAPI, handleApiError } from '../services/api'
-import { socketService } from '../services/socket'
+import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 
