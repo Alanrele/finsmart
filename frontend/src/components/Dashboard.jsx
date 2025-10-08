@@ -101,14 +101,34 @@ const Dashboard = () => {
     recentTransactionsLength: recentTransactions?.length
   });
 
-  // Chart colors
-  const COLORS = ['#C6A664', '#D4AF37', '#B8951A', '#A0860F', '#8B7509']
+  // Category translation function
+  const translateCategory = (category) => {
+    const translations = {
+      'food': 'Comida',
+      'transport': 'Transporte',
+      'entertainment': 'Entretenimiento',
+      'shopping': 'Compras',
+      'healthcare': 'Salud',
+      'utilities': 'Servicios',
+      'education': 'Educación',
+      'travel': 'Viajes',
+      'investment': 'Inversiones',
+      'income': 'Ingresos',
+      'transfer': 'Transferencias',
+      'other': 'Otros',
+      'salary': 'Salario',
+      'savings': 'Ahorros',
+      'freelance': 'Freelance'
+    }
+    return translations[category?.toLowerCase()] || category || 'Otros'
+  }
 
   // Prepare data for charts with additional safety checks
   const categoryData = Array.isArray(topCategories)
     ? topCategories.map((cat, index) => ({
-        name: cat?.category || 'Unknown',
+        name: translateCategory(cat?.category),
         value: cat?.amount || 0,
+        percentage: cat?.percentage || 0,
         color: COLORS[index % COLORS.length]
       }))
     : []
@@ -131,10 +151,10 @@ const Dashboard = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-            Dashboard Financiero
+            Panel Financiero
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">
-            Resumen de tus finanzas personales
+            Resumen completo de tus finanzas personales
           </p>
         </div>
         <div className="mt-4 sm:mt-0">
@@ -192,7 +212,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Ingresos
+                Ingresos Totales
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {formatCurrencyUltraCompact(summary?.totalIncome || 0)}
@@ -200,7 +220,7 @@ const Dashboard = () => {
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-4 h-4 text-green-500" />
                 <span className="text-sm text-green-500 ml-1">
-                  Mes actual
+                  Este mes
                 </span>
               </div>
             </div>
@@ -220,7 +240,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Balance
+                Balance Actual
               </p>
               <p className={`text-2xl font-bold ${
                 (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
@@ -256,7 +276,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                Transacciones
+                Total de Transacciones
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {summary?.transactionCount || 0}
@@ -296,7 +316,7 @@ const Dashboard = () => {
                   cy="50%"
                   outerRadius={80}
                   dataKey="value"
-                  label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({name, percentage}) => `${name} ${percentage?.toFixed(1) || 0}%`}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -349,7 +369,7 @@ const Dashboard = () => {
                     {formatCurrencyAuto(transaction.amount)}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
-                    {transaction.category}
+                    {translateCategory(transaction.category)}
                   </p>
                 </div>
               </motion.div>

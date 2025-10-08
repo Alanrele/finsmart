@@ -143,11 +143,46 @@ router.get('/dashboard', async (req, res) => {
     const spendingChange = totalSpending - previousMonthSpending;
     const spendingChangePercentage = previousMonthSpending > 0 ? (spendingChange / previousMonthSpending) * 100 : 0;
 
-    // Get top spending categories
+    // Get top spending categories with percentages
     const topCategories = Object.entries(categorySpending)
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
-      .map(([category, amount]) => ({ category, amount }));
+      .map(([category, amount]) => ({
+        category,
+        amount: roundToTwo(amount),
+        percentage: totalSpending > 0 ? roundToTwo((amount / totalSpending) * 100) : 0
+      }));
+
+    // Create categorySpending array with percentages for pie chart
+    const categorySpendingArray = Object.entries(categorySpending)
+      .sort(([,a], [,b]) => b - a)
+      .map(([category, amount]) => ({
+        category,
+        amount: roundToTwo(amount),
+        percentage: totalSpending > 0 ? roundToTwo((amount / totalSpending) * 100) : 0
+      }));
+
+    // If no categories or all categories are very small, add "Other" category
+    if (categorySpendingArray.length === 0 || totalSpending === 0) {
+      categorySpendingArray.push({
+        category: 'Otros',
+        amount: 0,
+        percentage: 100
+      });
+    } else if (categorySpendingArray.length > 5) {
+      // Group remaining categories into "Other"
+      const top5Total = categorySpendingArray.slice(0, 5).reduce((sum, cat) => sum + cat.amount, 0);
+      const otherAmount = totalSpending - top5Total;
+
+      if (otherAmount > 0) {
+        categorySpendingArray.splice(5); // Keep only top 5
+        categorySpendingArray.push({
+          category: 'Otros',
+          amount: roundToTwo(otherAmount),
+          percentage: roundToTwo((otherAmount / totalSpending) * 100)
+        });
+      }
+    }
 
     // Calculate balance
     const balance = totalIncome - totalSpending;
@@ -172,7 +207,7 @@ router.get('/dashboard', async (req, res) => {
         spendingChange: roundToTwo(spendingChange),
         spendingChangePercentage: roundToTwo(spendingChangePercentage)
       },
-      categorySpending,
+      categorySpending: categorySpendingArray,
       topCategories,
       recentTransactions,
       period: {

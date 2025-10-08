@@ -150,7 +150,7 @@ const authMiddleware = async (req, res, next) => {
           console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
           await addToCleanupCache(tokenHash);
           await cleanupUserByToken(token);
-          
+
           return res.status(401).json({
             error: 'Authentication token corrupted',
             details: 'Microsoft rejected the token as malformed. Your authentication token has been cleaned up. Please sign in again.',
@@ -164,7 +164,7 @@ const authMiddleware = async (req, res, next) => {
           console.error('🔑 Invalid authentication token - cleaning up');
           await addToCleanupCache(tokenHash);
           await cleanupUserByToken(token);
-          
+
           return res.status(401).json({
             error: 'Invalid authentication token',
             details: 'Microsoft rejected the authentication token. Please sign in again.',
@@ -235,7 +235,7 @@ const addToCleanupCache = (tokenHash) => {
 const cleanupUserByToken = async (token) => {
   try {
     console.log('🧹 Cleaning up corrupted token from database...');
-    
+
     const result = await User.updateMany(
       { accessToken: token },
       {

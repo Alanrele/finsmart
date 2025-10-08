@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react'
+import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { financeAPI, handleApiError } from '../services/api'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
@@ -11,7 +11,13 @@ const Transactions = () => {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNext: false,
+    hasPrev: false
+  })
   const [extensionWarningShown, setExtensionWarningShown] = useState(false)
   const [filters, setFilters] = useState({
     search: '',
@@ -59,6 +65,13 @@ const Transactions = () => {
       const response = await financeAPI.getTransactions(filters)
       console.log('📊 Transactions response:', response.data); // Debug log
       setTransactions(response.data.transactions || [])
+      setPagination(response.data.pagination || {
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        hasNext: false,
+        hasPrev: false
+      })
     } catch (error) {
       // Check if this is an extension-related error
       const isExtensionError = error.message && (
@@ -81,26 +94,83 @@ const Transactions = () => {
       toast.error(errorInfo.message)
       console.error('❌ Error loading transactions:', error); // Debug log
       setTransactions([]) // Set empty array on error
+      setPagination({
+        currentPage: 1,
+        totalPages: 1,
+        totalCount: 0,
+        hasNext: false,
+        hasPrev: false
+      })
     } finally {
       setLoading(false)
     }
   }
 
   const categories = [
-    'food', 'transport', 'entertainment', 'shopping', 'healthcare',
-    'utilities', 'education', 'travel', 'investment', 'income', 'transfer', 'other'
+    { value: 'food', label: 'Comida' },
+    { value: 'transport', label: 'Transporte' },
+    { value: 'entertainment', label: 'Entretenimiento' },
+    { value: 'shopping', label: 'Compras' },
+    { value: 'healthcare', label: 'Salud' },
+    { value: 'utilities', label: 'Servicios' },
+    { value: 'education', label: 'Educación' },
+    { value: 'travel', label: 'Viajes' },
+    { value: 'investment', label: 'Inversiones' },
+    { value: 'income', label: 'Ingresos' },
+    { value: 'transfer', label: 'Transferencias' },
+    { value: 'other', label: 'Otros' }
   ]
 
-  const types = ['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit']
+  const types = [
+    { value: 'debit', label: 'Débito' },
+    { value: 'credit', label: 'Crédito' },
+    { value: 'transfer', label: 'Transferencia' },
+    { value: 'payment', label: 'Pago' },
+    { value: 'withdrawal', label: 'Retiro' },
+    { value: 'deposit', label: 'Depósito' }
+  ]
 
   const handleTransactionClick = (transaction) => {
     setSelectedTransaction(transaction)
     setIsModalOpen(true)
   }
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedTransaction(null)
+  // Category translation function
+  const translateCategory = (category) => {
+    const translations = {
+      'food': 'Comida',
+      'transport': 'Transporte',
+      'entertainment': 'Entretenimiento',
+      'shopping': 'Compras',
+      'healthcare': 'Salud',
+      'utilities': 'Servicios',
+      'education': 'Educación',
+      'travel': 'Viajes',
+      'investment': 'Inversiones',
+      'income': 'Ingresos',
+      'transfer': 'Transferencias',
+      'other': 'Otros',
+      'salary': 'Salario',
+      'savings': 'Ahorros',
+      'freelance': 'Freelance'
+    }
+    return translations[category?.toLowerCase()] || category || 'Otros'
+  }
+
+  const handlePageChange = (newPage) => {
+    setFilters({...filters, page: newPage})
+  }
+
+  const handlePrevPage = () => {
+    if (pagination.hasPrev) {
+      handlePageChange(pagination.currentPage - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (pagination.hasNext) {
+      handlePageChange(pagination.currentPage + 1)
+    }
   }
 
   if (loading) {
@@ -158,10 +228,10 @@ const Transactions = () => {
               onChange={(e) => setFilters({...filters, category: e.target.value, page: 1})}
               className="input-field"
             >
-              <option value="">Todas</option>
+              <option value="">Todas las categorías</option>
               {categories.map(category => (
-                <option key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                <option key={category.value} value={category.value}>
+                  {category.label}
                 </option>
               ))}
             </select>
@@ -176,10 +246,10 @@ const Transactions = () => {
               onChange={(e) => setFilters({...filters, type: e.target.value, page: 1})}
               className="input-field"
             >
-              <option value="">Todos</option>
+              <option value="">Todos los tipos</option>
               {types.map(type => (
-                <option key={type} value={type}>
-                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                <option key={type.value} value={type.value}>
+                  {type.label}
                 </option>
               ))}
             </select>
@@ -255,7 +325,7 @@ const Transactions = () => {
                     </p>
                     <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400">
                       <span>{new Date(transaction.date).toLocaleDateString()}</span>
-                      <span className="capitalize">{transaction.category}</span>
+                      <span className="capitalize">{translateCategory(transaction.category)}</span>
                       <span className="capitalize">{transaction.channel}</span>
                     </div>
                   </div>
@@ -281,6 +351,90 @@ const Transactions = () => {
           )}
         </div>
       </motion.div>
+
+      {/* Pagination */}
+      {pagination.totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="flex items-center justify-between"
+        >
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            Mostrando {transactions.length} de {pagination.totalCount} transacciones
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handlePrevPage}
+              disabled={!pagination.hasPrev}
+              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Anterior
+            </button>
+
+            <div className="flex items-center space-x-1">
+              {/* First page */}
+              {pagination.currentPage > 3 && (
+                <>
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    className="px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    1
+                  </button>
+                  {pagination.currentPage > 4 && <span className="px-2">...</span>}
+                </>
+              )}
+
+              {/* Pages around current page */}
+              {Array.from(
+                { length: Math.min(5, pagination.totalPages) },
+                (_, i) => {
+                  const pageNum = Math.max(1, Math.min(pagination.totalPages, pagination.currentPage - 2 + i))
+                  if (pageNum < 1 || pageNum > pagination.totalPages) return null
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`px-3 py-2 text-sm rounded-lg ${
+                        pageNum === pagination.currentPage
+                          ? 'bg-blue-600 text-white'
+                          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                }
+              ).filter(Boolean)}
+
+              {/* Last page */}
+              {pagination.currentPage < pagination.totalPages - 2 && (
+                <>
+                  {pagination.currentPage < pagination.totalPages - 3 && <span className="px-2">...</span>}
+                  <button
+                    onClick={() => handlePageChange(pagination.totalPages)}
+                    className="px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {pagination.totalPages}
+                  </button>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={!pagination.hasNext}
+              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              Siguiente
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Transaction Detail Modal */}
       <TransactionDetailModal
