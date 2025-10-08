@@ -1,3 +1,60 @@
+# 🚨 CRITICAL: Fix SIGTERM Error
+
+## The deployment is failing with `npm error command failed npm error signal SIGTERM`
+
+**This happens because Railway cannot read `.env.prod` files. Environment variables must be set manually in the Railway dashboard.**
+
+### Immediate Fix:
+
+1. **Go to Railway Dashboard** → Your Project → Variables
+2. **Add these REQUIRED variables** (copy from `backend/.env.prod`):
+
+```bash
+**⚠️ IMPORTANT**: Copy the actual values from your `backend/.env.prod` file, NOT these placeholder examples!
+
+The real values are in your local `backend/.env.prod` file (which is gitignored and safe).
+
+# REQUIRED - JWT Secrets
+JWT_SECRET=your_secure_jwt_secret_here
+JWT_REFRESH_SECRET=your_refresh_secret_here
+
+# REQUIRED - OpenAI API
+OPENAI_API_KEY=sk-proj-your_openai_api_key_here
+
+# REQUIRED - Microsoft Graph
+GRAPH_CLIENT_ID=your_microsoft_graph_client_id
+GRAPH_CLIENT_SECRET=your_microsoft_graph_client_secret
+GRAPH_TENANT_ID=common
+
+# REQUIRED - Azure OCR
+AZURE_OCR_ENDPOINT=https://your-resource.cognitiveservices.azure.com/
+AZURE_OCR_KEY=your_azure_ocr_key_here
+
+# Server Configuration
+NODE_ENV=production
+ENABLE_DEMO_LOGIN=true
+SESSION_SECRET=CaskbackSecretKey2024ProductionModeRandomString32Chars
+TRUST_PROXY=true
+
+# Security
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+```
+
+3. **After setting variables, redeploy**:
+   ```bash
+   railway restart
+   ```
+
+4. **Check logs**:
+   ```bash
+   railway logs
+   ```
+
+   Look for "Connected to MongoDB" and "Server running on port" messages.
+
+---
+
 # 🚀 FinSmart - Despliegue en Railway.com
 
 ## 📋 Preparación Completa para Railway
@@ -32,9 +89,24 @@ railway init
 railway up
 ```
 
-#### 3. **Configurar variables de entorno en Railway**
+3. **Set Environment Variables Automatically**:
+   ```bash
+   # Run this script to set all variables automatically
+   ./setup-railway-vars.sh
+   ```
 
-En el dashboard de Railway, agrega estas variables:
+   Or set them manually in Railway Dashboard (see variables list above).
+
+4. **Redeploy and Check**:
+   ```bash
+   railway restart
+   railway logs
+   ```
+
+   **Look for these success messages:**
+   - "Connected to MongoDB" ✅
+   - "Server running on port XXXX" ✅
+   - No SIGTERM errors ✅
 
 ```env
 # Database
