@@ -83,6 +83,12 @@ VITE_AZURE_CLIENT_ID=29f56526-69dc-4e89-9955-060aa8292fd0
 - **Azure OCR** para procesar imágenes de transacciones
 - **OpenAI GPT-4** para análisis y chat
 - **MongoDB Atlas** para persistencia segura
+- **🔄 Reprocesamiento Inteligente** de correos históricos
+  - Revisa todos los correos BCP de hasta 1 año atrás
+  - Encuentra transacciones que pasaron desapercibidas
+  - Corrige errores de algoritmos anteriores
+  - Procesa tanto gastos como ingresos históricos
+  - Actualiza solo cuando hay cambios significativos
 
 ### 🎯 Próximos Pasos
 

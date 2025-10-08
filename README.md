@@ -35,6 +35,12 @@ FinSmart es una Progressive Web Application (PWA) completa para gestión financi
 - **Extracción inteligente**: Utiliza Azure OCR y OpenAI para procesar correos e imágenes
 - **Categorización automática**: Clasifica transacciones por tipo y categoría
 - **Dashboard interactivo**: Visualiza tus gastos con gráficos intuitivos
+- **🔄 Reprocesamiento Inteligente**: Mejora histórica de datos con algoritmos avanzados
+  - Revisa todos los correos BCP de hasta 1 año atrás
+  - Encuentra transacciones que pasaron desapercibidas
+  - Corrige errores de algoritmos anteriores
+  - Procesa tanto gastos como ingresos históricos
+  - Actualiza solo cuando hay cambios significativos
 
 ### 🤖 Inteligencia Artificial
 - **Chat financiero**: Pregunta sobre tus finanzas y recibe respuestas personalizadas
