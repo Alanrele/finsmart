@@ -1,6 +1,5 @@
 const express = require('express');
 const { Client } = require('@microsoft/microsoft-graph-client');
-const { AuthenticationProvider } = require('@microsoft/microsoft-graph-client');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
@@ -36,54 +35,60 @@ const getGraphClient = (accessToken) => {
 };
 
 // Connect to Microsoft Account
-router.post('/connect', async (req, res) => {
-  try {
-    const { accessToken, refreshToken } = req.body;
-
-    if (!accessToken) {
-      return res.status(400).json({ error: 'Access token is required' });
+router.post('/connect', [
+    body('accessToken').isString().notEmpty().withMessage('Access token must be a non-empty string.'),
+    body('refreshToken').optional().isString().withMessage('Refresh token must be a string.')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
 
-    // Update user with tokens
-    const user = await User.findByIdAndUpdate(
-      req.user._id,
-      {
-        accessToken,
-        refreshToken,
-        tokenExpiry: new Date(Date.now() + 3600000), // 1 hour
-        lastSync: new Date()
-      },
-      { new: true }
-    );
-
-    // Test the connection by getting user profile
     try {
-      const graphClient = getGraphClient(accessToken);
-      const profile = await graphClient.api('/me').get();
+        const { accessToken, refreshToken } = req.body;
 
-      res.json({
-        message: 'Microsoft Graph connected successfully',
-        profile: {
-          displayName: profile.displayName,
-          email: profile.mail || profile.userPrincipalName
+        // Update user with tokens
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                accessToken,
+                refreshToken,
+                tokenExpiry: new Date(Date.now() + 3600 * 1000), // Assume 1 hour expiry, can be refined
+                lastSync: new Date()
+            },
+            { new: true, upsert: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
         }
-      });
-    } catch (graphError) {
-      console.error('Graph API test failed:', graphError);
-      res.status(400).json({
-        error: 'Failed to connect to Microsoft Graph',
-        details: 'Please check your access token'
-      });
-    }
 
-  } catch (error) {
-    console.error('Connect error:', error);
-    res.status(500).json({ error: 'Failed to connect Microsoft account' });
-  }
+        // Test the connection by getting user profile
+        const graphClient = getGraphClient(accessToken);
+        const profile = await graphClient.api('/me').select('displayName,mail,userPrincipalName').get();
+
+        res.json({
+            message: 'Microsoft Graph connected successfully.',
+            profile: {
+                displayName: profile.displayName,
+                email: profile.mail || profile.userPrincipalName
+            }
+        });
+
+    } catch (graphError) {
+        console.error('Graph API connection error:', graphError.message);
+        // Check for typical auth errors
+        if (graphError.statusCode === 401 || graphError.code?.includes('InvalidAuthenticationToken')) {
+            return res.status(401).json({
+                message: 'Authentication failed. The access token may be invalid or expired.'
+            });
+        }
+        res.status(500).json({ message: 'Failed to connect to Microsoft Graph.', error: graphError.message });
+    }
 });
 
 // Verify token status
-router.get('/verify-token', async (req, res) => {
+router.get('/verify-token', authMiddleware, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
 
