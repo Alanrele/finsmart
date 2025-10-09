@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { createHash } = require('crypto');
 const User = require('../models/userModel');
 const { cleanupUserToken } = require('../utils/tokenCleanup');
 
@@ -18,9 +19,9 @@ const authMiddleware = async (req, res, next) => {
 
     console.log('🔑 Auth middleware - Token received:', token.substring(0, 20) + '...');
 
-    // Check if this token was recently cleaned up to prevent loops
-    const tokenHash = token.substring(0, 30);
-    if (recentlyCleanedTokens.has(tokenHash)) {
+    // Check if this token was recently cleaned up to prevent loops (use SHA-256 fingerprint)
+    const tokenFingerprint = fingerprintToken(token);
+    if (recentlyCleanedTokens.has(tokenFingerprint)) {
       console.error('🔄 Token was recently cleaned up - preventing loop');
       return res.status(401).json({
         error: 'Token was recently invalidated',
@@ -57,7 +58,7 @@ const authMiddleware = async (req, res, next) => {
       // Enhanced token validation for obviously corrupted tokens
       if (token.includes('undefined') || token.includes('null') || token === 'undefined' || token === 'null') {
         console.error('❌ Malformed token detected (contains undefined/null)');
-        await addToCleanupCache(tokenHash);
+        await addToCleanupCache(token);
         await cleanupUserByToken(token);
         return res.status(401).json({
           error: 'Invalid authentication token',
@@ -69,7 +70,7 @@ const authMiddleware = async (req, res, next) => {
       // Additional pre-validation for Microsoft tokens
       if (token.length < 20 || token.includes(' ') || token.includes('\n') || token.includes('\r')) {
         console.error('❌ Suspicious token format detected - likely corrupted');
-        await addToCleanupCache(tokenHash);
+        await addToCleanupCache(token);
         await cleanupUserByToken(token);
         return res.status(401).json({
           error: 'Suspicious token format',
@@ -157,7 +158,7 @@ const authMiddleware = async (req, res, next) => {
         // Check for specific JWT malformed error from Microsoft
         if (error.message && error.message.includes('JWT is not well formed')) {
           console.error('🔑 JWT malformed error detected - cleaning up corrupted token');
-          await addToCleanupCache(tokenHash);
+          await addToCleanupCache(token);
           await cleanupUserByToken(token);
 
           return res.status(401).json({
@@ -171,7 +172,7 @@ const authMiddleware = async (req, res, next) => {
         // Check for invalid authentication token error
         if (error.code === 'InvalidAuthenticationToken') {
           console.error('🔑 Invalid authentication token - cleaning up');
-          await addToCleanupCache(tokenHash);
+          await addToCleanupCache(token);
           await cleanupUserByToken(token);
 
           return res.status(401).json({
@@ -202,10 +203,13 @@ const authMiddleware = async (req, res, next) => {
 };
 
 // Helper functions
-const addToCleanupCache = (tokenHash) => {
-  recentlyCleanedTokens.add(tokenHash);
+const fingerprintToken = (token) => createHash('sha256').update(token).digest('hex');
+
+const addToCleanupCache = (token) => {
+  const fp = fingerprintToken(token);
+  recentlyCleanedTokens.add(fp);
   setTimeout(() => {
-    recentlyCleanedTokens.delete(tokenHash);
+    recentlyCleanedTokens.delete(fp);
   }, CLEANUP_CACHE_DURATION);
 };
 
