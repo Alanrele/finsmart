@@ -12,7 +12,9 @@ function isTransactionalEmail(subject, content) {
         'transferencia realizada',
         'transferencia recibida',
         'constancia de transferencia',
+        'constancia de pago',
         'pago de servicio',
+        'pago de tarjeta',
         'retiro',
         'depósito',
         'numero de operacion',
@@ -20,7 +22,9 @@ function isTransactionalEmail(subject, content) {
         'fecha y hora',
         'movimiento realizado',
         'cargo efectuado',
-        'abono recibido'
+        'abono recibido',
+        'devolución',
+        'devuelto'
     ];
 
     // Palabras clave que indican emails promocionales (evitar)
@@ -89,8 +93,12 @@ function isTransactionalEmail(subject, content) {
         'realizaste un consumo',
         'realizaste consumo',
         'consumo realizado',
+        'consumo tarjeta de débito',
         'transferencia realizada',
-        'constancia de transferencia'
+        'constancia de transferencia',
+        'constancia de pago',
+        'pago de tarjeta',
+        'devolución'
     ];
 
     // Patrones de evidencia adicional
@@ -248,12 +256,20 @@ function parseEmailContent(fullText) {
             else if (lowerLabel.includes('pagado a')) {
                 const match = value.match(/(\d{4})$/);
                 cardLast4 = match ? match[1] : null;
+                // Extract merchant name before the masked digits if present
+                const cleaned = value.replace(/\s*(\*{4,}|[*•]{4,})?\s*\d{4}\s*$/, '').trim();
+                if (cleaned) merchant = cleaned;
             } else if (lowerLabel.includes('tipo de pago')) {
                 paymentType = value;
-            } else if (lowerLabel.includes('número de tarjeta de débito') || lowerLabel.includes('numero de tarjeta de debito')) {
+            } else if (
+                lowerLabel.includes('número de tarjeta de débito') ||
+                lowerLabel.includes('numero de tarjeta de debito') ||
+                lowerLabel.includes('número de tarjeta') ||
+                lowerLabel.includes('numero de tarjeta')
+            ) {
                 const match = value.match(/(\d{4})$/);
                 cardLast4 = match ? match[1] : null;
-            } else if (lowerLabel.includes('empresa') || lowerLabel.includes('comercio')) {
+            } else if (lowerLabel.includes('empresa') || lowerLabel.includes('comercio') || lowerLabel.includes('nombre del comercio')) {
                 merchant = value;
             }
         });
@@ -269,6 +285,32 @@ function parseEmailContent(fullText) {
                 }
             });
         }
+    }
+
+    // Fallbacks when HTML table doesn't include explicit fields
+    // 1) Try to detect last 4 digits from mask patterns in free text
+    if (!cardLast4) {
+        const maskMatch = fullText.match(/(?:\*{4,}|[*•]{4,})\s*([0-9]{4})/);
+        if (maskMatch) {
+            cardLast4 = maskMatch[1];
+        }
+    }
+
+    // 2) Infer operation type from narrative text if missing
+    if (!operationType) {
+        const txt = fullText.toLowerCase();
+        if (/(devoluci[óo]n|devuelto)/i.test(txt)) {
+            operationType = 'Devolución';
+        } else if (/realizaste\s+un\s+consumo|consumo\s+tarjeta/i.test(txt)) {
+            operationType = 'Consumo Tarjeta de Débito';
+        } else if (/pago\s+de\s+tarjeta/i.test(txt)) {
+            operationType = 'Pago de tarjeta';
+        }
+    }
+
+    // 3) Infer currency from "Moneda Soles" if amount was parsed without currency
+    if (!currency && /moneda\s+sol(es)?/i.test(fullText)) {
+        currency = 'PEN';
     }
 
     return {
@@ -306,6 +348,11 @@ function classifyTransactionType(parsedData) {
             opType.includes('transferencia recibida') || opType.includes('abono')) {
             type = 'deposit';
             category = 'income'; // 'income' is valid in enum
+        }
+        // Devoluciones / reembolsos
+        else if (opType.includes('devoluci') || opType.includes('devuelto') || opType.includes('reembolso')) {
+            type = 'deposit';
+            category = 'income';
         }
         // Transferencias enviadas
         else if (opType.includes('transferencia') || opType.includes('envío')) {
