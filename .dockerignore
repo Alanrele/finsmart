@@ -1,0 +1,25 @@
+# Node
+node_modules
+npm-debug.log
+
+# Frontend build artifacts
+frontend/dist
+frontend/.vite
+
+# Git
+.git
+.gitignore
+
+# OS/IDE
+.DS_Store
+.vscode
+**/*.local
+
+# Env
+.env
+.env.*
+
+# Tests/coverage
+coverage
+**/*.spec.*
+**/*.test.*
