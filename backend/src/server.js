@@ -225,6 +225,12 @@ io.use(async (socket, next) => {
       return next(new Error('Authentication error: No token provided'));
     }
 
+    // Basic token sanity check: JWTs must contain two dots
+    if (typeof token !== 'string' || token.split('.').length !== 3) {
+      console.log('❌ Socket.IO handshake - Malformed token');
+      return next(new Error('Authentication error: Malformed token'));
+    }
+
     // Validar token usando el mismo middleware de autenticación
     const jwt = require('jsonwebtoken');
     const User = require('./models/userModel');

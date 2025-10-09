@@ -7,6 +7,16 @@ class SocketService {
   }
 
   connect(userId, token) {
+    // Basic token sanitation
+    if (typeof token === 'string' && token.startsWith('Bearer ')) {
+      token = token.replace(/^Bearer\s+/i, '')
+    }
+
+    const hasThreeParts = typeof token === 'string' && token.split('.').length === 3
+    if (!token || !hasThreeParts) {
+      console.warn('🚫 Socket.IO: token malformado o ausente; no se iniciará la conexión de sockets')
+      return null
+    }
     // Opción para deshabilitar Socket.io en producción si es necesario
     if (import.meta.env.VITE_DISABLE_SOCKET === 'true') {
       console.log('🚫 Socket.io disabled via environment variable')
