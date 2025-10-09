@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import React, { useEffect, useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
@@ -9,11 +9,11 @@ import {
   ArrowDownRight,
   Calendar,
   Target,
-  PieChart
-} from 'lucide-react'
+  PieChart as PieChartIcon // Renombrar para evitar conflicto
+} from 'lucide-react';
 import {
   ResponsiveContainer,
-  PieChart as RechartsPieChart,
+  PieChart, // Este es el componente de Recharts
   Pie,
   Cell,
   BarChart,
@@ -24,13 +24,13 @@ import {
   Tooltip,
   LineChart,
   Line
-} from 'recharts'
-import useAppStore from '../stores/appStore'
-import { financeAPI, handleApiError } from '../services/api'
-import toast from 'react-hot-toast'
-import LoadingCard from './LoadingCard'
-import EmailSyncControl from './EmailSyncControl'
-import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters'
+} from 'recharts';
+import useAppStore from '../stores/appStore';
+import { getDashboardData } from '../services/api'; // Importar directamente
+import toast from 'react-hot-toast';
+import LoadingCard from './LoadingCard';
+import EmailSyncControl from './EmailSyncControl';
+import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
 
@@ -48,41 +48,32 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const Dashboard = () => {
-  const { dashboardData, setDashboardData } = useAppStore()
-  const [loading, setLoading] = useState(true)
+  const { dashboardData, setDashboardData } = useAppStore();
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboardData()
-  }, [])
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
-      setLoading(true)
-      console.log('🔄 Loading dashboard data...');
-      const response = await financeAPI.getDashboard()
-      console.log('✅ Dashboard data loaded:', response.data);
-      setDashboardData(response.data)
+      setLoading(true);
+      const data = await getDashboardData();
+      setDashboardData(data);
     } catch (error) {
       console.error('❌ Dashboard loading error:', error);
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
-
-      // Set default empty data to prevent undefined errors
+      toast.error(error.message || 'Error al cargar los datos del panel.');
+      // Establecer datos vacíos por defecto para evitar errores de renderizado
       setDashboardData({
-        summary: {
-          totalBalance: 0,
-          monthlyIncome: 0,
-          monthlyExpenses: 0,
-          totalSavings: 0
-        },
+        summary: {},
         categorySpending: [],
         topCategories: [],
-        recentTransactions: []
+        recentTransactions: [],
       });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  }, [setDashboardData]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   if (loading) {
     return (
@@ -101,22 +92,13 @@ const Dashboard = () => {
     )
   }
 
-  // Extract data with safe defaults
   const {
     summary = {},
     categorySpending = [],
     topCategories = [],
     recentTransactions = []
-  } = dashboardData || {}
+  } = dashboardData || {};
 
-  console.log('📊 Dashboard data extracted:', {
-    hasSummary: !!summary,
-    categorySpendingLength: categorySpending?.length,
-    topCategoriesLength: topCategories?.length,
-    recentTransactionsLength: recentTransactions?.length
-  });
-
-  // Category translation function
   const translateCategory = (category) => {
     const translations = {
       'food': 'Comida',
@@ -138,7 +120,6 @@ const Dashboard = () => {
     return translations[category?.toLowerCase()] || category || 'Otros'
   }
 
-  // Prepare data for charts with additional safety checks
   const categoryData = Array.isArray(topCategories)
     ? topCategories.map((cat, index) => ({
         name: translateCategory(cat?.category),
@@ -146,19 +127,14 @@ const Dashboard = () => {
         percentage: cat?.percentage || 0,
         color: COLORS[index % COLORS.length]
       }))
-    : []
+    : [];
 
   const spendingTrend = Array.isArray(recentTransactions) && recentTransactions.length > 0
     ? recentTransactions.slice(0, 7).reverse().map((transaction, index) => ({
         day: `Día ${index + 1}`,
         amount: Math.abs(transaction?.amount || 0)
       }))
-    : []
-
-  console.log('📈 Chart data prepared:', {
-    categoryDataLength: categoryData?.length || 0,
-    spendingTrendLength: spendingTrend?.length || 0
-  });
+    : [];
 
   return (
     <div className="space-y-6">
@@ -304,7 +280,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <PieChart className="w-6 h-6 text-blue-600" />
+              <PieChartIcon className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </motion.div>
@@ -324,7 +300,7 @@ const Dashboard = () => {
           </h3>
           {categoryData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <RechartsPieChart>
+              <PieChart>
                 <Pie
                   data={categoryData}
                   cx="50%"
@@ -338,7 +314,7 @@ const Dashboard = () => {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => formatCurrency(value)} />
-              </RechartsPieChart>
+              </PieChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
@@ -432,4 +408,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard
+export default Dashboard;
