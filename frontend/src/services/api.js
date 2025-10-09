@@ -243,6 +243,28 @@ export const verifyGraphToken = async () => {
     }
 };
 
+export const getSyncStatus = async () => {
+    try {
+        const response = await api.get('/graph/sync-status');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get sync status');
+        return response.data;
+    } catch (error) {
+        console.error('Error getting sync status:', error);
+        throw error;
+    }
+};
+
+export const toggleSync = async (syncEnabled) => {
+    try {
+        const response = await api.post('/graph/toggle-sync', { syncEnabled });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to toggle sync');
+        return response.data;
+    } catch (error) {
+        console.error('Error toggling sync:', error);
+        throw error;
+    }
+};
+
 export const syncEmails = async () => {
     try {
         const response = await api.post('/graph/sync-emails');
