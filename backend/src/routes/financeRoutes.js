@@ -221,8 +221,8 @@ router.get('/transactions', [
     query('category').optional().isString(),
     query('type').optional().isString().isIn(['income', 'expense']),
     query('isAI').optional().isBoolean(),
-    query('startDate').optional().isISO8601().toDate(),
-    query('endDate').optional().isISO8601().toDate()
+    query('startDate').optional({ checkFalsy: true }).isISO8601().toDate(),
+    query('endDate').optional({ checkFalsy: true }).isISO8601().toDate()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -238,7 +238,7 @@ router.get('/transactions', [
         // Check if MongoDB is connected
         if (mongoose.connection.readyState !== 1) {
             console.error('❌ MongoDB not connected. Cannot fetch transactions.');
-            return res.status(503).json({ 
+            return res.status(503).json({
                 error: 'Servicio no disponible',
                 message: 'La conexión con la base de datos no está disponible en este momento.'
             });

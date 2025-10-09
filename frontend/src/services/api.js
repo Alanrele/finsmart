@@ -56,7 +56,7 @@ api.interceptors.response.use(
         // Log the error for debugging but pass the response through
         console.warn(`⚠️ API Warning: Received status ${response.status}`, response.data);
     }
-    
+
     return response;
   },
   async (error) => {
@@ -65,14 +65,14 @@ api.interceptors.response.use(
     // Handle 401 Unauthorized errors globally
     if (response?.status === 401) {
       console.error('🚨 401 Unauthorized Error Detected. Logging out.');
-      
+
       const { logout } = useAuthStore.getState();
-      
+
       // Prevent multiple toasts or logouts if they happen close together
       if (useAuthStore.getState().isAuthenticated) {
         toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
         logout();
-        
+
         // Redirect to login page
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
