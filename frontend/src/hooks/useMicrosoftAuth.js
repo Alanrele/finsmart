@@ -43,11 +43,15 @@ export const useMicrosoftAuth = () => {
           avatar: null
         }
 
-        // Create a demo token for development
-        const token = `demo-token-${Date.now()}`
+        // Get real access token instead of demo token
+        const accessToken = await getAccessToken();
 
-        login(userInfo, token)
-        toast.success('Autenticación exitosa con Microsoft')
+        if (accessToken) {
+          login(userInfo, accessToken)
+          toast.success('Autenticación exitosa con Microsoft')
+        } else {
+          toast.error('No se pudo obtener un token de acceso de Microsoft.');
+        }
 
         // Clear login progress flag
         sessionStorage.removeItem('msalLoginInProgress')

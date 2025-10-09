@@ -32,6 +32,21 @@ import LoadingCard from './LoadingCard'
 import EmailSyncControl from './EmailSyncControl'
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters'
 
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-2 rounded shadow-lg">
+        <p className="text-sm font-medium text-gray-900">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
+        <p className="text-xs text-gray-500">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
+      </div>
+    );
+  }
+
+  return null;
+};
+
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore()
   const [loading, setLoading] = useState(true)
