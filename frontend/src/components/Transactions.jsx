@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { financeAPI, handleApiError } from '../services/api'
+import { getTransactions } from '../services/api' // Importar directamente la función
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
 import TransactionDetailModal from './TransactionDetailModal'
@@ -30,43 +30,13 @@ const Transactions = () => {
     limit: 20
   })
 
-  useEffect(() => {
-    loadTransactions()
-
-    // Check for potential browser extension conflicts
-    const checkForExtensionConflicts = () => {
-      // Common signs of extension interference
-      const extensionIndicators = [
-        window.chrome && window.chrome.runtime && window.chrome.runtime.onMessage,
-        window.postMessage && typeof window.postMessage === 'function',
-        document.querySelector('[data-extension]'),
-        document.querySelector('[id*="extension"]'),
-        document.querySelector('[class*="extension"]')
-      ]
-
-      const hasExtensions = extensionIndicators.some(indicator => !!indicator)
-
-      if (hasExtensions && !extensionWarningShown) {
-        console.warn('🚨 Potential browser extension interference detected')
-        toast('💡 Si experimentas errores, considera desactivar extensiones del navegador', {
-          duration: 5000,
-          icon: '⚠️'
-        })
-        setExtensionWarningShown(true)
-      }
-    }
-
-    // Check after a short delay to allow extensions to load
-    setTimeout(checkForExtensionConflicts, 2000)
-  }, [filters, extensionWarningShown])
-
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     try {
       setLoading(true)
-      const response = await financeAPI.getTransactions(filters)
-      console.log('📊 Transactions response:', response.data); // Debug log
-      setTransactions(response.data.transactions || [])
-      setPagination(response.data.pagination || {
+      // Usar la función importada directamente
+      const data = await getTransactions(filters)
+      setTransactions(data.transactions || [])
+      setPagination(data.pagination || {
         currentPage: 1,
         totalPages: 1,
         totalCount: 0,
@@ -74,37 +44,23 @@ const Transactions = () => {
         hasPrev: false
       })
     } catch (error) {
-      // Check if this is an extension-related error
-      const isExtensionError = error.message && (
-        error.message.includes('message channel closed') ||
-        error.message.includes('listener indicated an asynchronous response') ||
-        error.message.includes('Extension context invalidated')
-      )
-
-      if (isExtensionError) {
-        console.warn('🚫 Extension error caught in transactions:', error.message)
-        toast.error('Error de extensión del navegador detectado. Intenta recargar la página.', {
-          duration: 5000
-        })
-        // Don't set empty array for extension errors - retry silently
-        setTimeout(() => loadTransactions(), 2000)
-        return
-      }
-
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
-      console.error('❌ Error loading transactions:', error); // Debug log
-      setTransactions([]) // Set empty array on error
-      setPagination({
-        currentPage: 1,
-        totalPages: 1,
-        totalCount: 0,
-        hasNext: false,
-        hasPrev: false
-      })
+      // El interceptor de API ya maneja los errores 401.
+      // Aquí manejamos otros errores específicos de esta llamada.
+      toast.error(error.message || 'Error al cargar las transacciones.')
+      console.error('❌ Error loading transactions:', error)
+      setTransactions([]) // Limpiar en caso de error
     } finally {
       setLoading(false)
     }
+  }, [filters]) // filters es la única dependencia necesaria
+
+  useEffect(() => {
+    loadTransactions()
+  }, [loadTransactions]) // El efecto se ejecuta cuando la función `loadTransactions` cambia (es decir, cuando cambian los filtros)
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedTransaction(null)
   }
 
   const categories = [
@@ -441,7 +397,7 @@ const Transactions = () => {
       <TransactionDetailModal
         transaction={selectedTransaction}
         isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        onClose={handleCloseModal} // Ahora esta función existe
       />
     </div>
   )
