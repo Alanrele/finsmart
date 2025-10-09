@@ -79,12 +79,9 @@ const Transactions = () => {
   ]
 
   const types = [
-    { value: 'debit', label: 'Débito' },
-    { value: 'credit', label: 'Crédito' },
-    { value: 'transfer', label: 'Transferencia' },
-    { value: 'payment', label: 'Pago' },
-    { value: 'withdrawal', label: 'Retiro' },
-    { value: 'deposit', label: 'Depósito' }
+    // El backend espera 'income' o 'expense' y mapea internamente a tipos específicos
+    { value: 'income', label: 'Ingresos' },
+    { value: 'expense', label: 'Gastos' }
   ]
 
   const handleTransactionClick = (transaction) => {

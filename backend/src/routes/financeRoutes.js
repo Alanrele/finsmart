@@ -213,16 +213,16 @@ router.get('/dashboard', async (req, res) => {
 
 // Get all transactions with filtering, sorting, and pagination
 router.get('/transactions', [
-    query('page').optional().isInt({ min: 1 }).toInt(),
-    query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
-    query('sortBy').optional().isString().isIn(['date', 'amount', 'category']),
-    query('sortOrder').optional().isString().isIn(['asc', 'desc']),
-    query('search').optional().isString(),
-    query('category').optional().isString(),
-    query('type').optional().isString().isIn(['income', 'expense']),
-    query('isAI').optional().isBoolean(),
-    query('startDate').optional({ checkFalsy: true }).isISO8601().toDate(),
-    query('endDate').optional({ checkFalsy: true }).isISO8601().toDate()
+  query('page').optional().isInt({ min: 1 }).toInt(),
+  query('limit').optional().isInt({ min: 1, max: 100 }).toInt(),
+  query('sortBy').optional({ checkFalsy: true }).isString().isIn(['date', 'amount', 'category']),
+  query('sortOrder').optional({ checkFalsy: true }).isString().isIn(['asc', 'desc']),
+  query('search').optional({ checkFalsy: true }).isString(),
+  query('category').optional({ checkFalsy: true }).isString(),
+  query('type').optional({ checkFalsy: true }).isString().isIn(['income', 'expense']),
+  query('isAI').optional({ checkFalsy: true }).isBoolean(),
+  query('startDate').optional({ checkFalsy: true }).isISO8601().toDate(),
+  query('endDate').optional({ checkFalsy: true }).isISO8601().toDate()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

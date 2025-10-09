@@ -102,7 +102,11 @@ export const getDashboardData = async (filters) => {
 
 export const getTransactions = async (filters) => {
     try {
-        const response = await api.get('/finance/transactions', { params: filters });
+        // Remove empty string params to avoid validation errors on backend
+        const sanitized = Object.fromEntries(
+            Object.entries(filters || {}).filter(([_, v]) => v !== '')
+        );
+        const response = await api.get('/finance/transactions', { params: sanitized });
         if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch transactions');
         return response.data;
     } catch (error) {
