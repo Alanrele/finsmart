@@ -308,3 +308,14 @@ export const getFinancialInsights = async (params) => {
         throw error;
     }
 };
+
+export const chatWithAI = async (message) => {
+    try {
+        const response = await api.post('/ai/chat', { message });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get AI response');
+        return response.data;
+    } catch (error) {
+        console.error('Error during AI chat:', error);
+        throw error;
+    }
+};

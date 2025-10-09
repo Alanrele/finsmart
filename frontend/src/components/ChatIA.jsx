@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader } from 'lucide-react'
-import { aiAPI, handleApiError } from '../services/api'
+import { chatWithAI } from '../services/api'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 
@@ -36,16 +36,15 @@ const ChatIA = () => {
     setIsLoading(true)
 
     try {
-      const response = await aiAPI.chat(userMessage)
+      const response = await chatWithAI(userMessage)
 
       // Add AI response
       addChatMessage({
         type: 'ai',
-        content: response.data.response
+        content: response.response
       })
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error procesando la consulta')
 
       // Add error message
       addChatMessage({
