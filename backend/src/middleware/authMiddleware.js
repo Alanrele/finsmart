@@ -162,25 +162,7 @@ const authMiddleware = async (req, res, next) => {
           });
         }
 
-        // Try to find existing user by email from token header if possible
-        try {
-          // Check if we can find user by existing Microsoft ID or email
-          const existingUser = await User.findOne({
-            $or: [
-              { accessToken: token },
-              { email: { $exists: true } }
-            ]
-          }).sort({ updatedAt: -1 });
-
-          if (existingUser) {
-            console.log('⚠️ Using existing user despite token validation failure');
-            req.user = existingUser;
-            return next();
-          }
-        } catch (fallbackError) {
-          console.error('Fallback user lookup failed:', fallbackError);
-        }
-
+        // Do NOT assign an arbitrary user on token failure
         return res.status(401).json({
           error: 'Microsoft token validation failed',
           details: 'Token validation failed. Please sign in again.',

@@ -324,8 +324,14 @@ io.on('connection', (socket) => {
   });
 
   socket.on('join-user-room', (userId) => {
-    socket.join(`user-${userId}`);
-    console.log(`👤 User ${userId} joined room user-${userId} (socket: ${socket.id})`);
+    // Ensure the userId matches the authenticated socket user to prevent cross-room contamination
+    const authedId = socket.user?._id?.toString?.() || socket.user?._id;
+    if (!authedId || userId?.toString?.() !== authedId) {
+      console.warn(`🚫 join-user-room rejected for socket ${socket.id}. Provided: ${userId}, Authed: ${authedId}`);
+      return;
+    }
+    socket.join(`user-${authedId}`);
+    console.log(`👤 User ${authedId} joined room user-${authedId} (socket: ${socket.id})`);
   });
 
   // Heartbeat para mantener conexiones activas en Railway
