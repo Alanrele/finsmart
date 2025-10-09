@@ -253,6 +253,12 @@ class EmailSyncService {
         const parsedData = emailParserService.parseEmailContent(emailContent);
 
         if (parsedData && parsedData.amount && parsedData.amount > 0) {
+          // Sanity guard: evitar montos absurdamente grandes por parsing incorrecto
+          const MAX_ALLOWED_AMOUNT = 10_000_000; // S/ 10 millones
+          if (parsedData.amount > MAX_ALLOWED_AMOUNT) {
+            console.warn(`⚠️ Skipping email-derived transaction with unrealistic amount: ${parsedData.amount}. Subject: ${message.subject}`);
+            continue;
+          }
           // Create transaction
           const transactionData = emailParserService.createTransactionFromEmail(
             parsedData,
