@@ -36,12 +36,9 @@ const { productionHelmetConfig, developmentHelmetConfig } = require('./config/he
 const app = express();
 const server = http.createServer(app);
 
-// Dummy io object for debugging
-const io = {
-  engine: { clientsCount: 0 },
-  use: () => {},
-  on: () => {}
-};
+const io = socketIo(server, {
+  cors: corsOptions
+});
 
 const PORT = process.env.PORT || 5000;
 
@@ -69,7 +66,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart'
 
 // Middleware
 const isProduction = process.env.NODE_ENV === 'production';
-// app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig)); // Temporarily disabled for debugging
+app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig));
 
 // CORS configuration for production
 const corsOptions = {
@@ -89,7 +86,7 @@ const corsOptions = {
       callback(null, true);
     } else {
       console.log('CORS blocked origin:', origin);
-      callback(null, true); // Allow for now, restrict later if needed
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -97,10 +94,10 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 };
 
-// app.use(cors(corsOptions)); // Temporarily disabled for debugging
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-// app.use(logger); // Temporarily disabled for debugging
+app.use(logger);
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -110,7 +107,7 @@ app.use('/api/finance', authMiddleware, financeRoutes);
 
 // Health check endpoint (before static files)
 app.get('/health', (req, res) => {
-  // const connectedSockets = io.engine.clientsCount || 0;
+  const connectedSockets = io.engine.clientsCount || 0;
 
   res.status(200).json({
     status: 'OK',
@@ -120,12 +117,10 @@ app.get('/health', (req, res) => {
     mongodb: process.env.MONGODB_URI ? 'configured' : 'missing',
     openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
     azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing',
-    // Información de Socket.io para diagnóstico - DISABLED
-    // socketio: {
-    //   connected_clients: connectedSockets,
-    //   transports: isRailwayProduction ? ['polling', 'websocket'] : ['websocket', 'polling'],
-    //   railway_mode: isRailwayProduction
-    // }
+    // Información de Socket.io para diagnóstico
+    socketio: {
+      connected_clients: connectedSockets,
+    }
   });
 });
 

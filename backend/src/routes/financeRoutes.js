@@ -24,7 +24,7 @@ router.get('/dashboard', async (req, res) => {
     if (mongoose.connection.readyState !== 1) {
       // If not connected, we can't proceed. Return an error.
       console.error('❌ MongoDB not connected. Cannot fetch dashboard data.');
-      return res.status(503).json({ 
+      return res.status(503).json({
         error: 'Servicio no disponible',
         message: 'La conexión con la base de datos no está disponible en este momento.'
       });
@@ -236,7 +236,7 @@ router.get('/transactions', [
         // Check if MongoDB is connected
         if (mongoose.connection.readyState !== 1) {
             console.error('❌ MongoDB not connected. Cannot fetch transactions.');
-            return res.status(503).json({ 
+            return res.status(503).json({
                 error: 'Servicio no disponible',
                 message: 'La conexión con la base de datos no está disponible en este momento.'
             });
