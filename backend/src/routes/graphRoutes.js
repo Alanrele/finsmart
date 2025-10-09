@@ -197,7 +197,8 @@ router.post('/sync-emails', async (req, res) => {
     const allowedSenders = [
       'notificaciones@bcp.com.pe',
       'alertas@bcp.com.pe',
-      'movimientos@bcp.com.pe'
+      'movimientos@bcp.com.pe',
+      'bcp@bcp.com.pe'
     ];
 
     console.log('📧 Fetching emails with ultra-minimal query to avoid complexity issues');
@@ -240,7 +241,11 @@ router.post('/sync-emails', async (req, res) => {
     // Filter transactional emails in memory by strict sender match
     const bcpEmails = messages.value.filter(message => {
       const fromEmail = message.from?.emailAddress?.address?.toLowerCase() || '';
-      return allowedSenders.includes(fromEmail);
+      const subj = message.subject || '';
+      const preview = message.body?.content || message.bodyPreview || '';
+      return allowedSenders.includes(fromEmail) && req.app.get('services')?.emailParserService?.isTransactionalEmail
+        ? req.app.get('services').emailParserService.isTransactionalEmail(subj, preview)
+        : require('../services/emailParserService').isTransactionalEmail(subj, preview);
     });
 
     console.log(`🏦 Found ${bcpEmails.length} emails from BCP domains`);

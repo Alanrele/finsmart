@@ -15,8 +15,8 @@ function isTransactionalEmail(subject, content) {
         'pago de servicio',
         'retiro',
         'depósito',
-        'número de operación',
         'numero de operacion',
+        'número de operación',
         'fecha y hora',
         'movimiento realizado',
         'cargo efectuado',
@@ -25,101 +25,53 @@ function isTransactionalEmail(subject, content) {
 
     // Palabras clave que indican emails promocionales (evitar)
     const promotionalKeywords = [
-        'descuento',
-        'promoción',
-        'oferta',
-        'beneficio',
-        'gustito',
-        'préstamo preaprobado',
-        'préstamo tarjetero',
-        'tarjeta invita',
-        'travel sale',
-        'shopping',
-        'seguro de viaje',
-        'date un gustito',
-        'calificas a',
-        'descubre beneficios',
-        'momento de hacer realidad',
-        'clóset con tommy',
-        'cafetera de regalo',
-        'dólar está a la baja',
-        'clara y todo lo que puede',
-        'ya revisaste si tienes',
-        '15% off',
-        'off en tu seguro',
-        'super precio',
-        'regalamos una cuota',
-        'proteger tu auto',
-        'ya conoces a clara',
-        'inicio de mes',
-        'tarjeta de crédito',
-        'felicitaciones',
-        'llave a un mundo',
-        'celebra la magia',
-        'renueva tu clóset',
-        'tommy hilfiger',
-        'calvin klein',
-        'magia de la primavera',
-        'qore',
-        'europa',
-        'euros al exterior',
-        'millas en el shopping',
-        'latam pass',
-        'depa propio',
-        'activa tu préstamo',
-        'mejora tu mes',
-        'dinero de vuelta',
-        'familia protegida',
-        'así sí vale la pena',
-        'calificas a una tarjeta',
-        'entra y descubre',
-        'tu préstamo tarjetero',
-        'ya está aprobado',
-        'activa',
-        'mejora',
-        'impulso a tu mes',
-        'dale un impulso',
-        'revive los clásicos',
-        'sinatra en navidad',
-        'dto.',
-        'descuentos con tarjetas',
-        'mundo de promociones',
-        'está aquí',
-        'renovar',
-        'estado de cuenta de tu tarjeta american express',
-        'estado de cuenta',
-        'newsletter',
-        'suscríbete',
-        'suscribete',
-        'publicidad',
-        'promo',
-        'club',
-        'puntos',
-        'programa de beneficios'
+        'descuento', 'promoción', 'oferta', 'beneficio', 'gustito',
+        'préstamo preaprobado', 'préstamo tarjetero', 'tarjeta invita',
+        'travel sale', 'shopping', 'seguro de viaje', 'date un gustito',
+        'calificas a', 'descubre beneficios', 'momento de hacer realidad',
+        'clóset con tommy', 'cafetera de regalo', 'dólar está a la baja',
+        'clara y todo lo que puede', 'ya revisaste si tienes', '15% off',
+        'off en tu seguro', 'super precio', 'regalamos una cuota',
+        'proteger tu auto', 'ya conoces a clara', 'inicio de mes',
+        'tarjeta de crédito', 'felicitaciones', 'llave a un mundo',
+        'celebra la magia', 'renueva tu clóset', 'tommy hilfiger',
+        'calvin klein', 'magia de la primavera', 'qore', 'europa',
+        'euros al exterior', 'millas en el shopping', 'latam pass',
+        'depa propio', 'activa tu préstamo', 'mejora tu mes', 'dinero de vuelta',
+        'familia protegida', 'así sí vale la pena', 'calificas a una tarjeta',
+        'entra y descubre', 'tu préstamo tarjetero', 'ya está aprobado',
+        'activa', 'mejora', 'impulso a tu mes', 'dale un impulso',
+        'revive los clásicos', 'sinatra en navidad', 'dto.',
+        'descuentos con tarjetas', 'mundo de promociones', 'está aquí',
+        'renovar', 'estado de cuenta de tu tarjeta american express',
+        'estado de cuenta', 'newsletter', 'suscríbete', 'suscribete',
+        'publicidad', 'promo', 'club', 'puntos', 'programa de beneficios',
+        // Correos corporativos informativos típicos (no transaccionales)
+        'póliza', 'poliza', 'endoso', 'buzón', 'buzon'
     ];
 
-    const fullText = (subject + ' ' + content).toLowerCase();
+    const fullText = (subject + ' ' + (content || '')).toLowerCase();
 
     // Detectar patrones promocionales específicos
     const promotionalPatterns = [
         /\d+%\s*off/i,                    // "15% OFF"
-        /💰.*gustito/i,                   // "💰¡Date un gustito"
-        /🎁.*regalo/i,                    // "🎁 regalo"
-        /🔑.*llave.*mundo/i,              // "🔑 La llave a un mundo"
-        /🚀.*activa/i,                    // "🚀 Activa tu"
-        /🚨.*renueva/i,                   // "🚨 ¡Alan, renueva"
-        /💳.*invita/i,                    // "💳 Alan, tu tarjeta te invita"
-        /🎉.*felicitaciones/i,            // "🎉 ¡Felicitaciones!"
-        /👀.*inicio.*mes/i,               // "👀 Es inicio de mes"
-        /¿.*conoces.*clara/i,             // "¿Ya conoces a Clara"
-        /¿.*calificas.*tarjeta/i,         // "¿Calificas a una Tarjeta"
-        /celebra.*magia.*primavera/i,     // "Celebra la magia de la primavera"
-        /momento.*hacer.*realidad.*depa/i, // "momento de hacer realidad el sueño del depa"
-        /✨.*descubre.*beneficios/i,      // "✨ ¡Alan, descubre beneficios"
-        /⌛.*recibos.*vencer/i             // "⌛ Tienes recibos que están por vencer"
+        /💰.*gustito/i,
+        /🎁.*regalo/i,
+        /🔑.*llave.*mundo/i,
+        /🚀.*activa/i,
+        /🚨.*renueva/i,
+        /💳.*invita/i,
+        /🎉.*felicitaciones/i,
+        /👀.*inicio.*mes/i,
+        /¿.*conoces.*clara/i,
+        /¿.*calificas.*tarjeta/i,
+        /celebra.*magia.*primavera/i,
+        /momento.*hacer.*realidad.*depa/i,
+        /✨.*descubre.*beneficios/i,
+        /⌛.*recibos.*vencer/i
     ];
 
-    // PRIMERO: Verificar palabras transaccionales fuertes (tienen prioridad)
+    // Señales fuertes de transacción
     const strongTransactionalKeywords = [
         'realizaste un consumo',
         'realizaste consumo',
@@ -128,37 +80,29 @@ function isTransactionalEmail(subject, content) {
         'constancia de transferencia'
     ];
 
-    for (const keyword of strongTransactionalKeywords) {
-        if (fullText.includes(keyword.toLowerCase())) {
-            return true; // Es claramente transaccional
-        }
-    }
-
-    // SEGUNDO: Verificar patrones promocionales
-    for (const pattern of promotionalPatterns) {
-        if (pattern.test(fullText)) {
-            return false;
-        }
-    }
-
-    // TERCERO: Si contiene palabras promocionales, probablemente no es transaccional
-    for (const keyword of promotionalKeywords) {
-        if (fullText.includes(keyword.toLowerCase())) {
-            return false;
-        }
-    }
-
-    // CUARTO: Si contiene otras palabras transaccionales, probablemente es transaccional
-    for (const keyword of transactionalKeywords) {
-        if (fullText.includes(keyword.toLowerCase())) {
-            return true;
-        }
-    }
-
-    // Si tiene patrones de montos, podría ser transaccional
+    // Patrones de evidencia adicional
     const hasAmount = /S\/\s*[\d\.\,]+|US\$\s*[\d\.\,]+|\$\s*[\d\.\,]+/.test(fullText);
+    const hasOperationNumber = /(n[úu]mero\s+de\s+operaci[oó]n|operaci[oó]n\s*(n[°º]|num\.?|#)\s*[:\-]?\s*\d+)/i.test(fullText);
+    const hasDate = /(fecha\s+y\s+hora|\d{1,2}\s+de\s+\w+\s+de\s+\d{4}\s*-\s*\d{1,2}:\d{2}\s*(am|pm))/i.test(fullText);
 
-    return hasAmount;
+    // 1) Bloquear promociones primero
+    for (const pattern of promotionalPatterns) {
+        if (pattern.test(fullText)) return false;
+    }
+    for (const keyword of promotionalKeywords) {
+        if (fullText.includes(keyword.toLowerCase())) return false;
+    }
+
+    // 2) Aceptar solo si hay señales transaccionales + evidencia (monto u otro)
+    if (strongTransactionalKeywords.some(k => fullText.includes(k))) {
+        return hasAmount || hasOperationNumber || hasDate;
+    }
+    if (transactionalKeywords.some(k => fullText.includes(k))) {
+        return (hasAmount && (hasOperationNumber || hasDate)) || hasOperationNumber;
+    }
+
+    // 3) Si no hay palabras transaccionales, aunque haya monto, NO aceptar
+    return false;
 }
 
 function extractAmountAndCurrency(text) {

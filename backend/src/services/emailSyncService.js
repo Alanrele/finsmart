@@ -105,12 +105,13 @@ class EmailSyncService {
       // Get recent emails (last 24 hours for periodic sync)
       const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-      const bcpFilters = [
-        "from/emailAddress/address eq 'notificaciones@bcp.com.pe'",
-        "from/emailAddress/address eq 'bcp@bcp.com.pe'",
-        "from/emailAddress/address eq 'alertas@bcp.com.pe'",
-        "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
+      const allowedSenders = [
+        'notificaciones@bcp.com.pe',
+        'bcp@bcp.com.pe',
+        'alertas@bcp.com.pe',
+        'movimientos@bcp.com.pe'
       ];
+      const bcpFilters = allowedSenders.map(a => `from/emailAddress/address eq '${a}'`);
 
       let messages;
 
@@ -139,12 +140,11 @@ class EmailSyncService {
             .top(20)
             .get();
 
-          // Filter BCP emails manually
+          // Filter BCP emails manually by strict whitelist
           if (result.value) {
-            const bcpDomains = ['@bcp.com.pe'];
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
-              return bcpDomains.some(domain => fromAddress.includes(domain));
+              return allowedSenders.includes(fromAddress);
             });
             console.log(`📧 Manually filtered to ${result.value.length} BCP emails`);
           }
@@ -161,15 +161,14 @@ class EmailSyncService {
             .top(10)
             .get();
 
-          // Filter both by date and BCP manually
+          // Filter both by date and BCP manually (strict whitelist)
           if (result.value) {
             const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const bcpDomains = ['@bcp.com.pe'];
 
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
-              const isBcp = bcpDomains.some(domain => fromAddress.includes(domain));
+              const isBcp = allowedSenders.includes(fromAddress);
               const isRecent = receivedDate >= last24HoursDate;
               return isBcp && isRecent;
             });
@@ -186,15 +185,14 @@ class EmailSyncService {
             .top(5)
             .get();
 
-          // Filter everything manually
+          // Filter everything manually (strict whitelist)
           if (result.value) {
             const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-            const bcpDomains = ['@bcp.com.pe'];
 
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
-              const isBcp = bcpDomains.some(domain => fromAddress.includes(domain));
+              const isBcp = allowedSenders.includes(fromAddress);
               const isRecent = receivedDate >= last24HoursDate;
               return isBcp && isRecent;
             });
@@ -222,13 +220,22 @@ class EmailSyncService {
           continue; // Skip already processed
         }
 
+        // Early gate: subject/bodyPreview transactional check to avoid heavy work
+        const subj = message.subject || '';
+        const bodyPreview = message.bodyPreview || '';
+        if (!emailParserService.isTransactionalEmail(subj, bodyPreview)) {
+          continue;
+        }
+
         let emailContent = '';
 
-        // Extract content
-        if (message.body.contentType === 'html') {
+        // Extract content (defensive: body may be missing in some fallbacks)
+        if (message.body && message.body.content) {
           emailContent = message.body.content;
+        } else if (message.bodyPreview) {
+          emailContent = message.bodyPreview;
         } else {
-          emailContent = message.body.content;
+          emailContent = subj;
         }
 
         // Process attachments if any
@@ -251,6 +258,11 @@ class EmailSyncService {
 
         // Parse email content
         const parsedData = emailParserService.parseEmailContent(emailContent);
+
+        // Double-check transactional nature with full content
+        if (!emailParserService.isTransactionalEmail(subj, emailContent)) {
+          continue;
+        }
 
         if (parsedData && parsedData.amount && parsedData.amount > 0) {
           // Sanity guard: evitar montos absurdamente grandes por parsing incorrecto
