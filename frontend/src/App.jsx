@@ -236,8 +236,8 @@ function App() {
       <DebugAuth />
       <DebugMSAL />
 
-      {/* Main content with padding if demo mode is active */}
-      <div className={offlineMode ? 'pt-10' : ''}>
+      {/* Main content */}
+      <div>
       <Routes>
         <Route
           path="/login"
@@ -328,8 +328,8 @@ function App() {
       {/* Debug Panel - solo en desarrollo */}
       {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
 
-      {/* Connectivity Status - siempre visible cuando hay problemas */}
-      <ConnectivityStatus offlineMode={offlineMode} />
+      {/* Connectivity Status */}
+      <ConnectivityStatus />
 
       {/* SSL Error Notification - detecta automáticamente problemas de certificado */}
       <SSLErrorNotification />
