@@ -96,7 +96,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(logger);
 
 const io = socketIo(server, {
-  cors: corsOptions
+  // Mount Socket.IO under /api to avoid proxy or static route conflicts
+  path: '/api/socket.io',
+  cors: corsOptions,
+  // Conservative timeouts to better tolerate free-tier platforms
+  pingInterval: 25000,
+  pingTimeout: 20000
 });
 
 // Routes

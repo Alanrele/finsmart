@@ -32,7 +32,7 @@ class SocketService {
       return 'http://localhost:5000'
     }
 
-    const serverUrl = getSocketUrl()
+  const serverUrl = getSocketUrl()
 
     console.log('🔌 Socket.IO connecting to:', serverUrl)
     console.log('🌐 Current hostname:', window.location.hostname)
@@ -44,6 +44,8 @@ class SocketService {
       : ['websocket', 'polling'] // Desarrollo: preferir WebSocket
 
     this.socket = io(serverUrl, {
+      // Use backend-mounted Socket.IO path under /api to align with server and Railway proxy
+      path: '/api/socket.io',
       auth: {
         token,
         userId
@@ -60,6 +62,7 @@ class SocketService {
       // Configuración específica para Railway
       upgrade: false, // Siempre deshabilitar upgrades
       rememberUpgrade: false,
+      withCredentials: true,
       // Configuración adicional para Railway
       autoConnect: true,
       forceBase64: isRailwayProduction,
