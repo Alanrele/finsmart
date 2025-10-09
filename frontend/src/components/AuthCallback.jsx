@@ -47,18 +47,25 @@ const AuthCallback = () => {
             navigate('/dashboard')
           } catch (tokenError) {
             console.error('❌ AuthCallback - Error getting access token:', tokenError)
-            // Fallback to demo token if token acquisition fails
-            const token = `demo-token-${Date.now()}`
-            const userInfo = {
-              _id: response.account.localAccountId,
-              firstName: response.account.idTokenClaims?.given_name || 'Usuario',
-              lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
-              email: response.account.username,
-              avatar: null
+            // Optional demo fallback only when explicitly allowed via env and not in production
+            const allowDemo = import.meta.env.VITE_ALLOW_DEMO_MODE === 'true'
+            const isProd = import.meta.env.MODE === 'production'
+            if (allowDemo && !isProd) {
+              const token = `demo-token-${Date.now()}`
+              const userInfo = {
+                _id: response.account.localAccountId,
+                firstName: response.account.idTokenClaims?.given_name || 'Usuario',
+                lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
+                email: response.account.username,
+                avatar: null
+              }
+              login(userInfo, token)
+              toast.success('✅ Autenticación exitosa con Microsoft (modo demo)')
+              navigate('/dashboard')
+            } else {
+              toast.error('No se pudo obtener el token de Microsoft. Vuelve a iniciar sesión.')
+              navigate('/login')
             }
-            login(userInfo, token)
-            toast.success('✅ Autenticación exitosa con Microsoft (modo demo)')
-            navigate('/dashboard')
           }
         } else {
           console.log('⚠️ AuthCallback - No response, redirecting to login')

@@ -48,6 +48,12 @@ const AuthDebugger = () => {
   };
 
   const enableDemoMode = async () => {
+    const allowDemo = import.meta.env.VITE_ALLOW_DEMO_MODE === 'true';
+    const isProd = import.meta.env.MODE === 'production';
+    if (!allowDemo || isProd) {
+      toast.error('Demo mode is disabled');
+      return;
+    }
     try {
       const data = await demoLogin();
 
@@ -118,6 +124,7 @@ const AuthDebugger = () => {
       </div>
 
       <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+        {import.meta.env.VITE_ALLOW_DEMO_MODE === 'true' && import.meta.env.MODE !== 'production' && (
         <button
           onClick={enableDemoMode}
           style={{
@@ -131,6 +138,7 @@ const AuthDebugger = () => {
         >
           Enable Demo Mode
         </button>
+        )}
 
         <button
           onClick={clearAuth}

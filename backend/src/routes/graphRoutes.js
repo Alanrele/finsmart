@@ -11,6 +11,7 @@ const tokenCleanup = require('../utils/tokenCleanup');
 const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
+const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
 
 // Custom authentication provider for Microsoft Graph
 class CustomAuthProvider {
@@ -160,7 +161,7 @@ router.post('/sync-emails', async (req, res) => {
     const userId = req.user._id;
 
     // Only block demo users, allow real Microsoft users
-    if (userId === 'demo-user-id') {
+    if (!ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('❌ Demo user blocked from sync');
       return res.status(400).json({
         error: 'Real Microsoft Graph connection required',
@@ -565,7 +566,7 @@ router.post('/sync-toggle', async (req, res) => {
     const userId = req.user._id;
 
     // Only block demo users
-    if (userId === 'demo-user-id') {
+    if (!ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       return res.status(400).json({
         error: 'Real Microsoft Graph connection required',
         details: 'Demo users cannot enable sync'
@@ -610,7 +611,7 @@ router.get('/sync-status', async (req, res) => {
     const userId = req.user._id;
 
     // Only treat as demo if it's specifically the demo user ID
-    if (userId === 'demo-user-id') {
+    if (userId === 'demo-user-id' && !ALLOW_DEMO_MODE) {
       return res.json({
         syncEnabled: false,
         lastSync: null,
@@ -695,7 +696,7 @@ router.get('/folders', async (req, res) => {
     const userId = req.user._id;
 
     // Check if it's a demo user - return demo folders
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo Microsoft Graph folders');
       return res.json({
         folders: [
@@ -760,7 +761,7 @@ router.get('/status', async (req, res) => {
     const userId = req.user._id;
 
     // Check if it's a demo user - return demo status
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo Microsoft Graph status');
       return res.json({
         isConnected: true,
@@ -792,7 +793,7 @@ router.post('/disconnect', async (req, res) => {
     console.log('📤 Disconnect request from user:', req.user);
 
     // Handle demo/Microsoft users differently
-    if (req.user._id === 'demo-user-id' || req.user._id === 'microsoft-user-id') {
+    if (req.user._id === 'demo-user-id' && ALLOW_DEMO_MODE) {
       console.log('🎭 Demo/Microsoft user disconnect - no database operation needed');
       return res.json({
         message: 'Microsoft account disconnected successfully',
@@ -865,8 +866,8 @@ router.post('/reprocess-emails', async (req, res) => {
 
     console.log('🔄 Starting email reprocessing for user:', userId);
 
-    // Check if it's a demo user
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user and demo mode is disabled
+    if (userId === 'demo-user-id' && !ALLOW_DEMO_MODE) {
       console.log('❌ Demo user blocked from reprocessing');
       return res.status(403).json({
         error: 'Demo accounts cannot reprocess emails',

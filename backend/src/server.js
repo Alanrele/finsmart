@@ -210,6 +210,8 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Socket.io connection handling con logging mejorado
+const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
+
 io.use(async (socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -227,8 +229,12 @@ io.use(async (socket, next) => {
     const jwt = require('jsonwebtoken');
     const User = require('./models/userModel');
 
-    // Check if it's a demo token
+    // Check if it's a demo token (only when explicitly allowed)
     if (token.startsWith('demo-token-')) {
+      if (!ALLOW_DEMO_MODE) {
+        console.log('❌ Socket.IO - Demo token rejected (demo mode disabled)');
+        return next(new Error('Authentication error: Demo mode disabled'));
+      }
       console.log('🎭 Socket.IO - Demo token detected, allowing connection');
       socket.user = {
         _id: 'demo-user-id',

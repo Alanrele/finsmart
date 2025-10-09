@@ -230,9 +230,10 @@ router.post('/refresh', async (req, res) => {
 // TEMPORARY: Demo login for development (remove in production)
 router.post('/demo-login', async (req, res) => {
   try {
-    // Only allow in development
-    if (process.env.NODE_ENV === 'production') {
-      return res.status(403).json({ error: 'Demo login not available in production' });
+    // Only allow when explicitly enabled and never in production
+    const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
+    if (process.env.NODE_ENV === 'production' || !ALLOW_DEMO_MODE) {
+      return res.status(403).json({ error: 'Demo login not available' });
     }
 
     console.log('🎭 Demo login requested');

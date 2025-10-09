@@ -5,6 +5,7 @@ const User = require('../models/userModel');
 const mongoose = require('mongoose');
 
 const router = express.Router();
+const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
 
 // Get user's financial dashboard
 router.get('/dashboard', async (req, res) => {
@@ -327,8 +328,8 @@ router.get('/spending/categories', [
 
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo spending categories data');
       return res.json([
         {
@@ -484,8 +485,8 @@ router.get('/trends', [
 
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo trends data');
       const currentDate = new Date();
       const demoTrends = [];
@@ -571,8 +572,8 @@ router.get('/summary', [
 
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo summary data');
       const now = new Date();
       const year = parseInt(req.query.year) || now.getFullYear();

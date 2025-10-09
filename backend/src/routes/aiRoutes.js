@@ -4,6 +4,7 @@ const Transaction = require('../models/transactionModel');
 const aiAnalysisService = require('../services/aiAnalysisService');
 
 const router = express.Router();
+const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
 
 // Health check endpoint for AI services
 router.get('/health', async (req, res) => {
@@ -39,8 +40,8 @@ router.post('/analyze', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo AI analysis data');
       return res.json({
         analysis: {
@@ -237,8 +238,8 @@ router.post('/chat', [
     const { message } = req.body;
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo AI chat response');
       const demoResponses = [
         "Como asistente financiero, veo que tienes excelentes hábitos de ahorro. Tu balance actual de $15,750.50 muestra una gestión responsable.",
@@ -285,8 +286,8 @@ router.get('/insights', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo AI insights data');
       return res.json({
         message: 'Spending insights generated',
@@ -392,8 +393,8 @@ router.get('/recommendations', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo AI recommendations data');
       return res.json({
         message: 'Financial recommendations generated',
@@ -505,8 +506,8 @@ router.get('/predict', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo AI prediction data');
       return res.json({
         message: 'Spending prediction generated',
@@ -566,8 +567,8 @@ router.post('/categorize', async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // Check if it's a demo user - return demo data
-    if (userId === 'demo-user-id' || userId === 'microsoft-user-id') {
+    // Check if it's a demo user - return demo data only when explicitly allowed
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
       console.log('🎭 Returning demo AI categorization data');
       return res.json({
         message: 'Transaction categorization completed',

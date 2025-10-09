@@ -336,14 +336,14 @@ export const updatePreferences = async (preferences) => {
 };
 
 export const demoLogin = async () => {
-    try {
-        const response = await api.post('/auth/demo-login');
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to login demo');
-        return response.data;
-    } catch (error) {
-        console.error('Error during demo login:', error);
-        throw error;
+    const allowDemo = import.meta.env.VITE_ALLOW_DEMO_MODE === 'true';
+    const isProd = import.meta.env.MODE === 'production';
+    if (!allowDemo || isProd) {
+        throw new Error('Demo login is disabled');
     }
+    const response = await api.post('/auth/demo-login');
+    if (response.status !== 200) throw new Error(response.data.error || 'Failed to login demo');
+    return response.data;
 };
 
 // AI-related API calls
