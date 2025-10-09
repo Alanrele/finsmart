@@ -193,8 +193,12 @@ router.post('/sync-emails', async (req, res) => {
     console.log('🔗 Creating Graph client...');
     const graphClient = getGraphClient(user.accessToken);
 
-    // Define BCP email domains for filtering
-    const bcpDomains = ['bcp.com.pe'];
+    // Define allowed transactional sender addresses (whitelist)
+    const allowedSenders = [
+      'notificaciones@bcp.com.pe',
+      'alertas@bcp.com.pe',
+      'movimientos@bcp.com.pe'
+    ];
 
     console.log('📧 Fetching emails with ultra-minimal query to avoid complexity issues');
 
@@ -233,10 +237,10 @@ router.post('/sync-emails', async (req, res) => {
       }
     }    console.log(`📨 Retrieved ${messages.value.length} total emails, filtering for BCP emails`);
 
-    // Filter BCP emails in memory
+    // Filter transactional emails in memory by strict sender match
     const bcpEmails = messages.value.filter(message => {
       const fromEmail = message.from?.emailAddress?.address?.toLowerCase() || '';
-      return bcpDomains.some(domain => fromEmail.includes(domain));
+      return allowedSenders.includes(fromEmail);
     });
 
     console.log(`🏦 Found ${bcpEmails.length} emails from BCP domains`);

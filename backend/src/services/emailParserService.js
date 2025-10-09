@@ -86,7 +86,16 @@ function isTransactionalEmail(subject, content) {
         'mundo de promociones',
         'está aquí',
         'renovar',
-        'estado de cuenta de tu tarjeta american express'
+        'estado de cuenta de tu tarjeta american express',
+        'estado de cuenta',
+        'newsletter',
+        'suscríbete',
+        'suscribete',
+        'publicidad',
+        'promo',
+        'club',
+        'puntos',
+        'programa de beneficios'
     ];
 
     const fullText = (subject + ' ' + content).toLowerCase();
@@ -147,7 +156,7 @@ function isTransactionalEmail(subject, content) {
     }
 
     // Si tiene patrones de montos, podría ser transaccional
-    const hasAmount = /S\/\s*[\d,]+\.?\d*|US\$\s*[\d,]+\.?\d*|\$\s*[\d,]+\.?\d*/.test(fullText);
+    const hasAmount = /S\/\s*[\d\.\,]+|US\$\s*[\d\.\,]+|\$\s*[\d\.\,]+/.test(fullText);
 
     return hasAmount;
 }
