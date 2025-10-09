@@ -257,14 +257,14 @@ class EmailSyncService {
         }
 
         // Parse email content
-        const parsedData = emailParserService.parseEmailContent(emailContent);
+  const parsedData = emailParserService.parseEmailContent(emailContent);
 
         // Double-check transactional nature with full content
         if (!emailParserService.isTransactionalEmail(subj, emailContent)) {
           continue;
         }
 
-        if (parsedData && parsedData.amount && parsedData.amount > 0) {
+  if (emailParserService.isValidParsedTransaction(parsedData, { subject: subj, receivedDateTime: message.receivedDateTime })) {
           // Sanity guard: evitar montos absurdamente grandes por parsing incorrecto
           const MAX_ALLOWED_AMOUNT = 10_000_000; // S/ 10 millones
           if (parsedData.amount > MAX_ALLOWED_AMOUNT) {

@@ -345,6 +345,29 @@ function classifyTransactionType(parsedData) {
 /**
  * Convierte la información parseada en una transacción para la base de datos
  */
+function mapChannel(value) {
+    if (!value) return 'other';
+    const v = String(value).toLowerCase();
+    if (v.includes('atm') || v.includes('cajero')) return 'atm';
+    if (v.includes('pos') || v.includes('terminal') || v.includes('comercio')) return 'pos';
+    if (v.includes('móvil') || v.includes('movil') || v.includes('app')) return 'mobile';
+    if (v.includes('web') || v.includes('online') || v.includes('internet')) return 'online';
+    if (v.includes('agencia') || v.includes('sucursal') || v.includes('branch')) return 'branch';
+    return 'other';
+}
+
+function isValidParsedTransaction(parsedData, emailMeta = {}) {
+    if (!parsedData) return false;
+    // Must have positive amount and a currency
+    if (!parsedData.amount || parsedData.amount <= 0) return false;
+    if (!parsedData.currency) return false;
+    // Must contain at least one identifier to give context
+    const hasIdentifier = !!(parsedData.operationNumber || parsedData.merchant || parsedData.beneficiary || parsedData.operationType);
+    if (!hasIdentifier) return false;
+    // Subject/received date are expected from email meta but not strictly required here
+    return true;
+}
+
 function createTransactionFromEmail(parsedData, userId, emailData) {
     const { type, category } = classifyTransactionType(parsedData);
 
@@ -364,9 +387,12 @@ function createTransactionFromEmail(parsedData, userId, emailData) {
         type,
         category,
         description,
-        date: parsedData.date ? new Date(parsedData.date) : new Date(),
+        date: parsedData.date ? new Date(parsedData.date) : (emailData?.receivedDateTime ? new Date(emailData.receivedDateTime) : new Date()),
         currency: parsedData.currency || 'PEN',
-        channel: 'other', // Changed from 'Email Import' to valid enum value
+        channel: mapChannel(parsedData.channel),
+        merchant: parsedData.merchant || parsedData.beneficiary || undefined,
+        operationNumber: parsedData.operationNumber || undefined,
+        cardNumber: parsedData.cardLast4 ? `****${parsedData.cardLast4}` : undefined,
         isAI: true, // Marcamos como procesado por IA
         metadata: {
             emailId: emailData.id,
@@ -377,6 +403,7 @@ function createTransactionFromEmail(parsedData, userId, emailData) {
             bankDest: parsedData.bankDest,
             sendingType: parsedData.sendingType,
             paymentType: parsedData.paymentType,
+            receivedDate: emailData.receivedDateTime ? new Date(emailData.receivedDateTime) : undefined,
             processedAt: new Date()
         }
     };
@@ -388,5 +415,6 @@ module.exports = {
     parseSpanishDate,
     classifyTransactionType,
     createTransactionFromEmail,
-    isTransactionalEmail
+    isTransactionalEmail,
+    isValidParsedTransaction
 };

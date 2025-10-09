@@ -352,7 +352,7 @@ router.post('/sync-emails', async (req, res) => {
           continue;
         }
 
-        if (parsedData && parsedData.amount && parsedData.amount > 0) {
+        if (emailParserService.isValidParsedTransaction(parsedData, { subject: emailSubject, receivedDateTime: message.receivedDateTime })) {
           console.log('💰 Creating transaction from parsed data...');
 
           let transactionData;
