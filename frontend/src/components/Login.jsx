@@ -1,105 +1,90 @@
-import React, { useState } from 'react'
-im        const data        // Login
-        const data = await loginUser({
-          email: formData.email,
-          password: formData.password
-        });
-
-        login(data.user, data.token);t registerUser({
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName
-        });
-
-        login(data.user, data.token);otion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
-import toast from 'react-hot-toast'
-import { Eye, EyeOff, Mail, Lock, User, Smartphone } from 'lucide-react'
-import useAuthStore from '../stores/authStore'
-import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import useAuthStore from '../stores/authStore';
+import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth';
 import { loginUser, registerUser } from '../services/api';
 
 const Login = () => {
-  const navigate = useNavigate()
-  const { login, setLoading, isLoading } = useAuthStore()
-  const { loginMicrosoft } = useMicrosoftAuth()
+  const navigate = useNavigate();
+  const { login, setLoading, isLoading } = useAuthStore();
+  const { loginMicrosoft } = useMicrosoftAuth();
 
-  const [isRegister, setIsRegister] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
+  const [isRegister, setIsRegister] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
     confirmPassword: ''
-  })
+  });
 
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
-    })
-  }
+    });
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
       if (isRegister) {
         // Registration
         if (formData.password !== formData.confirmPassword) {
-          toast.error('Las contraseñas no coinciden')
-          return
+          toast.error('Las contraseñas no coinciden');
+          setLoading(false);
+          return;
         }
 
-        const response = await authAPI.register({
+        const data = await registerUser({
           email: formData.email,
           password: formData.password,
           firstName: formData.firstName,
           lastName: formData.lastName
-        })
+        });
 
-        login(response.data.user, response.data.token)
-        toast.success('Cuenta creada exitosamente')
-        navigate('/dashboard')
+        login(data.user, data.token);
+        toast.success('Cuenta creada exitosamente');
+        navigate('/dashboard');
       } else {
         // Login
-        const response = await authAPI.login({
+        const data = await loginUser({
           email: formData.email,
           password: formData.password
-        })
+        });
 
-        login(response.data.user, response.data.token)
-        toast.success('Inicio de sesión exitoso')
-        navigate('/dashboard')
+        login(data.user, data.token);
+        toast.success('Inicio de sesión exitoso');
+        navigate('/dashboard');
       }
     } catch (error) {
-      toast.error(error.message || 'An unknown error occurred');
+      toast.error(error.message || 'Ocurrió un error desconocido');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleMicrosoftLogin = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
-      // This will redirect to Microsoft login page
-      await loginMicrosoft()
-      // Note: Code after this won't execute as page redirects
-      // The callback will be handled by AuthCallback component
+      await loginMicrosoft();
     } catch (error) {
-      console.error('Microsoft login error:', error)
+      console.error('Microsoft login error:', error);
       if (error.message?.includes('unauthorized_client')) {
-        toast.error('Configuración de Azure AD pendiente. Usa el botón de desarrollo por ahora.')
+        toast.error('Configuración de Azure AD pendiente. Usa el botón de desarrollo por ahora.');
       } else {
-        toast.error('Error al iniciar sesión con Microsoft')
+        toast.error('Error al iniciar sesión con Microsoft');
       }
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-dark-bg via-gray-900 to-dark-bg flex items-center justify-center p-4">
@@ -108,7 +93,6 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        {/* Logo */}
         <div className="text-center mb-8">
           <motion.div
             initial={{ scale: 0 }}
@@ -124,7 +108,6 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Form */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -144,7 +127,6 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Registration fields */}
             {isRegister && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -186,7 +168,6 @@ const Login = () => {
               </div>
             )}
 
-            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Correo Electrónico
@@ -206,7 +187,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Contraseña
@@ -219,21 +199,20 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="input-field pl-10 pr-10"
-                  placeholder="••••••••"
+                  className="input-field pl-10"
+                  placeholder="Tu contraseña"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-3 text-gray-400"
                 >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
             </div>
 
-            {/* Confirm Password (Register only) */}
             {isRegister && (
               <div>
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -242,124 +221,67 @@ const Login = () => {
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type="password"
                     id="confirmPassword"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     className="input-field pl-10"
-                    placeholder="••••••••"
+                    placeholder="Confirma tu contraseña"
                     required
                   />
                 </div>
               </div>
             )}
 
-            {/* Submit Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <button
               type="submit"
               disabled={isLoading}
-              className="w-full btn-primary flex items-center justify-center space-x-2"
+              className="btn-primary w-full"
             >
-              {isLoading ? (
-                <div className="loading-spinner w-5 h-5" />
-              ) : (
-                <>
-                  <Smartphone className="w-5 h-5" />
-                  <span>{isRegister ? 'Crear Cuenta' : 'Iniciar Sesión'}</span>
-                </>
-              )}
-            </motion.button>
+              {isLoading ? 'Cargando...' : (isRegister ? 'Registrarse' : 'Iniciar Sesión')}
+            </button>
+          </form>
 
-            {/* Divider */}
+          <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300 dark:border-gray-600" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">o</span>
+                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                  O continuar con
+                </span>
               </div>
             </div>
 
-            {/* Development Login Button */}
-            {import.meta.env.DEV && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="button"
-                onClick={async () => {
-                  try {
-                    setLoading(true)
-                    // Simulate demo user login
-                    const demoUser = {
-                      _id: 'demo-user-id',
-                      firstName: 'Demo',
-                      lastName: 'User',
-                      email: 'demo@finsmart.com',
-                      avatar: null
-                    }
-                    const demoToken = 'demo-token-for-development'
-
-                    login(demoUser, demoToken)
-                    toast.success('Sesión de desarrollo iniciada')
-                    navigate('/dashboard')
-                  } catch (error) {
-                    toast.error('Error en login de desarrollo')
-                  } finally {
-                    setLoading(false)
-                  }
-                }}
-                disabled={isLoading}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 mb-3"
-              >
-                <span>🚀 Acceso de Desarrollo</span>
-              </motion.button>
-            )}
-
-            {/* Microsoft Login */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="button"
-              onClick={handleMicrosoftLogin}
-              disabled={isLoading}
-              className="w-full btn-secondary flex items-center justify-center space-x-2"
-            >
-              <svg className="w-5 h-5" viewBox="0 0 23 23">
-                <path fill="#f3f3f3" d="M0 0h23v23H0z"/>
-                <path fill="#f35325" d="M1 1h10v10H1z"/>
-                <path fill="#81bc06" d="M12 1h10v10H12z"/>
-                <path fill="#05a6f0" d="M1 12h10v10H1z"/>
-                <path fill="#ffba08" d="M12 12h10v10H12z"/>
-              </svg>
-              <span>Continuar con Microsoft</span>
-            </motion.button>
-
-            {/* Toggle mode */}
-            <div className="text-center">
+            <div className="mt-6">
               <button
-                type="button"
-                onClick={() => setIsRegister(!isRegister)}
-                className="text-dark-primary hover:text-dark-accent font-medium"
+                onClick={handleMicrosoftLogin}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
               >
-                {isRegister
-                  ? '¿Ya tienes cuenta? Inicia sesión'
-                  : '¿No tienes cuenta? Regístrate'
-                }
+                <img src="/assets/microsoft-logo.svg" alt="Microsoft" className="w-5 h-5 mr-2" />
+                Microsoft
               </button>
             </div>
-          </form>
-        </motion.div>
+          </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8 text-gray-400 text-sm">
-          <p>&copy; 2024 FinSmart. Análisis financiero seguro y privado.</p>
-        </div>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {isRegister ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'}
+              <button
+                onClick={() => setIsRegister(!isRegister)}
+                className="font-medium text-dark-primary hover:text-dark-accent ml-1"
+              >
+                {isRegister ? 'Inicia sesión' : 'Regístrate'}
+              </button>
+            </p>
+          </div>
+        </motion.div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
