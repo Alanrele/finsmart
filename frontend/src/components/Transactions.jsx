@@ -11,6 +11,7 @@ const Transactions = () => {
   const [transactions, setTransactions] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
