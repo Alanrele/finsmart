@@ -291,12 +291,19 @@ const Transactions = () => {
                       ? 'text-green-600'
                       : 'text-red-600'
                   }`}>
-                    {transaction.type === 'credit' || transaction.type === 'deposit' ? '+' : '-'}
-                    {formatCurrencyAuto(transaction.amount)}
+                    {
+                      // Mostrar siempre el monto completo con signo, sin formato compactado (K/M/B)
+                      formatCurrency(
+                        transaction.type === 'credit' || transaction.type === 'deposit'
+                          ? Math.abs(transaction.amount)
+                          : -Math.abs(transaction.amount),
+                        true
+                      )
+                    }
                   </p>
-                  {transaction.balance && (
+                  {transaction.balance != null && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Saldo: {formatCurrencyAuto(transaction.balance)}
+                      Saldo: {formatCurrency(transaction.balance)}
                     </p>
                   )}
                 </div>

@@ -162,17 +162,52 @@ function isTransactionalEmail(subject, content) {
 }
 
 function extractAmountAndCurrency(text) {
+    // Soporta formatos peruanos: "S/ 1,234.56", "S/ 1.234,56", "S/. 123,45", "PEN 123,45"
+    // y USD: "US$ 1,234.56", "$ 123.45"
     const patterns = [
-        { regex: /S\/\s*([\d,]+\.?\d*)/i, currency: 'PEN' },
-        { regex: /US\$\s*([\d,]+\.?\d*)/i, currency: 'USD' },
-        { regex: /\$\s*([\d,]+\.?\d*)/i, currency: 'USD' }
+        { regex: /(S\/?\.?|PEN)\s*([\d\.\,]+\d)/i, currency: 'PEN' },
+        { regex: /(US\$)\s*([\d\.\,]+\d)/i, currency: 'USD' },
+        { regex: /(^|\s)\$\s*([\d\.\,]+\d)/i, currency: 'USD' }
     ];
+
+    // Normaliza un número en string detectando correctamente separadores de miles/decimales
+    const normalizeNumber = (raw) => {
+        if (!raw) return NaN;
+        let s = raw.trim();
+
+        // Si contiene tanto coma como punto, decidir el decimal como el separador más a la derecha
+        const lastComma = s.lastIndexOf(',');
+        const lastDot = s.lastIndexOf('.');
+        if (lastComma !== -1 && lastDot !== -1) {
+            // Si la coma está a la derecha del punto: coma = decimal (formato europeo)
+            const decimalIsComma = lastComma > lastDot;
+            if (decimalIsComma) {
+                s = s.replace(/\./g, ''); // quitar separadores miles
+                s = s.replace(/,/g, '.');  // decimal -> punto
+            } else {
+                // punto es decimal (formato US)
+                s = s.replace(/,/g, '');
+            }
+        } else if (lastComma !== -1 && lastDot === -1) {
+            // Solo coma: asume formato europeo -> decimal
+            s = s.replace(/\./g, ''); // seguridad
+            s = s.replace(/,/g, '.');
+        } else {
+            // Solo punto o ninguno: remover comas de miles si hubiese
+            s = s.replace(/,/g, '');
+        }
+
+        const num = parseFloat(s);
+        if (isNaN(num)) return NaN;
+        // Redondea a 2 decimales para estabilidad
+        return Math.round(num * 100) / 100;
+    };
 
     for (const p of patterns) {
         const match = text.match(p.regex);
         if (match) {
-            const amountStr = match[1].replace(/,/g, '');
-            const amount = parseFloat(amountStr);
+            const amountStr = match[2];
+            const amount = normalizeNumber(amountStr);
             if (!isNaN(amount)) {
                 return { amount, currency: p.currency };
             }
