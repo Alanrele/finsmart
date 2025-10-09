@@ -52,6 +52,19 @@ function isTransactionalEmail(subject, content) {
 
     const fullText = (subject + ' ' + (content || '')).toLowerCase();
 
+    // Rechazar explícitamente frases negativas comunes
+    const negativePhrases = [
+        'no es una transaccion',
+        'no es una transacción',
+        'no es una operacion',
+        'no es una operación',
+        'no corresponde a una transaccion',
+        'no corresponde a una transacción'
+    ];
+    for (const phrase of negativePhrases) {
+        if (fullText.includes(phrase)) return false;
+    }
+
     // Detectar patrones promocionales específicos
     const promotionalPatterns = [
         /\d+%\s*off/i,                    // "15% OFF"
