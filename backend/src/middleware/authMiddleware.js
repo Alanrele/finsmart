@@ -30,8 +30,28 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Check if it's a Microsoft token (typical pattern)
-    if (token.length > 50 && typeof token === 'string') {
+    // If it looks like our app JWT (3 segments), verify it first and short-circuit
+    const isLikelyJwt = typeof token === 'string' && token.split('.').length === 3;
+    if (isLikelyJwt) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.userId).select('-password');
+
+        if (!user) {
+          return res.status(401).json({ error: 'Token is not valid.' });
+        }
+
+        console.log('✅ JWT token verified for user:', user.email);
+        req.user = user;
+        return next();
+      } catch (jwtError) {
+        console.error('❌ JWT verification failed (will not treat as MS token):', jwtError.message);
+        return res.status(401).json({ error: 'Token is not valid.' });
+      }
+    }
+
+    // Otherwise, attempt Microsoft token validation (non-JWT tokens)
+    if (typeof token === 'string' && token.split('.').length !== 3) {
       console.log('🔑 Microsoft token detected, processing...');
 
       // Enhanced token validation for obviously corrupted tokens
@@ -172,22 +192,8 @@ const authMiddleware = async (req, res, next) => {
       }
     }
 
-    // Try to verify as JWT
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.userId).select('-password');
-
-      if (!user) {
-        return res.status(401).json({ error: 'Token is not valid.' });
-      }
-
-      console.log('✅ JWT token verified for user:', user.email);
-      req.user = user;
-      next();
-    } catch (jwtError) {
-      console.error('❌ JWT verification failed:', jwtError.message);
-      return res.status(401).json({ error: 'Token is not valid.' });
-    }
+    // If it wasn't JWT and wasn't a valid MS token either, reject
+    return res.status(401).json({ error: 'Token is not valid.' });
 
   } catch (error) {
     console.error('❌ Auth middleware error:', error);
