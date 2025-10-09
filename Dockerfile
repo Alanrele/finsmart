@@ -11,7 +11,8 @@ ENV npm_config_optional=true
 
 # Build frontend
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
+# Copy only package.json to allow Linux-specific resolution of optional deps
+COPY frontend/package.json ./
 
 # Use npm install (not ci) to resolve platform-specific optional deps (rollup native)
 RUN npm install
