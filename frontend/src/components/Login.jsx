@@ -1,11 +1,24 @@
 import React, { useState } from 'react'
-import { motion } from 'framer-motion'
+im        const data        // Login
+        const data = await loginUser({
+          email: formData.email,
+          password: formData.password
+        });
+
+        login(data.user, data.token);t registerUser({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName
+        });
+
+        login(data.user, data.token);otion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { Eye, EyeOff, Mail, Lock, User, Smartphone } from 'lucide-react'
 import useAuthStore from '../stores/authStore'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
-import { authAPI, handleApiError } from '../services/api'
+import { loginUser, registerUser } from '../services/api';
 
 const Login = () => {
   const navigate = useNavigate()
@@ -63,8 +76,7 @@ const Login = () => {
         navigate('/dashboard')
       }
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'An unknown error occurred');
     } finally {
       setLoading(false)
     }

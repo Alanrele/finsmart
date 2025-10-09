@@ -177,6 +177,30 @@ export const getFinancialHealth = async () => {
     }
 };
 
+// Auth related API calls
+export const loginUser = async (credentials) => {
+    try {
+        const response = await api.post('/auth/login', credentials);
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to login');
+        return response.data;
+    } catch (error) {
+        console.error('Error logging in:', error);
+        throw error;
+    }
+};
+
+export const registerUser = async (userData) => {
+    try {
+        const response = await api.post('/auth/register', userData);
+        if (response.status !== 201) throw new Error(response.data.error || 'Failed to register');
+        return response.data;
+    } catch (error) {
+        console.error('Error registering user:', error);
+        throw error;
+    }
+};
+
+
 // Microsoft Graph related API calls
 export const connectGraph = async (tokenData) => {
     try {
