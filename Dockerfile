@@ -5,6 +5,10 @@ FROM node:20-bullseye-slim as frontend-build
 RUN apt-get update && apt-get install -y python3 make g++ \
 	&& rm -rf /var/lib/apt/lists/*
 
+# Workaround Rollup native optional dependency issues in CI
+ENV ROLLUP_SKIP_NODEJS_NATIVE=1
+ENV npm_config_optional=true
+
 # Build frontend
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
