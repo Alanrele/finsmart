@@ -15,7 +15,8 @@ import {
   getGraphStatus,
   disconnectGraph,
   syncEmails,
-  reprocessEmails
+  reprocessEmails,
+  resetAndReprocessEmails
 } from '../services/api'
 import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
@@ -27,6 +28,7 @@ const OutlookConnect = () => {
   const [loading, setLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [reprocessLoading, setReprocessLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
 
   useEffect(() => {
@@ -142,6 +144,28 @@ const OutlookConnect = () => {
       toast.error(error.message || 'Error al reprocesar')
     } finally {
       setReprocessLoading(false)
+    }
+  }
+
+  const handleResetAndReprocess = async () => {
+    if (!isGraphConnected) {
+      toast.error('Primero debes conectar tu cuenta de Outlook')
+      return
+    }
+
+    // Confirmar acción destructiva
+    const confirmed = window.confirm('Esto eliminará todas las transacciones importadas por correo y volverá a procesar tu historial. ¿Deseas continuar?')
+    if (!confirmed) return
+
+    setResetLoading(true)
+
+    try {
+      const data = await resetAndReprocessEmails()
+      toast.success(`Se eliminaron ${data.deletedCount} transacciones. Reprocesamiento iniciado.`)
+    } catch (error) {
+      toast.error(error.message || 'Error al reiniciar y reprocesar')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -264,6 +288,19 @@ const OutlookConnect = () => {
                   <AlertTriangle className="w-4 h-4" />
                 )}
                 <span>Reprocesar Correos</span>
+              </button>
+
+              <button
+                onClick={handleResetAndReprocess}
+                disabled={resetLoading}
+                className="btn-danger flex items-center justify-center space-x-2"
+              >
+                {resetLoading ? (
+                  <div className="loading-spinner w-4 h-4" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4" />
+                )}
+                <span>Limpiar y Reprocesar</span>
               </button>
 
               <button

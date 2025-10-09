@@ -919,4 +919,50 @@ router.post('/reprocess-emails', async (req, res) => {
   }
 });
 
+// Reset (delete) all email-derived transactions for the user and reprocess all emails
+router.post('/reset-and-reprocess', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    console.log('🧹 Reset and reprocess requested for user:', userId);
+
+    // Get EmailSyncService instance
+    const emailSyncService = req.app.get('emailSyncService');
+    if (!emailSyncService) {
+      console.error('❌ EmailSyncService not available');
+      return res.status(500).json({
+        error: 'Email sync service not available',
+        details: 'Please try again later'
+      });
+    }
+
+    // Delete all transactions that came from email import (identified by presence of messageId)
+    const result = await Transaction.deleteMany({
+      userId,
+      messageId: { $exists: true, $ne: null }
+    });
+
+    console.log(`🧹 Deleted ${result.deletedCount} email-derived transactions for user ${userId}`);
+
+    // Trigger reprocessing in background
+    emailSyncService
+      .reprocessAllEmails(userId, { batchSize: req.body.batchSize || 10 })
+      .then((r) => console.log('✅ Reset reprocessing completed:', r))
+      .catch((e) => console.error('❌ Reset reprocessing failed:', e));
+
+    return res.json({
+      message: 'Reset and reprocessing started',
+      deletedCount: result.deletedCount,
+      status: 'processing'
+    });
+
+  } catch (error) {
+    console.error('❌ Error in reset-and-reprocess:', error);
+    res.status(500).json({
+      error: 'Failed to reset and reprocess emails',
+      details: error.message
+    });
+  }
+});
+
 module.exports = router;
