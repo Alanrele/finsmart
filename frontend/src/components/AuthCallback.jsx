@@ -2,6 +2,7 @@ import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
 import useAuthStore from '../stores/authStore'
+import { completeMicrosoftLogin } from '../services/api'
 import LoadingScreen from './LoadingScreen'
 import toast from 'react-hot-toast'
 
@@ -31,18 +32,21 @@ const AuthCallback = () => {
           try {
             const tokenResponse = await instance.acquireTokenSilent(tokenRequest)
             const accessToken = tokenResponse.accessToken
-            console.log('🔑 AuthCallback - Access token obtained')
+            console.log('🔑 AuthCallback - MS access token obtained, exchanging for app JWT')
 
-            // Success - user is authenticated
+            // Build minimal userInfo payload for backend
             const userInfo = {
-              _id: response.account.localAccountId,
-              firstName: response.account.idTokenClaims?.given_name || 'Usuario',
-              lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
-              email: response.account.username,
-              avatar: null
+              id: response.account.localAccountId,
+              mail: response.account.username,
+              userPrincipalName: response.account.username,
+              givenName: response.account.idTokenClaims?.given_name || 'Usuario',
+              surname: response.account.idTokenClaims?.family_name || 'Microsoft'
             }
 
-            login(userInfo, accessToken)
+            // Exchange MS token for backend JWT
+            const data = await completeMicrosoftLogin({ accessToken, userInfo })
+            // Store our app JWT in auth store
+            login(data.user, data.token)
             toast.success('✅ Autenticación exitosa con Microsoft')
             navigate('/dashboard')
           } catch (tokenError) {

@@ -27,9 +27,14 @@ api.interceptors.request.use(
     try {
       const { token, isAuthenticated } = useAuthStore.getState();
 
-      if (token && isAuthenticated) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+            if (token && isAuthenticated) {
+                // Only attach app JWT (must contain 2 dots). Prevent attaching MS access tokens.
+                if (typeof token === 'string' && token.split('.').length === 3) {
+                    config.headers.Authorization = `Bearer ${token}`;
+                } else {
+                    console.warn('⚠️ Skipping non-JWT token in Authorization header');
+                }
+            }
     } catch (error) {
       console.error('❌ Error reading auth state from Zustand:', error);
     }
@@ -233,6 +238,18 @@ export const connectGraph = async (tokenData) => {
         return response.data;
     } catch (error) {
         console.error('Error connecting to Microsoft Graph:', error);
+        throw error;
+    }
+};
+
+// Exchange Microsoft access token for app JWT
+export const completeMicrosoftLogin = async ({ accessToken, refreshToken = null, userInfo }) => {
+    try {
+        const response = await api.post('/auth/microsoft/callback', { accessToken, refreshToken, userInfo });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to complete Microsoft login');
+        return response.data; // { token, user }
+    } catch (error) {
+        console.error('Error completing Microsoft login:', error);
         throw error;
     }
 };
