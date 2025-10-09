@@ -342,27 +342,34 @@ const Transactions = () => {
                 </>
               )}
 
-              {/* Pages around current page */}
-              {Array.from(
-                { length: Math.min(5, pagination.totalPages) },
-                (_, i) => {
-                  const pageNum = Math.max(1, Math.min(pagination.totalPages, pagination.currentPage - 2 + i))
-                  if (pageNum < 1 || pageNum > pagination.totalPages) return null
-                  return (
+              {/* Pages around current page (no duplicates) */}
+              {(() => {
+                const maxButtons = 5
+                const half = Math.floor(maxButtons / 2)
+                const total = pagination.totalPages
+                const current = pagination.currentPage
+                // Compute start and end ensuring a continuous range without clamping duplicates
+                let startPage = Math.max(1, current - half)
+                let endPage = Math.min(total, startPage + maxButtons - 1)
+                // If we don't have enough pages at the end, shift the window left
+                startPage = Math.max(1, Math.min(startPage, endPage - maxButtons + 1))
+
+                const buttons = []
+                for (let p = startPage; p <= endPage; p++) {
+                  buttons.push(
                     <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
+                      key={p}
+                      onClick={() => handlePageChange(p)}
                       className={`px-3 py-2 text-sm rounded-lg ${
-                        pageNum === pagination.currentPage
-                          ? 'bg-blue-600 text-white'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                        p === current ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
-                      {pageNum}
+                      {p}
                     </button>
                   )
                 }
-              ).filter(Boolean)}
+                return buttons
+              })()}
 
               {/* Last page */}
               {pagination.currentPage < pagination.totalPages - 2 && (
