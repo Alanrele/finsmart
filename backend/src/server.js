@@ -124,13 +124,14 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    // socketio_clients: io.engine.clientsCount || 0
-  });
-});
+// Eliminar el endpoint redundante /api/health
+// app.get('/api/health', (req, res) => {
+//   res.json({
+//     status: 'OK',
+//     timestamp: new Date().toISOString(),
+//     socketio_clients: io.engine.clientsCount || 0
+//   });
+// });
 
 // Debug endpoint (development only)
 app.get('/api/debug/env', (req, res) => {

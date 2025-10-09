@@ -220,7 +220,9 @@ router.get('/transactions', [
     query('search').optional().isString(),
     query('category').optional().isString(),
     query('type').optional().isString().isIn(['income', 'expense']),
-    query('isAI').optional().isBoolean()
+    query('isAI').optional().isBoolean(),
+    query('startDate').optional().isISO8601().toDate(),
+    query('endDate').optional().isISO8601().toDate()
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -236,7 +238,7 @@ router.get('/transactions', [
         // Check if MongoDB is connected
         if (mongoose.connection.readyState !== 1) {
             console.error('❌ MongoDB not connected. Cannot fetch transactions.');
-            return res.status(503).json({
+            return res.status(503).json({ 
                 error: 'Servicio no disponible',
                 message: 'La conexión con la base de datos no está disponible en este momento.'
             });
@@ -250,11 +252,23 @@ router.get('/transactions', [
 
         let query = { userId };
 
+        // Date range filter
+        if (req.query.startDate || req.query.endDate) {
+            query.date = {};
+            if (req.query.startDate) {
+                query.date.$gte = req.query.startDate;
+            }
+            if (req.query.endDate) {
+                query.date.$lte = req.query.endDate;
+            }
+        }
+
         if (req.query.search) {
             const searchRegex = new RegExp(req.query.search, 'i');
             query.$or = [
                 { description: searchRegex },
-                { category: searchRegex }
+                { category: searchRegex },
+                { notes: searchRegex }
             ];
         }
 
