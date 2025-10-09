@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Target, Lightbulb, AlertCircle } from 'lucide-react'
-import { aiAPI, handleApiError } from '../services/api'
+import { analyzeFinancialData, getFinancialRecommendations, getFinancialInsights } from '../services/api'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 import LoadingCard from './LoadingCard'
@@ -20,11 +20,10 @@ const Analysis = () => {
   const loadAnalysis = async () => {
     try {
       setAiLoading(true)
-      const response = await aiAPI.analyze({ period: 'month' })
-      setAiAnalysis(response.data.analysis)
+      const response = await analyzeFinancialData({ period: 'month' })
+      setAiAnalysis(response.analysis)
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error al cargar el análisis de IA');
     } finally {
       setAiLoading(false)
     }
@@ -32,8 +31,8 @@ const Analysis = () => {
 
   const loadRecommendations = async () => {
     try {
-      const response = await aiAPI.getRecommendations()
-      setRecommendations(response.data.recommendations)
+      const response = await getFinancialRecommendations()
+      setRecommendations(response.recommendations)
     } catch (error) {
       console.error('Error loading recommendations:', error)
     }
@@ -41,8 +40,8 @@ const Analysis = () => {
 
   const loadInsights = async () => {
     try {
-      const response = await aiAPI.getInsights({ months: 3 })
-      setInsights(response.data.insights)
+      const response = await getFinancialInsights({ months: 3 })
+      setInsights(response.insights)
     } catch (error) {
       console.error('Error loading insights:', error)
     }

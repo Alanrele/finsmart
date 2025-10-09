@@ -254,39 +254,35 @@ export const syncEmails = async () => {
     }
 };
 
-export const processReceipt = async (file) => {
-    const formData = new FormData();
-    formData.append('receipt', file);
+export const analyzeFinancialData = async (data) => {
     try {
-        const response = await api.post('/graph/process-receipt', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to process receipt');
+        const response = await api.post('/ai/analyze', data);
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to analyze financial data');
         return response.data;
     } catch (error) {
-        console.error('Error processing receipt:', error);
+        console.error('Error analyzing financial data:', error);
         throw error;
     }
 };
 
-export const getSyncStatus = async () => {
+export const getFinancialRecommendations = async () => {
     try {
-        const response = await api.get('/graph/sync-status');
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get sync status');
+        const response = await api.get('/ai/recommendations');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial recommendations');
         return response.data;
     } catch (error) {
-        console.error('Error getting sync status:', error);
+        console.error('Error fetching financial recommendations:', error);
         throw error;
     }
 };
 
-export const toggleSync = async (syncEnabled) => {
+export const getFinancialInsights = async (params) => {
     try {
-        const response = await api.post('/graph/toggle-sync', { syncEnabled });
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to toggle sync');
+        const response = await api.get('/ai/insights', { params });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial insights');
         return response.data;
     } catch (error) {
-        console.error('Error toggling sync:', error);
+        console.error('Error fetching financial insights:', error);
         throw error;
     }
 };
