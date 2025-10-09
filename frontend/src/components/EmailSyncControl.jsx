@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { graphAPI } from '../services/api'
+import { getSyncStatus, toggleSync, syncEmails } from '../services/api'
 import useAuthStore from '../stores/authStore'
 import toast from 'react-hot-toast'
 
@@ -26,8 +26,8 @@ const EmailSyncControl = () => {
   const loadSyncStatus = async () => {
     try {
       setIsLoading(true)
-      const response = await graphAPI.getSyncStatus()
-      setSyncStatus(response.data)
+      const response = await getSyncStatus()
+      setSyncStatus(response)
     } catch (error) {
       console.error('Error loading sync status:', error)
       toast.error('Error al cargar estado de sincronización')
@@ -41,12 +41,12 @@ const EmailSyncControl = () => {
       setIsToggling(true)
       const newState = !syncStatus.syncEnabled
 
-      const response = await graphAPI.toggleSync(newState)
+      const response = await toggleSync(newState)
 
       setSyncStatus(prev => ({
         ...prev,
         syncEnabled: newState,
-        lastSync: response.data.lastSync
+        lastSync: response.lastSync
       }))
 
       toast.success(
@@ -67,10 +67,10 @@ const EmailSyncControl = () => {
       setIsSyncing(true)
       toast.loading('📧 Sincronizando correos...', { id: 'sync' })
 
-      const response = await graphAPI.syncEmails()
+      const response = await syncEmails()
 
       toast.success(
-        `✅ Sincronización completada: ${response.data.processedCount} transacciones procesadas`,
+        `✅ Sincronización completada: ${response.processedCount} transacciones procesadas`,
         { id: 'sync' }
       )
 

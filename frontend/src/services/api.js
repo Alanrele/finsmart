@@ -144,47 +144,68 @@ export const deleteTransaction = async (id) => {
     }
 };
 
-export const getSpendingByCategory = async () => {
+export const getCategories = async () => {
     try {
-        const response = await api.get('/finance/spending-by-category');
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch spending data');
+        const response = await api.get('/finance/categories');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch categories');
         return response.data;
     } catch (error) {
-        console.error('Error fetching spending data:', error);
+        console.error('Error fetching categories:', error);
         throw error;
     }
 };
 
-export const getIncomeVsExpense = async () => {
+export const getSummary = async () => {
     try {
-        const response = await api.get('/finance/income-vs-expense');
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch income vs expense data');
+        const response = await api.get('/finance/summary');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch summary');
         return response.data;
     } catch (error) {
-        console.error('Error fetching income vs expense data:', error);
+        console.error('Error fetching summary:', error);
         throw error;
     }
 };
 
-export const getFinancialHealth = async () => {
+export const getForecast = async () => {
     try {
-        const response = await api.get('/finance/financial-health');
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial health');
+        const response = await api.get('/finance/forecast');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch forecast');
         return response.data;
     } catch (error) {
-        console.error('Error fetching financial health:', error);
+        console.error('Error fetching forecast:', error);
         throw error;
     }
 };
 
-// Auth related API calls
+export const getBudgets = async () => {
+    try {
+        const response = await api.get('/finance/budgets');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch budgets');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching budgets:', error);
+        throw error;
+    }
+};
+
+export const saveBudget = async (budgetData) => {
+    try {
+        const response = await api.post('/finance/budgets', budgetData);
+        if (response.status !== 200 && response.status !== 201) throw new Error(response.data.error || 'Failed to save budget');
+        return response.data;
+    } catch (error) {
+        console.error('Error saving budget:', error);
+        throw error;
+    }
+};
+
 export const loginUser = async (credentials) => {
     try {
         const response = await api.post('/auth/login', credentials);
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to login');
+        if (response.status !== 200) throw new Error(response.data.message || 'Login failed');
         return response.data;
     } catch (error) {
-        console.error('Error logging in:', error);
+        console.error('Error during login:', error);
         throw error;
     }
 };
@@ -192,14 +213,13 @@ export const loginUser = async (credentials) => {
 export const registerUser = async (userData) => {
     try {
         const response = await api.post('/auth/register', userData);
-        if (response.status !== 201) throw new Error(response.data.error || 'Failed to register');
+        if (response.status !== 201) throw new Error(response.data.message || 'Registration failed');
         return response.data;
     } catch (error) {
-        console.error('Error registering user:', error);
+        console.error('Error during registration:', error);
         throw error;
     }
 };
-
 
 // Microsoft Graph related API calls
 export const connectGraph = async (tokenData) => {
@@ -245,6 +265,28 @@ export const processReceipt = async (file) => {
         return response.data;
     } catch (error) {
         console.error('Error processing receipt:', error);
+        throw error;
+    }
+};
+
+export const getSyncStatus = async () => {
+    try {
+        const response = await api.get('/graph/sync-status');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get sync status');
+        return response.data;
+    } catch (error) {
+        console.error('Error getting sync status:', error);
+        throw error;
+    }
+};
+
+export const toggleSync = async (syncEnabled) => {
+    try {
+        const response = await api.post('/graph/toggle-sync', { syncEnabled });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to toggle sync');
+        return response.data;
+    } catch (error) {
+        console.error('Error toggling sync:', error);
         throw error;
     }
 };
