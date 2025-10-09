@@ -8,8 +8,8 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 
-# Faster, reproducible installs
-RUN npm ci
+# Use npm install (not ci) to resolve platform-specific optional deps (rollup native)
+RUN npm install
 
 COPY frontend/ ./
 RUN npm run build
