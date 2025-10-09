@@ -341,3 +341,48 @@ export const demoLogin = async () => {
         throw error;
     }
 };
+
+// AI-related API calls
+export const analyzeFinancialData = async (data) => {
+    try {
+        const response = await api.post('/ai/analyze', data);
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to analyze financial data');
+        return response.data;
+    } catch (error) {
+        console.error('Error analyzing financial data:', error);
+        throw error;
+    }
+};
+
+export const getFinancialRecommendations = async () => {
+    try {
+        const response = await api.get('/ai/recommendations');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial recommendations');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching financial recommendations:', error);
+        throw error;
+    }
+};
+
+export const getFinancialInsights = async (params) => {
+    try {
+        const response = await api.get('/ai/insights', { params });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial insights');
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching financial insights:', error);
+        throw error;
+    }
+};
+
+export const chatWithAI = async (message) => {
+    try {
+        const response = await api.post('/ai/chat', { message });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get AI response');
+        return response.data;
+    } catch (error) {
+        console.error('Error during AI chat:', error);
+        throw error;
+    }
+};
