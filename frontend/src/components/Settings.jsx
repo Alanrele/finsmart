@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { User, Mail, Bell, Moon, Sun, Shield, Download, Trash2 } from 'lucide-react'
 import useAuthStore from '../stores/authStore'
 import useAppStore from '../stores/appStore'
-import { financeAPI, handleApiError } from '../services/api'
+import { updatePreferences } from '../services/api'
 import toast from 'react-hot-toast'
 
 const Settings = () => {
@@ -23,12 +23,11 @@ const Settings = () => {
     setLoading(true)
 
     try {
-      await financeAPI.updatePreferences(preferences)
+      await updatePreferences(preferences)
       setTheme(preferences.theme)
       toast.success('Preferencias guardadas correctamente')
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error al guardar preferencias')
     } finally {
       setLoading(false)
     }

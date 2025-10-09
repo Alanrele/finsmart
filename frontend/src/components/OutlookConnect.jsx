@@ -10,7 +10,13 @@ import {
   Download
 } from 'lucide-react'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
-import { graphAPI, handleApiError } from '../services/api'
+import {
+  connectGraph,
+  getGraphStatus,
+  disconnectGraph,
+  syncEmails,
+  reprocessEmails
+} from '../services/api'
 import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
@@ -45,9 +51,9 @@ const OutlookConnect = () => {
 
   const checkConnectionStatus = async () => {
     try {
-      const response = await graphAPI.getStatus()
-      setConnectionStatus(response.data)
-      setGraphConnection(response.data.isConnected, response.data.lastSync)
+      const data = await getGraphStatus()
+      setConnectionStatus(data)
+      setGraphConnection(data.isConnected, data.lastSync)
     } catch (error) {
       console.error('Error checking connection status:', error)
     }
@@ -61,18 +67,14 @@ const OutlookConnect = () => {
       const accessToken = await getAccessToken()
 
       // Send token to backend
-      await graphAPI.connect({
-        accessToken,
-        refreshToken: null // This would come from MSAL if needed
-      })
+      await connectGraph({ accessToken, refreshToken: null })
 
       setGraphConnection(true, new Date())
       toast.success('Outlook conectado exitosamente')
       await checkConnectionStatus()
 
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error al conectar Outlook')
     } finally {
       setLoading(false)
     }
@@ -82,14 +84,13 @@ const OutlookConnect = () => {
     setLoading(true)
 
     try {
-      await graphAPI.disconnect()
+      await disconnectGraph()
       setGraphConnection(false, null)
       setConnectionStatus(null)
       toast.success('Outlook desconectado')
 
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error al desconectar')
     } finally {
       setLoading(false)
     }
@@ -104,18 +105,17 @@ const OutlookConnect = () => {
     setSyncLoading(true)
 
     try {
-      const response = await graphAPI.syncEmails()
+      const data = await syncEmails()
 
       toast.success(
-        `Sincronización completada: ${response.data.processedCount} nuevas transacciones procesadas`
+        `Sincronización completada: ${data.processedCount} nuevas transacciones procesadas`
       )
 
       setGraphConnection(true, new Date())
       await checkConnectionStatus()
 
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error al sincronizar')
     } finally {
       setSyncLoading(false)
     }
@@ -130,7 +130,7 @@ const OutlookConnect = () => {
     setReprocessLoading(true)
 
     try {
-      const response = await graphAPI.reprocessEmails()
+      await reprocessEmails()
 
       toast.success(
         'Reprocesamiento iniciado. Recibirás una notificación cuando termine.'
@@ -139,8 +139,7 @@ const OutlookConnect = () => {
       // The actual completion will be handled via WebSocket
 
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error(error.message || 'Error al reprocesar')
     } finally {
       setReprocessLoading(false)
     }

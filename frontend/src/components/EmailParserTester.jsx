@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Send, CheckCircle, AlertCircle, Copy } from 'lucide-react'
-import { graphAPI, handleApiError } from '../services/api'
+import { testEmailParser } from '../services/api'
 import toast from 'react-hot-toast'
 
 const EmailParserTester = () => {
@@ -18,13 +18,12 @@ const EmailParserTester = () => {
     try {
       setLoading(true)
       console.log('🧪 Testing email parser...')
-      const response = await graphAPI.testEmailParser(emailContent)
-      console.log('✅ Parser result:', response.data)
-      setResult(response.data)
+      const data = await testEmailParser(emailContent)
+      console.log('✅ Parser result:', data)
+      setResult(data)
       toast.success('Email parseado correctamente')
     } catch (error) {
-      const errorInfo = handleApiError(error)
-      toast.error(errorInfo.message)
+      toast.error('Error al parsear el email')
       console.error('❌ Parser test error:', error)
     } finally {
       setLoading(false)

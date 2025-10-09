@@ -254,9 +254,9 @@ export const getSyncStatus = async () => {
     }
 };
 
-export const toggleSync = async (syncEnabled) => {
+export const toggleSync = async (enabled) => {
     try {
-        const response = await api.post('/graph/toggle-sync', { syncEnabled });
+        const response = await api.post('/graph/sync-toggle', { enabled });
         if (response.status !== 200) throw new Error(response.data.error || 'Failed to toggle sync');
         return response.data;
     } catch (error) {
@@ -276,46 +276,68 @@ export const syncEmails = async () => {
     }
 };
 
-export const analyzeFinancialData = async (data) => {
+export const getGraphStatus = async () => {
     try {
-        const response = await api.post('/ai/analyze', data);
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to analyze financial data');
+        const response = await api.get('/graph/status');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get Graph status');
         return response.data;
     } catch (error) {
-        console.error('Error analyzing financial data:', error);
+        console.error('Error getting Graph status:', error);
         throw error;
     }
 };
 
-export const getFinancialRecommendations = async () => {
+export const disconnectGraph = async () => {
     try {
-        const response = await api.get('/ai/recommendations');
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial recommendations');
+        const response = await api.post('/graph/disconnect');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to disconnect Graph');
         return response.data;
     } catch (error) {
-        console.error('Error fetching financial recommendations:', error);
+        console.error('Error disconnecting Graph:', error);
         throw error;
     }
 };
 
-export const getFinancialInsights = async (params) => {
+export const reprocessEmails = async () => {
     try {
-        const response = await api.get('/ai/insights', { params });
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to fetch financial insights');
+        const response = await api.post('/graph/reprocess-emails');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to reprocess emails');
         return response.data;
     } catch (error) {
-        console.error('Error fetching financial insights:', error);
+        console.error('Error reprocessing emails:', error);
         throw error;
     }
 };
 
-export const chatWithAI = async (message) => {
+export const testEmailParser = async (emailContent) => {
     try {
-        const response = await api.post('/ai/chat', { message });
-        if (response.status !== 200) throw new Error(response.data.error || 'Failed to get AI response');
+        const response = await api.post('/graph/test-email-parser', { emailContent });
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to test email parser');
         return response.data;
     } catch (error) {
-        console.error('Error during AI chat:', error);
+        console.error('Error testing email parser:', error);
+        throw error;
+    }
+};
+
+export const updatePreferences = async (preferences) => {
+    try {
+        const response = await api.patch('/finance/preferences', preferences);
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to update preferences');
+        return response.data;
+    } catch (error) {
+        console.error('Error updating preferences:', error);
+        throw error;
+    }
+};
+
+export const demoLogin = async () => {
+    try {
+        const response = await api.post('/auth/demo-login');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to login demo');
+        return response.data;
+    } catch (error) {
+        console.error('Error during demo login:', error);
         throw error;
     }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '../stores/authStore';
-import { authAPI } from '../services/api';
+import { demoLogin } from '../services/api';
 import toast from 'react-hot-toast';
 
 const AuthDebugger = () => {
@@ -49,10 +49,10 @@ const AuthDebugger = () => {
 
   const enableDemoMode = async () => {
     try {
-      const response = await authAPI.demoLogin();
+      const data = await demoLogin();
 
-      if (response.data) {
-        authStore.login(response.data.user, response.data.token);
+      if (data) {
+        authStore.login(data.user, data.token);
         toast.success('Modo demo activado exitosamente');
 
         // Refresh the page to apply new auth state
