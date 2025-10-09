@@ -1,8 +1,9 @@
 # Multi-stage build for FinSmart
-FROM node:20-alpine as frontend-build
+FROM node:20-bullseye-slim as frontend-build
 
-# Install minimal build deps only if needed by some packages
-RUN apk add --no-cache python3 make g++
+# Install minimal build deps (Debian-based) and clean apt cache
+RUN apt-get update && apt-get install -y python3 make g++ \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Build frontend
 WORKDIR /app/frontend
