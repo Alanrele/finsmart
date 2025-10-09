@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   Mail,
   Calendar,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
 import {
@@ -293,12 +294,15 @@ const OutlookConnect = () => {
               <button
                 onClick={handleResetAndReprocess}
                 disabled={resetLoading}
-                className="btn-danger flex items-center justify-center space-x-2"
+                className="btn-secondary flex items-center justify-center space-x-2"
+                aria-label="Limpiar y Reprocesar"
+                title="Elimina transacciones importadas y vuelve a procesar el historial"
+                data-testid="reset-and-reprocess"
               >
                 {resetLoading ? (
                   <div className="loading-spinner w-4 h-4" />
                 ) : (
-                  <AlertTriangle className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" />
                 )}
                 <span>Limpiar y Reprocesar</span>
               </button>
