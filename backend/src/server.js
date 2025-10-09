@@ -225,9 +225,9 @@ io.use(async (socket, next) => {
       return next(new Error('Authentication error: No token provided'));
     }
 
-    // Basic token sanity check: JWTs must contain two dots
+    // Basic token sanity check: app JWTs must contain two dots
     if (typeof token !== 'string' || token.split('.').length !== 3) {
-      console.log('❌ Socket.IO handshake - Malformed token');
+      console.log('❌ Socket.IO handshake - Malformed or non-JWT token');
       return next(new Error('Authentication error: Malformed token'));
     }
 
@@ -251,68 +251,24 @@ io.use(async (socket, next) => {
       return next();
     }
 
-    // Try to validate as Microsoft token first (since that's what we expect from real users)
+    // Validate as app JWT only (Microsoft tokens are not accepted at socket layer)
     try {
-      console.log('🔄 Socket.IO - Trying Microsoft token validation');
-
-      const { Client } = require('@microsoft/microsoft-graph-client');
-
-      class CustomAuthProvider {
-        constructor(accessToken) {
-          this.accessToken = accessToken;
-        }
-        async getAccessToken() {
-          return this.accessToken;
-        }
-      }
-
-      const authProvider = new CustomAuthProvider(token);
-      const graphClient = Client.initWithMiddleware({ authProvider });
-
-      // Get user profile from Microsoft Graph
-      const profile = await graphClient.api('/me').get();
-      console.log('✅ Socket.IO - Microsoft token verified for:', profile.mail || profile.userPrincipalName);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('✅ Socket.IO - JWT token verified for user:', decoded.userId);
 
       // Find user in database
-      let user = await User.findOne({
-        $or: [
-          { email: profile.mail },
-          { email: profile.userPrincipalName }
-        ]
-      });
-
+      const user = await User.findById(decoded.userId);
       if (!user) {
-        console.log('❌ Socket.IO - User not found for Microsoft token');
+        console.log('❌ Socket.IO - User not found for JWT token');
         return next(new Error('Authentication error: User not found'));
       }
 
       socket.user = user;
       return next();
-
-    } catch (microsoftError) {
-      console.log('🔄 Socket.IO - Microsoft token validation failed, trying JWT');
-
-      // If Microsoft token fails, try JWT validation
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        console.log('✅ Socket.IO - JWT token verified for user:', decoded.userId);
-
-        // Find user in database
-        const user = await User.findById(decoded.userId);
-        if (!user) {
-          console.log('❌ Socket.IO - User not found for JWT token');
-          return next(new Error('Authentication error: User not found'));
-        }
-
-        socket.user = user;
-        return next();
-
-      } catch (jwtError) {
-        console.error('❌ Socket.IO - Both JWT and Microsoft token validation failed');
-        console.error('Microsoft Error:', microsoftError.message);
-        console.error('JWT Error:', jwtError.message);
-        return next(new Error('Authentication error: Invalid token'));
-      }
+    } catch (jwtError) {
+      console.error('❌ Socket.IO - JWT validation failed');
+      console.error('JWT Error:', jwtError.message);
+      return next(new Error('Authentication error: Invalid token'));
     }
 
   } catch (error) {

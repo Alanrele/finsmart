@@ -27,13 +27,21 @@ api.interceptors.request.use(
     try {
       const { token, isAuthenticated } = useAuthStore.getState();
 
-            if (token && isAuthenticated) {
-                // Only attach app JWT (must contain 2 dots). Prevent attaching MS access tokens.
-                if (typeof token === 'string' && token.split('.').length === 3) {
-                    config.headers.Authorization = `Bearer ${token}`;
-                } else {
-                    console.warn('⚠️ Skipping non-JWT token in Authorization header');
+            // Only attach our app JWT: must be a 3-part JWT and contain a userId claim when decoded
+            const isLikelyJwt = typeof token === 'string' && token.split('.').length === 3;
+            if (token && isAuthenticated && isLikelyJwt) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload && (payload.userId || payload.sub)) {
+                        config.headers.Authorization = `Bearer ${token}`;
+                    } else {
+                        console.warn('⚠️ JWT payload missing userId/sub; skipping Authorization header');
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Failed to decode JWT payload; skipping Authorization header');
                 }
+            } else if (token) {
+                console.warn('⚠️ Skipping non-JWT token in Authorization header');
             }
     } catch (error) {
       console.error('❌ Error reading auth state from Zustand:', error);

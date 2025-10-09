@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { useMsal, useIsAuthenticated } from '@azure/msal-react'
+import { useMsal } from '@azure/msal-react'
 import toast from 'react-hot-toast'
 import useAuthStore from './stores/authStore'
 import useAppStore from './stores/appStore'
@@ -31,32 +31,19 @@ import SocketDebugPanel from './components/SocketDebugPanel'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
-  const msalAuthenticated = useIsAuthenticated();
-  const { accounts } = useMsal();
   const isAuthenticated = useAuthStore(state => state.isAuthenticated)
   const user = useAuthStore(state => state.user)
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🛡️ ProtectedRoute verificando estado:', {
-      msalAuthenticated,
-      zustandAuthenticated: isAuthenticated,
-      hasUser: !!user,
-      accountsCount: accounts.length,
-      timestamp: new Date().toISOString()
-    });
-
-    // Dar tiempo para que MSAL se inicialice completamente
+    // Dar un pequeño margen para rehidratar Zustand en recargas
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 200);
-
+    }, 150);
     return () => clearTimeout(timer);
-  }, [msalAuthenticated, isAuthenticated, user, accounts]);
+  }, [isAuthenticated, user]);
 
-  // Mostrar loading mientras se verifica el estado
   if (isLoading) {
-    console.log('🛡️ ProtectedRoute: Verificando autenticación...');
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -67,20 +54,16 @@ const ProtectedRoute = ({ children }) => {
     );
   }
 
-  // Verificar tanto MSAL como Zustand y que tenga cuentas
-  if (!msalAuthenticated || !isAuthenticated || accounts.length === 0) {
-    console.log('🛡️ ProtectedRoute: Usuario no autenticado, redirigiendo a login');
+  if (!isAuthenticated || !user) {
     return <Navigate to="/login" replace />;
   }
-
-  console.log('🛡️ ProtectedRoute: Usuario autenticado, mostrando contenido protegido');
   return children;
 };
 
 function App() {
   const { isAuthenticated, user, token, login, updateLastActivity, clearExpiredSession } = useAuthStore()
   const { initializeTheme, addNotification } = useAppStore()
-  const { instance, inProgress, accounts } = useMsal()
+  const { instance } = useMsal()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -115,89 +98,7 @@ function App() {
     };
   }, [isAuthenticated, updateLastActivity, clearExpiredSession, navigate]);
 
-  useEffect(() => {
-    // Handle Microsoft login callback
-    const handleCallback = async () => {
-      try {
-        console.log('🔍 Callback handler - inProgress:', inProgress, 'accounts:', accounts.length)
-
-        // Wait for MSAL to initialize and ensure no other operations are in progress
-        if (instance && inProgress === "none") {
-          console.log('🚀 Handling redirect promise...')
-          const response = await instance.handleRedirectPromise()
-
-          if (response && response.account) {
-            console.log('✅ Microsoft login success:', response.account.username)
-
-            // Success - user is authenticated
-            const userInfo = {
-              _id: response.account.localAccountId,
-              firstName: response.account.idTokenClaims?.given_name || 'Usuario',
-              lastName: response.account.idTokenClaims?.family_name || 'Microsoft',
-              email: response.account.username,
-              avatar: null
-            }
-
-            // Get the actual access token from MSAL
-            let accessToken = null;
-            try {
-              const tokenRequest = {
-                scopes: ['User.Read'],
-                account: response.account
-              };
-
-              const tokenResponse = await instance.acquireTokenSilent(tokenRequest);
-              accessToken = tokenResponse.accessToken;
-              console.log('🔑 Got real access token from MSAL');
-            } catch (tokenError) {
-              console.error('❌ Could not get access token:', tokenError);
-              toast.error('No se pudo obtener un token de acceso. Intente iniciar sesión de nuevo.');
-              accessToken = null; // Ensure no token is used
-            }
-
-            // Ensure login is processed
-            console.log('🔐 Setting auth state with token:', { userInfo, hasToken: !!accessToken })
-            login(userInfo, accessToken)
-
-            // Wait a bit for state to update
-            setTimeout(() => {
-              console.log('🎯 Auth state after login:', { isAuthenticated, user: useAuthStore.getState().user })
-              toast.success('✅ Autenticación exitosa con Microsoft')
-
-              // Clear any login progress flags
-              sessionStorage.removeItem('msalLoginInProgress')
-
-              // Navigate to dashboard
-              console.log('🚀 Navigating to dashboard...')
-              navigate('/dashboard', { replace: true })
-            }, 100)
-
-          } else if (sessionStorage.getItem('msalLoginInProgress') === 'true') {
-            // Login was in progress but no response received
-            console.log('⚠️ Login was in progress but no response received')
-            sessionStorage.removeItem('msalLoginInProgress')
-          } else {
-            console.log('ℹ️ No redirect response, normal page load')
-          }
-        } else {
-          console.log('⏳ MSAL not ready or operation in progress:', inProgress)
-        }
-      } catch (error) {
-        console.error('❌ Auth callback error:', error)
-        sessionStorage.removeItem('msalLoginInProgress')
-
-        // Only show error if it's a real error, not just normal flow
-        if (error.name !== 'InteractionInProgress') {
-          toast.error('Error en la autenticación con Microsoft')
-        }
-      }
-    }
-
-    // Only run if MSAL instance is available
-    if (instance) {
-      handleCallback()
-    }
-  }, [instance, login, navigate, inProgress])
+  // MSAL redirect is handled exclusively in AuthCallback component now to avoid races
 
   useEffect(() => {
     // Initialize theme
