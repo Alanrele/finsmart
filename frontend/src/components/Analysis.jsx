@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Target, Lightbulb, AlertCircle } from 'lucide-react'
 import { analyzeFinancialData, getFinancialRecommendations, getFinancialInsights } from '../services/api'
@@ -10,12 +10,7 @@ const Analysis = () => {
   const { aiAnalysis, setAiAnalysis, aiLoading, setAiLoading } = useAppStore()
   const [recommendations, setRecommendations] = useState([])
   const [insights, setInsights] = useState([])
-
-  useEffect(() => {
-    loadAnalysis()
-    loadRecommendations()
-    loadInsights()
-  }, [])
+  const [hasStarted, setHasStarted] = useState(false)
 
   const loadAnalysis = async () => {
     try {
@@ -47,6 +42,16 @@ const Analysis = () => {
     }
   }
 
+  const handleStart = async () => {
+    if (hasStarted || aiLoading) return;
+    setHasStarted(true)
+    await Promise.all([
+      loadAnalysis(),
+      loadRecommendations(),
+      loadInsights()
+    ])
+  }
+
   if (aiLoading) {
     return (
       <div className="space-y-6">
@@ -68,6 +73,23 @@ const Analysis = () => {
           Insights inteligentes sobre tus hábitos financieros
         </p>
       </div>
+
+      {/* Start CTA */}
+      {!hasStarted && !aiAnalysis && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card flex items-center justify-between"
+        >
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Análisis inteligente</h2>
+            <p className="text-gray-500 dark:text-gray-400">Pulsa el botón para comenzar el análisis y generar insights. Evitamos gastar tokens innecesariamente.</p>
+          </div>
+          <button onClick={handleStart} className="btn-primary">
+            Comenzar análisis
+          </button>
+        </motion.div>
+      )}
 
       {/* AI Analysis Summary */}
       {aiAnalysis && (

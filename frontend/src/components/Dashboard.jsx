@@ -121,12 +121,14 @@ const Dashboard = () => {
   }
 
   const categoryData = Array.isArray(topCategories)
-    ? topCategories.map((cat, index) => ({
-        name: translateCategory(cat?.category),
-        value: cat?.amount || 0,
-        percentage: cat?.percentage || 0,
-        color: COLORS[index % COLORS.length]
-      }))
+    ? topCategories
+        .filter((cat) => (cat?.amount || 0) > 0)
+        .map((cat, index) => ({
+          name: translateCategory(cat?.category),
+          value: Math.abs(cat?.amount || 0),
+          percentage: cat?.percentage || 0,
+          color: COLORS[index % COLORS.length]
+        }))
     : [];
 
   const spendingTrend = Array.isArray(recentTransactions) && recentTransactions.length > 0
@@ -305,9 +307,11 @@ const Dashboard = () => {
                   data={categoryData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={80}
+                  outerRadius={90}
                   dataKey="value"
-                  label={({name, percentage}) => `${name} ${percentage?.toFixed(1) || 0}%`}
+                  minAngle={4}
+                  labelLine={false}
+                  label={({ name, percentage }) => `${name} ${Number(percentage || 0).toFixed(1)}%`}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -356,8 +360,14 @@ const Dashboard = () => {
                       ? 'text-green-600'
                       : 'text-red-600'
                   }`}>
-                    {transaction.type === 'credit' || transaction.type === 'deposit' ? '+' : '-'}
-                    {formatCurrencyAuto(transaction.amount)}
+                    {
+                      formatCurrency(
+                        (transaction.type === 'credit' || transaction.type === 'deposit')
+                          ? Math.abs(transaction.amount)
+                          : -Math.abs(transaction.amount),
+                        true
+                      )
+                    }
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
                     {translateCategory(transaction.category)}

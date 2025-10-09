@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 
 const router = express.Router();
 const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
+const MAX_TX_AMOUNT = parseInt(process.env.MAX_TX_AMOUNT || '10000000', 10); // S/ 10M por defecto
 
 // Get user's financial dashboard
 router.get('/dashboard', async (req, res) => {
@@ -40,13 +41,14 @@ router.get('/dashboard', async (req, res) => {
     // Redondear todos los valores para evitar problemas de precisión
     const roundToTwo = (num) => Math.round(num * 100) / 100;
 
-    // Get current month transactions
+    // Get current month transactions (filtrar montos irreales)
     const currentMonthTransactions = await Transaction.find({
       userId,
       date: {
         $gte: new Date(currentYear, currentMonth - 1, 1),
         $lt: new Date(currentYear, currentMonth, 1)
-      }
+      },
+      amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
     });
 
     // Calculate spending by category
@@ -85,7 +87,8 @@ router.get('/dashboard', async (req, res) => {
         $gte: new Date(previousYear, previousMonth - 1, 1),
         $lt: new Date(previousYear, previousMonth, 1)
       },
-      type: { $in: ['debit', 'payment', 'withdrawal'] }
+      type: { $in: ['debit', 'payment', 'withdrawal'] },
+      amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
     });
 
     const previousMonthSpending = previousMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
@@ -251,7 +254,7 @@ router.get('/transactions', [
         const sortBy = req.query.sortBy || 'date';
         const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
 
-        let query = { userId };
+  let query = { userId, amount: { $gt: 0, $lte: MAX_TX_AMOUNT } };
 
         // Date range filter
         if (req.query.startDate || req.query.endDate) {
@@ -289,7 +292,7 @@ router.get('/transactions', [
             query.isAI = req.query.isAI === 'true';
         }
 
-        const totalCount = await Transaction.countDocuments(query);
+    const totalCount = await Transaction.countDocuments(query);
         const transactions = await Transaction.find(query)
             .sort({ [sortBy]: sortOrder })
             .skip(skip)
@@ -424,12 +427,13 @@ router.get('/spending/categories', [
       }
     }
 
-    // Aggregate spending by category
+    // Aggregate spending by category (filtrar montos irreales)
     const categorySpending = await Transaction.aggregate([
       {
         $match: {
           userId: userId,
           type: { $in: ['debit', 'payment', 'withdrawal'] },
+          amount: { $gt: 0, $lte: MAX_TX_AMOUNT },
           ...dateFilter
         }
       },
@@ -617,7 +621,8 @@ router.get('/summary', [
     const incomeTransactions = await Transaction.find({
       userId,
       date: { $gte: startDate, $lte: endDate },
-      type: { $in: ['credit', 'deposit'] }
+      type: { $in: ['credit', 'deposit'] },
+      amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
     });
 
     const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
