@@ -338,43 +338,50 @@ const Dashboard = () => {
             Transacciones Recientes
           </h3>
           <div className="space-y-3">
-            {recentTransactions?.slice(0, 5).map((transaction, index) => (
-              <motion.div
-                key={transaction._id || index}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              >
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900 dark:text-white truncate">
-                    {transaction.description || transaction.merchant || 'Transacción'}
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(transaction.date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className={`font-semibold ${
-                    transaction.type === 'credit' || transaction.type === 'deposit'
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}>
-                    {
-                      formatCurrency(
-                        (transaction.type === 'credit' || transaction.type === 'deposit')
-                          ? Math.abs(transaction.amount)
-                          : -Math.abs(transaction.amount),
-                        true
-                      )
-                    }
-                  </p>
-                  <p className="text-xs text-gray-500 capitalize">
-                    {translateCategory(transaction.category)}
-                  </p>
-                </div>
-              </motion.div>
-            )) || (
+            {Array.isArray(recentTransactions) && recentTransactions.length > 0 ? (
+              recentTransactions.slice(0, 5).map((transaction, index) => (
+                <motion.div
+                  key={transaction._id || index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                      {transaction.description || transaction.merchant || 'Transacción'}
+                    </p>
+                    <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
+                      <span>{new Date(transaction.date).toLocaleDateString()}</span>
+                      {transaction.category && (
+                        <span className="capitalize">{translateCategory(transaction.category)}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="sm:text-right whitespace-nowrap sm:self-center self-end">
+                    <p className={`font-semibold ${
+                      transaction.type === 'credit' || transaction.type === 'deposit'
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                    }`}>
+                      {
+                        formatCurrency(
+                          (transaction.type === 'credit' || transaction.type === 'deposit')
+                            ? Math.abs(transaction.amount)
+                            : -Math.abs(transaction.amount),
+                          true
+                        )
+                      }
+                    </p>
+                    {transaction.category && (
+                      <p className="text-xs text-gray-500 capitalize">
+                        {translateCategory(transaction.category)}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              ))
+            ) : (
               <div className="text-center text-gray-500 py-8">
                 No hay transacciones recientes
               </div>
