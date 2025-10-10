@@ -258,9 +258,9 @@ const Transactions = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleTransactionClick(transaction)}
-                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
               >
-                <div className="flex items-center space-x-4 flex-1">
+                <div className="flex items-center space-x-4 flex-1 min-w-0">
                   <div className={`p-2 rounded-lg ${
                     transaction.type === 'credit' || transaction.type === 'deposit'
                       ? 'bg-green-100 dark:bg-green-900/20'
@@ -274,10 +274,10 @@ const Transactions = () => {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                    <p className="font-medium text-gray-900 dark:text-white truncate text-base md:text-[1rem]">
                       {transaction.description || transaction.merchant || 'Transacción'}
                     </p>
-                    <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center space-x-3 text-sm md:text-[0.9rem] text-gray-500 dark:text-gray-400 flex-wrap">
                       <span>{new Date(transaction.date).toLocaleDateString()}</span>
                       <span className="capitalize">{translateCategory(transaction.category)}</span>
                       <span className="capitalize">{transaction.channel}</span>
@@ -285,7 +285,7 @@ const Transactions = () => {
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="md:text-right whitespace-nowrap md:self-center self-end">
                   <p className={`text-lg font-semibold ${
                     transaction.type === 'credit' || transaction.type === 'deposit'
                       ? 'text-green-600'
