@@ -134,7 +134,7 @@ const Login = () => {
                     Nombre
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       id="firstName"
@@ -152,7 +152,7 @@ const Login = () => {
                     Apellido
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                     <input
                       type="text"
                       id="lastName"
@@ -173,7 +173,7 @@ const Login = () => {
                 Correo Electrónico
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 <input
                   type="email"
                   id="email"
@@ -192,7 +192,7 @@ const Login = () => {
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -206,7 +206,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400"
                 >
                   {showPassword ? <EyeOff /> : <Eye />}
                 </button>
@@ -219,7 +219,7 @@ const Login = () => {
                   Confirmar Contraseña
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                   <input
                     type="password"
                     id="confirmPassword"
