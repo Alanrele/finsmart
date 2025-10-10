@@ -36,6 +36,22 @@ const OutlookConnect = () => {
     checkConnectionStatus()
   }, [])
 
+  // Helper to avoid indefinite loading if network hangs
+  const withTimeout = (promise, ms = 15000) => {
+    let timeoutId
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        const err = new Error('timeout')
+        err.code = 'TIMEOUT'
+        reject(err)
+      }, ms)
+    })
+    return Promise.race([
+      promise.finally(() => clearTimeout(timeoutId)),
+      timeout
+    ])
+  }
+
   // Handle reprocess completion
   useEffect(() => {
     const handleReprocessCompleted = (data) => {
@@ -133,7 +149,7 @@ const OutlookConnect = () => {
     setReprocessLoading(true)
 
     try {
-      await reprocessEmails()
+      await withTimeout(reprocessEmails(), 15000)
 
       toast.success(
         'Reprocesamiento iniciado. Recibirás una notificación cuando termine.'
@@ -142,7 +158,11 @@ const OutlookConnect = () => {
       // The actual completion will be handled via WebSocket
 
     } catch (error) {
-      toast.error(error.message || 'Error al reprocesar')
+      if (error?.code === 'TIMEOUT') {
+        toast('El servidor está procesando. Te avisaremos cuando termine.', { icon: '⏳' })
+      } else {
+        toast.error(error.message || 'Error al reprocesar')
+      }
     } finally {
       setReprocessLoading(false)
     }
@@ -161,10 +181,14 @@ const OutlookConnect = () => {
     setResetLoading(true)
 
     try {
-      const data = await resetAndReprocessEmails()
+      const data = await withTimeout(resetAndReprocessEmails(), 20000)
       toast.success(`Se eliminaron ${data.deletedCount} transacciones. Reprocesamiento iniciado.`)
     } catch (error) {
-      toast.error(error.message || 'Error al reiniciar y reprocesar')
+      if (error?.code === 'TIMEOUT') {
+        toast('Limpieza iniciada. Te avisaremos por WebSocket al terminar.', { icon: '🧹' })
+      } else {
+        toast.error(error.message || 'Error al reiniciar y reprocesar')
+      }
     } finally {
       setResetLoading(false)
     }

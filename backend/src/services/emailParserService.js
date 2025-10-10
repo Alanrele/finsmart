@@ -127,58 +127,86 @@ function isTransactionalEmail(subject, content) {
 }
 
 function extractAmountAndCurrency(text) {
-    // Soporta formatos peruanos: "S/ 1,234.56", "S/ 1.234,56", "S/. 123,45", "PEN 123,45"
-    // y USD: "US$ 1,234.56", "$ 123.45"
+    // Busca TODAS las apariciones de montos con moneda y elige la mejor por contexto
+    // Soporta formatos: "S/ 1,234.56", "S/. 1.234,56", "PEN 123,45", "US$ 1,234.56", "$ 123.45"
+    if (!text) return null;
+
     const patterns = [
-        { regex: /(S\/?\.?|PEN)\s*([\d\.\,]+\d)/i, currency: 'PEN' },
-        { regex: /(US\$)\s*([\d\.\,]+\d)/i, currency: 'USD' },
-        { regex: /(^|\s)\$\s*([\d\.\,]+\d)/i, currency: 'USD' }
+        { regex: /(S\/?\.?|PEN)\s*([0-9][\d\.,]*\d)/gi, currency: 'PEN' },
+        { regex: /(US\$)\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' },
+        { regex: /(^|\s)\$\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' }
     ];
 
-    // Normaliza un número en string detectando correctamente separadores de miles/decimales
     const normalizeNumber = (raw) => {
         if (!raw) return NaN;
-        let s = raw.trim();
+        let s = String(raw).replace(/\s+/g, '').trim();
 
-        // Si contiene tanto coma como punto, decidir el decimal como el separador más a la derecha
+        // Decidir separador decimal por el último símbolo entre coma y punto
         const lastComma = s.lastIndexOf(',');
         const lastDot = s.lastIndexOf('.');
         if (lastComma !== -1 && lastDot !== -1) {
-            // Si la coma está a la derecha del punto: coma = decimal (formato europeo)
             const decimalIsComma = lastComma > lastDot;
             if (decimalIsComma) {
-                s = s.replace(/\./g, ''); // quitar separadores miles
-                s = s.replace(/,/g, '.');  // decimal -> punto
+                s = s.replace(/\./g, '');
+                s = s.replace(/,/g, '.');
             } else {
-                // punto es decimal (formato US)
                 s = s.replace(/,/g, '');
             }
-        } else if (lastComma !== -1 && lastDot === -1) {
-            // Solo coma: asume formato europeo -> decimal
-            s = s.replace(/\./g, ''); // seguridad
+        } else if (lastComma !== -1) {
+            s = s.replace(/\./g, '');
             s = s.replace(/,/g, '.');
         } else {
-            // Solo punto o ninguno: remover comas de miles si hubiese
             s = s.replace(/,/g, '');
         }
 
         const num = parseFloat(s);
-        if (isNaN(num)) return NaN;
-        // Redondea a 2 decimales para estabilidad
+        if (!isFinite(num)) return NaN;
         return Math.round(num * 100) / 100;
     };
 
+    const candidates = [];
     for (const p of patterns) {
-        const match = text.match(p.regex);
-        if (match) {
+        let match;
+        while ((match = p.regex.exec(text)) !== null) {
+            const idx = match.index || 0;
             const amountStr = match[2];
             const amount = normalizeNumber(amountStr);
-            if (!isNaN(amount)) {
-                return { amount, currency: p.currency };
-            }
+            if (isNaN(amount)) continue;
+
+            // Contexto alrededor del match para puntuar
+            const start = Math.max(0, idx - 60);
+            const end = Math.min(text.length, idx + (match[0]?.length || 0) + 40);
+            const ctx = text.substring(start, end).toLowerCase();
+
+            let score = 0;
+            // Señales positivas
+            if (/monto|importe|consumo|pagado|pago|transferencia|devoluci[óo]n/.test(ctx)) score += 3;
+            if (/:\s*(s\/?|us\$|\$)/i.test(ctx)) score += 1; // etiqueta "monto: S/"
+
+            // Señales negativas: saldos, límites, disponible
+            if (/saldo|disponible|l[íi]mite|estado de cuenta|l[íi]nea de cr[ée]dito/.test(ctx)) score -= 4;
+
+            // Penaliza cantidades anormalmente grandes (posible concatenación errónea)
+            if (amount > 50_000_000) score -= 10;
+
+            candidates.push({ amount, currency: p.currency, score, idx });
         }
     }
-    return null;
+
+    if (candidates.length === 0) return null;
+
+    // Ordenar por mayor score y, en empate, por mayor cercanía al inicio del contenido (asume primer monto relevante)
+    candidates.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
+    const best = candidates[0];
+
+    // Filtro final adicional: descartar montos provenientes de "saldo" si dominaron el contexto
+    if (best.score <= -1) {
+        // Buscar siguiente candidato no negativo
+        const alt = candidates.find(c => c.score >= 0);
+        if (alt) return { amount: alt.amount, currency: alt.currency };
+    }
+
+    return { amount: best.amount, currency: best.currency };
 }
 
 function parseSpanishDate(dateStr) {
@@ -251,6 +279,36 @@ function parseEmailContent(fullText) {
                 operationType = value;
             } else if (lowerLabel.includes('tipo de envío') || lowerLabel.includes('tipo de envio')) {
                 sendingType = value;
+            } else if ((/monto|importe/.test(lowerLabel)) && !/saldo|disponible/.test(lowerLabel)) {
+                // Extraer monto preferentemente de la fila "Monto" o "Importe"
+                const extracted = extractAmountAndCurrency(value);
+                if (extracted) {
+                    amountInfo = extracted;
+                    currency = extracted.currency;
+                } else {
+                    // Si no trae moneda, intentar normalizar solo el número y usar moneda detectada en texto
+                    const numMatch = value.match(/[0-9][\d\.,]*\d/);
+                    if (numMatch) {
+                        const tmp = numMatch[0];
+                        // Reutilizamos la normalización interna de extractAmountAndCurrency
+                        const n = (function normalizeForTable(raw){
+                            let s = String(raw).replace(/\s+/g,'').trim();
+                            const lastComma = s.lastIndexOf(',');
+                            const lastDot = s.lastIndexOf('.');
+                            if (lastComma !== -1 && lastDot !== -1) {
+                                const decimalIsComma = lastComma > lastDot;
+                                if (decimalIsComma) { s = s.replace(/\./g,''); s = s.replace(/,/g,'.'); }
+                                else { s = s.replace(/,/g,''); }
+                            } else if (lastComma !== -1) { s = s.replace(/\./g,''); s = s.replace(/,/g,'.'); }
+                            else { s = s.replace(/,/g,''); }
+                            const num = parseFloat(s);
+                            return isFinite(num) ? Math.round(num*100)/100 : NaN;
+                        })(tmp);
+                        if (!isNaN(n)) {
+                            amountInfo = { amount: n, currency: currency || null };
+                        }
+                    }
+                }
             }
             // --- Nuevos campos ---
             else if (lowerLabel.includes('pagado a')) {
@@ -441,9 +499,13 @@ function createTransactionFromEmail(parsedData, userId, emailData) {
         description = parsedData.operationType;
     }
 
+    // Guardrail adicional por si llegara un monto inflado
+    const MAX_REASONABLE_AMOUNT = 10_000_000; // 10 millones
+    const safeAmount = Math.min(Math.abs(parsedData.amount || 0), MAX_REASONABLE_AMOUNT);
+
     return {
         userId,
-        amount: Math.abs(parsedData.amount || 0),
+        amount: safeAmount,
         type,
         category,
         description,
