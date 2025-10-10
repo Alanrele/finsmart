@@ -21,13 +21,16 @@ const Navbar = () => {
   const { theme, setTheme } = useAppStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
+  const debugEnabled = (typeof window !== 'undefined' && window.localStorage.getItem('finsmart:debug') === '1') ||
+    (typeof import.meta !== 'undefined' && String(import.meta.env.VITE_ENABLE_DEBUG || '').toLowerCase() === 'true')
+
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Home },
     { name: 'Transacciones', href: '/transactions', icon: CreditCard },
     { name: 'Análisis', href: '/analysis', icon: TrendingUp },
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
     { name: 'Outlook', href: '/outlook', icon: Mail },
-    { name: 'Email Parser', href: '/email-parser', icon: FileText },
+    ...(debugEnabled ? [{ name: 'Email Parser', href: '/email-parser', icon: FileText }] : []),
     { name: 'Configuración', href: '/settings', icon: Settings },
   ]
 

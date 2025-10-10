@@ -49,7 +49,7 @@ const NotificationPanel = () => {
       {/* Notification Bell (Mobile) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-4 right-4 lg:hidden bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 z-40"
+        className="fixed bottom-20 right-4 lg:hidden bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 z-40 safe-area-bottom"
       >
         <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
         {notifications && notifications.length > 0 && (

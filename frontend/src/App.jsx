@@ -236,7 +236,7 @@ function App() {
           <Route path="chat" element={<ChatIA />} />
           <Route path="outlook" element={<OutlookConnect />} />
           <Route path="settings" element={<Settings />} />
-          <Route path="email-parser" element={<EmailParserTester />} />
+          {debugEnabled && <Route path="email-parser" element={<EmailParserTester />} />}
         </Route>
 
         <Route path="*" element={
