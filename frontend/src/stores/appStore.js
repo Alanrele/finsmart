@@ -7,6 +7,9 @@ const useAppStore = create(
       // Theme
       theme: 'dark',
 
+      // App readiness (to gate overlays during initial load)
+      appReady: false,
+
       // Dashboard data
       dashboardData: null,
 
@@ -41,6 +44,10 @@ const useAppStore = create(
 
       setDashboardData: (data) => {
         set({ dashboardData: data })
+      },
+
+      setAppReady: (ready) => {
+        set({ appReady: !!ready })
       },
 
       setTransactions: (transactions) => {

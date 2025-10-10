@@ -3,8 +3,11 @@ import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 import NotificationPanel from './NotificationPanel'
+import useAppStore from '../stores/appStore'
 
 const Layout = () => {
+  const appReady = useAppStore(state => state.appReady)
+
   return (
     <div className="min-h-screen bg-light-bg dark:bg-dark-bg">
       {/* Mobile Navigation */}
@@ -26,8 +29,8 @@ const Layout = () => {
         </div>
       </div>
 
-      {/* Notification Panel */}
-      <NotificationPanel />
+      {/* Notification Panel (render only when app is ready) */}
+      {appReady && <NotificationPanel />}
     </div>
   )
 }

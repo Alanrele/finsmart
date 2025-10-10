@@ -4,7 +4,6 @@ import { Toaster } from 'react-hot-toast'
 import { useMsal } from '@azure/msal-react'
 import toast from 'react-hot-toast'
 import useAuthStore from './stores/authStore'
-import useAppStore from './stores/appStore'
 import socketService from './services/socket'
 
 
@@ -24,6 +23,7 @@ import DebugMSAL from './components/DebugMSAL'
 import AuthDebugPanel from './components/AuthDebugPanel'
 import ConnectivityStatus from './components/ConnectivityStatus'
 import SSLErrorNotification from './components/SSLErrorNotification'
+import useAppStore from './stores/appStore'
 
 import AuthStorageDebug from './components/AuthStorageDebug'
 import EmailParserTester from './components/EmailParserTester'
@@ -66,6 +66,7 @@ function App() {
   const { instance } = useMsal()
   const navigate = useNavigate()
   const location = useLocation()
+  const appReady = useAppStore(state => state.appReady)
   const [debugEnabled, setDebugEnabled] = useState(() => {
     // Build-time flag (Vite)
     const envFlag = String(import.meta.env.VITE_ENABLE_DEBUG || '').toLowerCase() === 'true'
@@ -272,8 +273,8 @@ function App() {
       {/* Debug Panel - solo en desarrollo */}
       {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
 
-  {/* Connectivity Status - oculto por defecto, accesible en modo debug */}
-  {debugEnabled && <ConnectivityStatus />}
+  {/* Connectivity Status - solo si app lista y modo debug */}
+  {debugEnabled && appReady && <ConnectivityStatus />}
 
       {/* SSL Error Notification - detecta automáticamente problemas de certificado */}
       <SSLErrorNotification />

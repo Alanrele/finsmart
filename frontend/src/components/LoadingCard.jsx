@@ -8,7 +8,7 @@ const LoadingCard = ({ className = "" }) => {
       animate={{ opacity: 1 }}
       className={`card ${className}`}
     >
-      <div className="animate-pulse">
+      <div className="animate-pulse pointer-events-none min-h-[120px]">
         <div className="flex items-center justify-between mb-4">
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
           <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>

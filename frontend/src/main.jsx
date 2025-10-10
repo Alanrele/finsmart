@@ -5,6 +5,7 @@ import { MsalProvider } from '@azure/msal-react'
 import { PublicClientApplication } from '@azure/msal-browser'
 import { msalConfig } from './config/msalConfig'
 import App from './App.jsx'
+import useAppStore from './stores/appStore'
 import MSALInitializing from './components/MSALInitializing.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
@@ -47,6 +48,7 @@ const msalInstance = new PublicClientApplication(msalConfig);
 const Root = () => {
   const [msalInitialized, setMsalInitialized] = useState(false)
   const [msalError, setMsalError] = useState(false)
+  const setAppReady = useAppStore(state => state.setAppReady)
 
   useEffect(() => {
     const initializeMsal = async () => {
