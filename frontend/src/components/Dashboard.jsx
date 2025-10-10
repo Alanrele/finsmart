@@ -174,7 +174,7 @@ const Dashboard = () => {
                 Gasto Total
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrencyUltraCompact(summary?.totalSpending || 0)}
+                {formatCurrency(summary?.totalSpending || 0)}
               </p>
               <div className="flex items-center mt-2">
                 {summary?.spendingChangePercentage >= 0 ? (
@@ -208,7 +208,7 @@ const Dashboard = () => {
                 Ingresos Totales
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {formatCurrencyUltraCompact(summary?.totalIncome || 0)}
+                {formatCurrency(summary?.totalIncome || 0)}
               </p>
               <div className="flex items-center mt-2">
                 <TrendingUp className="w-4 h-4 text-green-500" />
@@ -238,7 +238,7 @@ const Dashboard = () => {
               <p className={`text-2xl font-bold ${
                 (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
-                {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrencyUltraCompact(summary?.balance || 0)}
+                {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrency(Math.abs(summary?.balance || 0))}
               </p>
               <div className="flex items-center mt-2">
                 <Target className="w-4 h-4 text-gray-500" />
@@ -405,7 +405,7 @@ const Dashboard = () => {
             <LineChart data={spendingTrend}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="day" />
-              <YAxis formatter={(value) => `S/ ${formatNumber(value)}`} />
+              <YAxis formatter={(value) => formatCurrency(value)} />
               <Tooltip formatter={(value) => [formatCurrency(value), 'Gasto']} />
               <Line
                 type="monotone"
