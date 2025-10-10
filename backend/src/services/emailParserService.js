@@ -51,7 +51,10 @@ function isTransactionalEmail(subject, content) {
         'estado de cuenta', 'newsletter', 'suscríbete', 'suscribete',
         'publicidad', 'promo', 'club', 'puntos', 'programa de beneficios',
         // Correos corporativos informativos típicos (no transaccionales)
-        'póliza', 'poliza', 'endoso', 'buzón', 'buzon'
+        'póliza', 'poliza', 'endoso', 'buzón', 'buzon',
+        'póliza de seguro', 'poliza de seguro', 'endoso de póliza', 'endoso de poliza',
+        'este correo no requiere acción', 'este correo no requiere accion',
+        'si decides realizar el cambio', 'debes enviarnos la póliza', 'debes enviarnos la poliza'
     ];
 
     const fullText = (subject + ' ' + (content || '')).toLowerCase();
@@ -63,7 +66,11 @@ function isTransactionalEmail(subject, content) {
         'no es una operacion',
         'no es una operación',
         'no corresponde a una transaccion',
-        'no corresponde a una transacción'
+        'no corresponde a una transacción',
+        // Bloques de avisos corporativos que causaban falsos positivos
+        'si decides realizar el cambio',
+        'debes enviarnos la póliza',
+        'debes enviarnos la poliza'
     ];
     for (const phrase of negativePhrases) {
         if (fullText.includes(phrase)) return false;
@@ -115,6 +122,12 @@ function isTransactionalEmail(subject, content) {
     }
 
     // 2) Aceptar solo si hay señales transaccionales + evidencia (monto u otro)
+    //    pero rechazar si también hay indicadores corporativos
+    const corporateBlockers = [/p[óo]liza/, /endoso/, /si decides realizar el cambio/, /debes enviarnos la p[óo]liza/];
+    if (corporateBlockers.some(rx => rx.test(fullText))) {
+        return false;
+    }
+
     if (strongTransactionalKeywords.some(k => fullText.includes(k))) {
         return hasAmount || hasOperationNumber || hasDate;
     }
@@ -177,14 +190,23 @@ function extractAmountAndCurrency(text) {
             const start = Math.max(0, idx - 60);
             const end = Math.min(text.length, idx + (match[0]?.length || 0) + 40);
             const ctx = text.substring(start, end).toLowerCase();
+            // Ventanas locales inmediatas para etiquetas cercanas
+            const preLocal = text.substring(Math.max(0, idx - 24), idx).toLowerCase();
+            const postLocal = text.substring(idx, Math.min(text.length, idx + 24)).toLowerCase();
 
             let score = 0;
             // Señales positivas
-            if (/monto|importe|consumo|pagado|pago|transferencia|devoluci[óo]n/.test(ctx)) score += 3;
-            if (/:\s*(s\/?|us\$|\$)/i.test(ctx)) score += 1; // etiqueta "monto: S/"
+            if (/monto|importe|consumo|pagado|pago|transferencia|devoluci[óo]n/.test(preLocal + postLocal)) score += 4; // cercano al monto
+            else if (/monto|importe|consumo|pagado|pago|transferencia|devoluci[óo]n/.test(ctx)) score += 2; // un poco más lejos
+            if (/:\s*(s\/?|us\$|\$)/i.test(preLocal + postLocal)) score += 1; // etiqueta inmediata "monto: S/"
 
             // Señales negativas: saldos, límites, disponible
-            if (/saldo|disponible|l[íi]mite|estado de cuenta|l[íi]nea de cr[ée]dito/.test(ctx)) score -= 4;
+            const negLabel = /saldo|disponible|l[íi]mite|estado de cuenta|l[íi]nea de cr[ée]dito/;
+            if (negLabel.test(preLocal) || /^\s*(saldo|disponible)/.test(postLocal)) score -= 8; // etiqueta local
+            else if (negLabel.test(ctx)) score -= 3; // mencionar lejos penaliza menos
+
+            // Contexto corporativo (seguros/pólizas) que no debe contar como monto de transacción
+            if (/p[óo]liza|endoso|seguro|cotizaci[óo]n|prima|n[°º]\s*de\s*p[óo]liza/.test(ctx)) score -= 8;
 
             // Penaliza cantidades anormalmente grandes (posible concatenación errónea)
             if (amount > 50_000_000) score -= 10;
