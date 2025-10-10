@@ -70,7 +70,27 @@ function isTransactionalEmail(subject, content) {
         // Bloques de avisos corporativos que causaban falsos positivos
         'si decides realizar el cambio',
         'debes enviarnos la póliza',
-        'debes enviarnos la poliza'
+        'debes enviarnos la poliza',
+        // Resúmenes/boletines/estado de cuenta
+    'estado de cuenta',
+        'resumen de cuenta',
+        'boletín',
+        'boletin',
+        'newsletter',
+        'correo informativo',
+    'tu estado de cuenta ya está listo',
+    'tu estado de cuenta ya esta listo',
+    'tu estado de cuenta ya está disponible',
+    'tu estado de cuenta ya esta disponible',
+    'pago mínimo',
+    'pago minimo',
+    'pago total',
+    'saldo al corte',
+        'este es un correo informativo',
+        'no responder',
+        'no responder a este correo',
+        'no conteste',
+        'no contestar'
     ];
     for (const phrase of negativePhrases) {
         if (fullText.includes(phrase)) return false;
@@ -123,15 +143,33 @@ function isTransactionalEmail(subject, content) {
 
     // 2) Aceptar solo si hay señales transaccionales + evidencia (monto u otro)
     //    pero rechazar si también hay indicadores corporativos
-    const corporateBlockers = [/p[óo]liza/, /endoso/, /si decides realizar el cambio/, /debes enviarnos la p[óo]liza/];
+    const corporateBlockers = [
+        /p[óo]liza/,
+        /endoso/,
+        /si decides realizar el cambio/,
+        /debes enviarnos la p[óo]liza/,
+        /estado de cuenta/,
+        /resumen de cuenta/,
+        /bolet[íi]n/,
+        /newsletter/,
+        /correo informativo/,
+        /tu estado de cuenta ya est[áa] (listo|disponible)/,
+        /pago m[íi]nimo/,
+        /pago total/,
+        /saldo al corte/,
+        /no responder/,
+        /no contest(e|ar)/
+    ];
     if (corporateBlockers.some(rx => rx.test(fullText))) {
         return false;
     }
 
     if (strongTransactionalKeywords.some(k => fullText.includes(k))) {
-        return hasAmount || hasOperationNumber || hasDate;
+        // Requiere número de operación o monto+fecha (más estricto)
+        return hasOperationNumber || (hasAmount && hasDate);
     }
     if (transactionalKeywords.some(k => fullText.includes(k))) {
+        // Requiere monto+ (op# o fecha) o número de operación
         return (hasAmount && (hasOperationNumber || hasDate)) || hasOperationNumber;
     }
 
@@ -195,15 +233,19 @@ function extractAmountAndCurrency(text) {
             const postLocal = text.substring(idx, Math.min(text.length, idx + 24)).toLowerCase();
 
             let score = 0;
-            // Señales positivas
-            if (/monto|importe|consumo|pagado|pago|transferencia|devoluci[óo]n/.test(preLocal + postLocal)) score += 4; // cercano al monto
-            else if (/monto|importe|consumo|pagado|pago|transferencia|devoluci[óo]n/.test(ctx)) score += 2; // un poco más lejos
+            const positiveLabelRx = /monto|importe|consumo|pagado|pago|transferencia|transferido|devoluci[óo]n|cargo|abono/;
+            const negativeLabelRx = /saldo|disponible|l[íi]mite|estado de cuenta|l[íi]nea de cr[ée]dito/;
+
+            // Señales positivas (cercanía vale más)
+            const hasPositiveNear = positiveLabelRx.test(preLocal) || positiveLabelRx.test(postLocal);
+            const hasPositiveCtx = positiveLabelRx.test(ctx);
+            if (hasPositiveNear) score += 6; // inmediato al número
+            else if (hasPositiveCtx) score += 2; // mencionado en el entorno
             if (/:\s*(s\/?|us\$|\$)/i.test(preLocal + postLocal)) score += 1; // etiqueta inmediata "monto: S/"
 
             // Señales negativas: saldos, límites, disponible
-            const negLabel = /saldo|disponible|l[íi]mite|estado de cuenta|l[íi]nea de cr[ée]dito/;
-            if (negLabel.test(preLocal) || /^\s*(saldo|disponible)/.test(postLocal)) score -= 8; // etiqueta local
-            else if (negLabel.test(ctx)) score -= 3; // mencionar lejos penaliza menos
+            if (negativeLabelRx.test(preLocal) || /^\s*(saldo|disponible)/.test(postLocal)) score -= 9; // etiqueta local
+            else if (negativeLabelRx.test(ctx)) score -= 3; // mencionar lejos penaliza menos
 
             // Contexto corporativo (seguros/pólizas) que no debe contar como monto de transacción
             if (/p[óo]liza|endoso|seguro|cotizaci[óo]n|prima|n[°º]\s*de\s*p[óo]liza/.test(ctx)) score -= 8;
@@ -211,21 +253,52 @@ function extractAmountAndCurrency(text) {
             // Penaliza cantidades anormalmente grandes (posible concatenación errónea)
             if (amount > 50_000_000) score -= 10;
 
-            candidates.push({ amount, currency: p.currency, score, idx });
+            // Medir distancia a etiqueta positiva más cercana (dentro de 20 chars)
+            let boundDistance = Infinity;
+            const window = text.substring(Math.max(0, idx - 20), Math.min(text.length, idx + 20)).toLowerCase();
+            const labelMatch = window.match(positiveLabelRx);
+            if (labelMatch) {
+                const labelIndexInWindow = window.indexOf(labelMatch[0]);
+                boundDistance = Math.abs(labelIndexInWindow - 20); // aprox distancia relativa al número
+            }
+
+            candidates.push({ amount, currency: p.currency, score, idx, boundDistance });
         }
     }
 
     if (candidates.length === 0) return null;
 
-    // Ordenar por mayor score y, en empate, por mayor cercanía al inicio del contenido (asume primer monto relevante)
-    candidates.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
-    const best = candidates[0];
+    // Preferir candidatos ligados a etiqueta positiva cercana (boundDistance < 20)
+    const bound = candidates.filter(c => Number.isFinite(c.boundDistance) && c.boundDistance < 20);
+    let best;
+    if (bound.length > 0) {
+        bound.sort((a, b) => (a.boundDistance - b.boundDistance) || (b.score - a.score) || (a.idx - b.idx));
+        best = bound[0];
+    } else {
+        // Orden general por score
+        candidates.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
+        best = candidates[0];
+    }
 
     // Filtro final adicional: descartar montos provenientes de "saldo" si dominaron el contexto
     if (best.score <= -1) {
         // Buscar siguiente candidato no negativo
-        const alt = candidates.find(c => c.score >= 0);
+        const pool = bound.length > 0 ? bound : candidates;
+        const alt = pool.find(c => c.score >= 0);
         if (alt) return { amount: alt.amount, currency: alt.currency };
+    }
+
+    // Si no hay vínculo con etiqueta positiva cercana y el contexto no indica monto/importe/consumo, descartar
+    const positiveLabelRx = /monto|importe|consumo|pagado|pago|transferencia|transferido|devoluci[óo]n|cargo|abono/;
+    const start = Math.max(0, best.idx - 60);
+    const end = Math.min(text.length, best.idx + 40);
+    const ctx = text.substring(start, end).toLowerCase();
+    const preLocal = text.substring(Math.max(0, best.idx - 24), best.idx).toLowerCase();
+    const postLocal = text.substring(best.idx, Math.min(text.length, best.idx + 24)).toLowerCase();
+    const hasPositiveNear = positiveLabelRx.test(preLocal) || positiveLabelRx.test(postLocal);
+    const hasPositiveCtx = positiveLabelRx.test(ctx);
+    if (!hasPositiveNear && !hasPositiveCtx) {
+        return null;
     }
 
     return { amount: best.amount, currency: best.currency };
@@ -388,9 +461,13 @@ function parseEmailContent(fullText) {
         }
     }
 
-    // 3) Infer currency from "Moneda Soles" if amount was parsed without currency
-    if (!currency && /moneda\s+sol(es)?/i.test(fullText)) {
-        currency = 'PEN';
+    // 3) Infer currency if missing
+    if (!currency) {
+        if (/US\$|\bUSD\b|\$\s*\d/.test(fullText)) {
+            currency = 'USD';
+        } else if (/moneda\s+sol(es)?/i.test(fullText) || /S\/?\s*\d/.test(fullText)) {
+            currency = 'PEN';
+        }
     }
 
     return {
