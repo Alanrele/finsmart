@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { useMsal } from '@azure/msal-react'
@@ -66,6 +66,49 @@ function App() {
   const { instance } = useMsal()
   const navigate = useNavigate()
   const location = useLocation()
+  const [debugEnabled, setDebugEnabled] = useState(() => {
+    // Build-time flag (Vite)
+    const envFlag = String(import.meta.env.VITE_ENABLE_DEBUG || '').toLowerCase() === 'true'
+    // Persisted flag (localStorage)
+    const lsFlag = typeof window !== 'undefined' && window.localStorage.getItem('finsmart:debug') === '1'
+    // URL query flag
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+    const urlFlag = urlParams ? ['1', 'true', 'on'].includes(String(urlParams.get('debug')).toLowerCase()) : false
+    if (urlFlag && typeof window !== 'undefined') {
+      window.localStorage.setItem('finsmart:debug', '1')
+    }
+    return envFlag || lsFlag || urlFlag
+  })
+
+  // Allow toggling debug via URL param and keyboard shortcut Ctrl+Alt+D
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const qp = params.get('debug')
+    if (qp != null) {
+      const on = ['1', 'true', 'on'].includes(qp.toLowerCase())
+      window.localStorage.setItem('finsmart:debug', on ? '1' : '0')
+      setDebugEnabled(on)
+      // Optional: clean the param from URL without reload
+      try {
+        params.delete('debug')
+        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}${window.location.hash}`
+        window.history.replaceState({}, '', newUrl)
+      } catch {}
+    }
+
+    const onKey = (e) => {
+      // Ctrl + Alt + D to toggle
+      if (e.ctrlKey && e.altKey && (e.key === 'd' || e.key === 'D')) {
+        setDebugEnabled(prev => {
+          const next = !prev
+          window.localStorage.setItem('finsmart:debug', next ? '1' : '0')
+          return next
+        })
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   // Activity tracker effect para mantener la sesión activa
   useEffect(() => {
@@ -229,17 +272,17 @@ function App() {
       {/* Debug Panel - solo en desarrollo */}
       {process.env.NODE_ENV === 'development' && <AuthDebugPanel />}
 
-      {/* Connectivity Status */}
-      <ConnectivityStatus />
+  {/* Connectivity Status - oculto por defecto, accesible en modo debug */}
+  {debugEnabled && <ConnectivityStatus />}
 
       {/* SSL Error Notification - detecta automáticamente problemas de certificado */}
       <SSLErrorNotification />
 
-      {/* Auth Storage Debug - para diagnosticar problemas de tokens */}
-      <AuthStorageDebug />
+  {/* Auth Storage Debug - oculto por defecto */}
+  {debugEnabled && <AuthStorageDebug />}
 
-      {/* Socket Debug Panel - monitorea conexiones en tiempo real */}
-      <SocketDebugPanel />
+      {/* Socket Debug Panel - oculto por defecto */}
+      {debugEnabled && <SocketDebugPanel />}
       </div>
     </div>
   )
