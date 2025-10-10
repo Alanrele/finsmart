@@ -58,9 +58,10 @@ const useAppStore = create(
       },
 
       setGraphConnection: (connected, lastSync = null) => {
+        const value = lastSync ? new Date(lastSync) : new Date()
         set({
           isGraphConnected: connected,
-          lastSync: lastSync || new Date()
+          lastSync: value.toISOString()
         })
       },
 

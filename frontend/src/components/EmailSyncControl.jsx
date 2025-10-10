@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getSyncStatus, toggleSync, syncEmails } from '../services/api'
+import { getSyncStatus, toggleSync as apiToggleSync, syncEmails } from '../services/api'
 import useAuthStore from '../stores/authStore'
 import toast from 'react-hot-toast'
 
@@ -27,7 +27,14 @@ const EmailSyncControl = () => {
     try {
       setIsLoading(true)
       const response = await getSyncStatus()
-      setSyncStatus(response)
+      setSyncStatus({
+        syncEnabled: !!response?.syncEnabled,
+        lastSync: response?.lastSync || null,
+        hasConnection: !!response?.hasConnection,
+        recentTransactions: response?.recentTransactions ?? 0,
+        isDemo: !!response?.isDemo,
+        message: response?.message
+      })
     } catch (error) {
       console.error('Error loading sync status:', error)
       toast.error('Error al cargar estado de sincronización')
@@ -36,17 +43,17 @@ const EmailSyncControl = () => {
     }
   }
 
-  const toggleSync = async () => {
+  const handleToggleSync = async () => {
     try {
       setIsToggling(true)
       const newState = !syncStatus.syncEnabled
 
-      const response = await toggleSync(newState)
+      const response = await apiToggleSync(newState)
 
       setSyncStatus(prev => ({
         ...prev,
         syncEnabled: newState,
-        lastSync: response.lastSync
+        lastSync: response?.lastSync || prev.lastSync || new Date().toISOString()
       }))
 
       toast.success(
@@ -88,6 +95,7 @@ const EmailSyncControl = () => {
     if (!lastSync) return 'Nunca'
 
     const date = new Date(lastSync)
+    if (isNaN(date.getTime())) return 'Nunca'
     const now = new Date()
     const diffInMinutes = Math.floor((now - date) / (1000 * 60))
 
@@ -178,7 +186,7 @@ const EmailSyncControl = () => {
           {/* Controls */}
           <div className="flex space-x-3">
             <button
-              onClick={toggleSync}
+              onClick={handleToggleSync}
               disabled={isToggling}
               className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
                 syncStatus.syncEnabled
