@@ -305,7 +305,7 @@ const OutlookConnect = () => {
               <button
                 onClick={handleReprocess}
                 disabled={reprocessLoading}
-                className="btn-outline flex items-center justify-center space-x-2"
+                className="btn-secondary flex items-center justify-center space-x-2"
               >
                 {reprocessLoading ? (
                   <div className="loading-spinner w-4 h-4" />
