@@ -29,17 +29,15 @@ class SocketService {
 
     // Configurar URL del servidor Socket.IO
     const getSocketUrl = () => {
-      // Forzar Railway en cualquier dominio que no sea localhost
-      const hostname = window.location.hostname
-      const isProduction = hostname.includes('railway.app') || hostname !== 'localhost'
-
-      if (isProduction) {
-        console.log('🚀 Production Socket - Using Railway URL')
-        return 'https://finsmart-production.up.railway.app'
+      const { protocol, hostname, port, origin } = window.location
+      const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
+      if (isLocal) {
+        console.log('🏠 Development Socket - Using localhost')
+        return 'http://localhost:5000'
       }
-
-      console.log('🏠 Development Socket - Using localhost')
-      return 'http://localhost:5000'
+      // En producción, usar el mismo origen que sirve la app
+      console.log('🚀 Production Socket - Using window.origin')
+      return origin
     }
 
   const serverUrl = getSocketUrl()
@@ -48,14 +46,14 @@ class SocketService {
     console.log('🌐 Current hostname:', window.location.hostname)
 
     // Configuración específica para Railway (limita WebSockets en plan gratuito)
-    const isRailwayProduction = serverUrl.includes('railway.app')
+  const isRailwayProduction = !serverUrl.includes('localhost')
     const transportConfig = isRailwayProduction
       ? ['polling'] // Railway: solo polling por estabilidad
       : ['websocket', 'polling'] // Desarrollo: preferir WebSocket
 
     this.socket = io(serverUrl, {
       // Use backend-mounted Socket.IO path under /api to align with server and Railway proxy
-      path: '/api/socket.io',
+  path: '/api/socket.io',
       auth: {
         token,
         userId

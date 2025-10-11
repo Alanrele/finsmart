@@ -5,12 +5,21 @@ import useAuthStore from '../stores/authStore';
 
 // Configurar URL del backend para producción y desarrollo
 const getApiBaseUrl = () => {
-  const railwayConfig = getRailwayConfig();
-  // Agregar /api al final para el backend
-  return `${railwayConfig.apiUrl}/api`;
+    const railwayConfig = getRailwayConfig();
+    // Agregar /api al final para el backend
+    const candidate = `${railwayConfig.apiUrl}/api`;
+    if (typeof candidate === 'string' && candidate.startsWith('http')) {
+        return candidate;
+    }
+    // Fallback robusto a mismo origen
+    const origin = typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'http://localhost:5000';
+    return `${origin}/api`;
 };
 
 const API_BASE_URL = getApiBaseUrl();
+console.log('🔗 API base URL:', API_BASE_URL);
 
 // Create axios instance
 const api = axios.create({
