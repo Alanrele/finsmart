@@ -48,6 +48,25 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
+class PieErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = { hasError: false }
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  componentDidCatch(error, info) {
+    console.error('Pie chart render error:', error, info)
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div className="text-sm text-gray-500 dark:text-gray-400">No se pudo renderizar el gráfico.</div>
+    }
+    return this.props.children
+  }
+}
+
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore();
   const [loading, setLoading] = useState(true);
@@ -315,8 +334,9 @@ const Dashboard = () => {
             Gastos por Categoría
           </h3>
           {categoryData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+            <PieErrorBoundary>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
                 {/* Effects */}
                 <defs>
                   <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -340,6 +360,7 @@ const Dashboard = () => {
                   dataKey="value"
                   minAngle={4}
                   labelLine={false}
+                  isAnimationActive={false}
                   label={({ name, percentage }) => `${name} ${Number(percentage || 0).toFixed(1)}%`}
                   onMouseEnter={(_, index) => setActiveSlice(index)}
                   onMouseLeave={() => setActiveSlice(-1)}
@@ -389,6 +410,7 @@ const Dashboard = () => {
                 <Tooltip formatter={(value) => formatCurrency(value)} />
               </PieChart>
             </ResponsiveContainer>
+            </PieErrorBoundary>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
               No hay datos de categorías disponibles
