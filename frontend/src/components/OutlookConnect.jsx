@@ -24,7 +24,7 @@ import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 
 const OutlookConnect = () => {
-  const { getAccessToken } = useMicrosoftAuth()
+  const { getAccessToken, getGraphMailToken } = useMicrosoftAuth()
   const { isGraphConnected, setGraphConnection, lastSync } = useAppStore()
   const [loading, setLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
@@ -82,8 +82,13 @@ const OutlookConnect = () => {
     setLoading(true)
 
     try {
-      // Get access token from Microsoft
-      const accessToken = await getAccessToken()
+      // Get access token from Microsoft with Mail.Read scopes
+      const accessToken = await getGraphMailToken()
+
+      // Validate token before sending
+      if (!accessToken || typeof accessToken !== 'string' || accessToken.trim() === '') {
+        throw new Error('No se pudo obtener un token válido de Microsoft. Por favor, inicia sesión nuevamente.')
+      }
 
       // Send token to backend
       await connectGraph({ accessToken, refreshToken: null })
@@ -93,7 +98,16 @@ const OutlookConnect = () => {
       await checkConnectionStatus()
 
     } catch (error) {
-      toast.error(error.message || 'Error al conectar Outlook')
+      console.error('Error al conectar Outlook:', error)
+      
+      // Check if it's a Microsoft authentication error
+      if (error.message?.includes('No accounts found') || 
+          error.message?.includes('token acquisition failed') ||
+          error.message?.includes('grant permission')) {
+        toast.error(error.message || 'Por favor, inicia sesión con Microsoft primero')
+      } else {
+        toast.error(error.message || 'Error al conectar Outlook')
+      }
     } finally {
       setLoading(false)
     }

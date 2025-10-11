@@ -350,8 +350,8 @@ const Dashboard = () => {
           className="card"
         >
           {categoryData.length > 0 ? (
-            <Enhanced3DDonutChart 
-              data={categoryData} 
+            <Enhanced3DDonutChart
+              data={categoryData}
               title="Gastos por Categoría"
             />
           ) : (

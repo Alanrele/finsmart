@@ -42,7 +42,11 @@ router.post('/connect', [
 ], async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        console.error('Validation errors in /connect:', errors.array());
+        return res.status(400).json({ 
+            message: 'Invalid request parameters',
+            errors: errors.array() 
+        });
     }
 
     try {

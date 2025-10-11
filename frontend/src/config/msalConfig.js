@@ -62,6 +62,12 @@ export const loginRequest = {
   prompt: 'select_account'
 };
 
+// Separate request for Microsoft Graph Mail access
+export const graphMailRequest = {
+  scopes: ['User.Read', 'Mail.Read', 'Mail.ReadWrite', 'openid', 'profile', 'email'],
+  forceRefresh: false
+};
+
 export const graphConfig = {
   graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me'
 };

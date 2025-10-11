@@ -1,5 +1,5 @@
 import { useMsal } from '@azure/msal-react'
-import { loginRequest } from '../config/msalConfig'
+import { loginRequest, graphMailRequest } from '../config/msalConfig'
 import useAuthStore from '../stores/authStore'
 import { completeMicrosoftLogin } from '../services/api'
 import { getRailwayConfig } from '../config/railway'
@@ -100,7 +100,7 @@ export const useMicrosoftAuth = () => {
 
   const getAccessToken = async () => {
     if (accounts.length === 0) {
-      throw new Error('No accounts found')
+      throw new Error('No accounts found. Please sign in with Microsoft first.')
     }
 
     try {
@@ -108,16 +108,65 @@ export const useMicrosoftAuth = () => {
         ...loginRequest,
         account: accounts[0]
       })
+      
+      if (!response || !response.accessToken) {
+        throw new Error('Failed to acquire access token from Microsoft')
+      }
+      
       return response.accessToken
     } catch (error) {
       console.error('Silent token acquisition failed:', error)
       // Try interactive token acquisition
       try {
         const response = await instance.acquireTokenPopup(loginRequest)
+        
+        if (!response || !response.accessToken) {
+          throw new Error('Failed to acquire access token from Microsoft popup')
+        }
+        
         return response.accessToken
       } catch (interactiveError) {
         console.error('Interactive token acquisition failed:', interactiveError)
-        throw interactiveError
+        throw new Error('Could not acquire Microsoft access token. Please sign in again.')
+      }
+    }
+  }
+
+  // Get access token specifically for Microsoft Graph Mail operations
+  const getGraphMailToken = async () => {
+    if (accounts.length === 0) {
+      throw new Error('No accounts found. Please sign in with Microsoft first.')
+    }
+
+    try {
+      // Try silent token acquisition with Mail scopes
+      const response = await instance.acquireTokenSilent({
+        ...graphMailRequest,
+        account: accounts[0]
+      })
+      
+      if (!response || !response.accessToken) {
+        throw new Error('Failed to acquire Graph Mail access token from Microsoft')
+      }
+      
+      console.log('✅ Successfully acquired Graph Mail token silently')
+      return response.accessToken
+    } catch (error) {
+      console.error('Silent Graph Mail token acquisition failed:', error)
+      // Try interactive token acquisition - this will prompt user to consent to Mail scopes
+      try {
+        console.log('🔄 Requesting Graph Mail token interactively...')
+        const response = await instance.acquireTokenPopup(graphMailRequest)
+        
+        if (!response || !response.accessToken) {
+          throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+        }
+        
+        console.log('✅ Successfully acquired Graph Mail token via popup')
+        return response.accessToken
+      } catch (interactiveError) {
+        console.error('Interactive Graph Mail token acquisition failed:', interactiveError)
+        throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
       }
     }
   }
@@ -129,6 +178,7 @@ export const useMicrosoftAuth = () => {
     loginMicrosoftPopup,
     logoutMicrosoft,
     getAccessToken,
+    getGraphMailToken,
     isLoggedIn,
     account: accounts[0] || null
   }
