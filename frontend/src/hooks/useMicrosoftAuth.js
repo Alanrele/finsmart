@@ -2,6 +2,7 @@ import { useMsal } from '@azure/msal-react'
 import { loginRequest } from '../config/msalConfig'
 import useAuthStore from '../stores/authStore'
 import { completeMicrosoftLogin } from '../services/api'
+import { getRailwayConfig } from '../config/railway'
 import toast from 'react-hot-toast'
 
 export const useMicrosoftAuth = () => {
@@ -10,7 +11,12 @@ export const useMicrosoftAuth = () => {
 
   const loginMicrosoft = async () => {
     try {
-      console.log('🚀 Starting Microsoft login redirect (like Render)...')
+      console.log('🚀 Starting Microsoft login redirect...')
+
+      // Get dynamic redirect URI based on environment
+      const railwayConfig = getRailwayConfig()
+      const redirectUri = railwayConfig.redirectUri
+      console.log('🔗 Using redirect URI:', redirectUri)
 
       // Clear any previous login state
       sessionStorage.removeItem('msalLoginInProgress')
@@ -20,7 +26,7 @@ export const useMicrosoftAuth = () => {
       await instance.loginRedirect({
         scopes: ["openid", "profile", "User.Read"],
         prompt: "select_account",
-        redirectUri: "https://finsmart-production.up.railway.app/auth/ms-callback"
+        redirectUri
       })
 
       // Nota: loginRedirect no retorna respuesta, se maneja en AuthCallback
