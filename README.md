@@ -4,6 +4,36 @@
 
 FinSmart es una Progressive Web Application (PWA) completa para gestión financiera inteligente, que combina autenticación Microsoft, inteligencia artificial y análisis automatizado de documentos.
 
+## 🔗 Enlaces Importantes
+
+### Producción
+- **🌐 Aplicación**: https://finsmart.up.railway.app
+- **📊 Health Check**: https://finsmart.up.railway.app/health
+- **🚂 Railway Dashboard**: https://railway.app/dashboard
+
+### Documentación
+- **🚀 Guía de Despliegue Railway**: [DESPLIEGUE_RAILWAY.md](./DESPLIEGUE_RAILWAY.md)
+- **🔍 Diagnóstico y Troubleshooting**: [RAILWAY_DIAGNOSTIC.md](./RAILWAY_DIAGNOSTIC.md)
+- **🔒 Variables de Entorno**: [CLAVES_REALES.md](./CLAVES_REALES.md) (archivo local)
+- **📖 Configuración Azure AD**: [AZURE_AD_SETUP.md](./AZURE_AD_SETUP.md)
+
+### Verificación Rápida
+```bash
+# PowerShell (Windows)
+.\scripts\check-deployment.ps1
+
+# Bash (Linux/Mac)
+bash scripts/check-deployment.sh
+```
+
+### Desarrollo Local
+- **Frontend**: http://localhost:3001
+- **Backend**: http://localhost:5001
+- **API Docs**: http://localhost:5001/api/docs
+
+### 📋 Client ID Configurado
+- **Azure Client ID**: `29f56526-69dc-4e89-9955-060aa8292fd0`
+
 ## ✨ Características Principales
 
 - 🔐 **Autenticación Microsoft**: Login seguro con Azure AD
@@ -12,21 +42,6 @@ FinSmart es una Progressive Web Application (PWA) completa para gestión financi
 - 📱 **PWA**: Aplicación instalable y con soporte offline
 - ⚡ **Tecnología Moderna**: React 18, Node.js, MongoDB Atlas
 - 🚀 **Producción Ready**: Desplegable en Railway.com
-
-## 🔗 Enlaces Importantes
-
-- **🌐 Repositorio GitHub**: https://github.com/Alanrele/finsmart
-- **📖 Documentación Completa**: Ver archivos `.md` en el proyecto
-- **🚀 Guía de Despliegue**: [DESPLIEGUE_RAILWAY.md](./DESPLIEGUE_RAILWAY.md)
-- **🔒 Variables de Entorno**: [CLAVES_REALES.md](./CLAVES_REALES.md) (archivo local)
-- **Frontend**: http://localhost:3001
-- **Backend**: http://localhost:5001
-- **API Docs**: http://localhost:5001/api/docs
-- **Health Check**: `node check-services.js`
-
-### 📋 Client ID Configurado
-- **Azure Client ID**: `29f56526-69dc-4e89-9955-060aa8292fd0`
-- **Archivo de configuración**: `AZURE_AD_SETUP.md`
 
 ## 🚀 Características Principales
 
