@@ -55,7 +55,12 @@ const ChatIA = () => {
     // Match numbers with optional thousand separators or decimals, avoid times/dates/percents
     const numberRegex = /(?<![A-Za-z0-9/:])(?:\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|\d+(?:[.,]\d{2})?)(?![A-Za-z0-9%/:])/g
 
-    text = text.replace(numberRegex, (match) => {
+    text = text.replace(numberRegex, (match, _p1, offset) => {
+      // If a currency indicator already appears just before the number, skip reformatting to avoid 'S/ S/'
+      const pre = text.slice(Math.max(0, offset - 5), offset)
+      if (/(S\/|US\$|\$|€)\s*$/.test(pre)) {
+        return match
+      }
       // Skip if too short and integer (< 2 digits) and no decimals
       const hasDecimal = /[.,]\d{1,}/.test(match)
       if (!hasDecimal && /^\d{1}$/.test(match)) return match
@@ -83,6 +88,17 @@ const ChatIA = () => {
       }
       return match
     })
+
+    // 4) Cleanup malformed currency sequences
+    text = text
+      // Collapse duplicate currency markers like 'S/ S/' => 'S/ '
+      .replace(/(-?\s*)S\/\s*S\//g, '$1S/ ')
+      // Fix '$S/' => 'S/'
+      .replace(/\$\s*S\//g, 'S/ ')
+      // If 'US$ S/' -> 'US$ '
+      .replace(/US\$\s*S\//g, 'US$ ')
+      // If 'S/ US$' -> 'US$ '
+      .replace(/S\/\s*US\$/g, 'US$ ')
 
     return text
   }
