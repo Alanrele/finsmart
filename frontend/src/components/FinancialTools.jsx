@@ -191,8 +191,8 @@ const FinancialTools = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                ? 'bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white shadow-lg'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-[#C6A664]/20 dark:hover:bg-[#C6A664]/30'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -292,17 +292,17 @@ const FinancialTools = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mt-6 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl"
+                className="mt-6 p-6 bg-gradient-to-br from-[#C6A664]/20 to-[#8B7355]/20 dark:from-[#C6A664]/20 dark:to-[#8B7355]/20 rounded-xl border border-[#C6A664]/30"
               >
                 <div className="text-center mb-6">
-                  <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full text-4xl font-bold ${
+                  <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full text-4xl font-bold shadow-lg ${
                     healthScore.total >= 80
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
                       : healthScore.total >= 60
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-gradient-to-br from-[#C6A664] to-[#8B7355] text-white'
                       : healthScore.total >= 40
-                      ? 'bg-yellow-500 text-white'
-                      : 'bg-red-500 text-white'
+                      ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white'
+                      : 'bg-gradient-to-br from-red-500 to-red-600 text-white'
                   }`}>
                     {healthScore.total}
                   </div>

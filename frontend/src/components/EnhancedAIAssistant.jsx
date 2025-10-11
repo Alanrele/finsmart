@@ -98,7 +98,7 @@ const EnhancedAIAssistant = () => {
 
     try {
       const response = await chatWithAI({ message: messageText });
-      
+
       const aiMessage = {
         type: 'ai',
         content: response.response,
@@ -187,35 +187,35 @@ const EnhancedAIAssistant = () => {
       icon: Brain,
       title: 'Analizar Finanzas',
       description: 'Análisis completo de tu situación financiera',
-      color: 'from-blue-500 to-cyan-500'
+      color: 'from-[#C6A664] to-[#8B7355]'
     },
     {
       id: 'recommendations',
       icon: Lightbulb,
       title: 'Recomendaciones',
       description: 'Consejos personalizados para mejorar',
-      color: 'from-yellow-500 to-orange-500'
+      color: 'from-[#8B7355] to-[#C6A664]'
     },
     {
       id: 'insights',
       icon: TrendingUp,
       title: 'Insights',
       description: 'Patrones y tendencias en tus gastos',
-      color: 'from-green-500 to-emerald-500'
+      color: 'from-[#C6A664] to-[#8B7355]'
     },
     {
       id: 'predict',
       icon: Calculator,
       title: 'Predicción',
       description: 'Estima tus gastos futuros',
-      color: 'from-purple-500 to-pink-500'
+      color: 'from-[#8B7355] to-[#C6A664]'
     }
   ];
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-xl">
+      <div className="bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white p-6 rounded-t-xl">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
             <Brain className="w-6 h-6" />
@@ -271,13 +271,13 @@ const EnhancedAIAssistant = () => {
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {message.type === 'user' ? (
-              <div className="max-w-[70%] bg-blue-600 text-white px-4 py-3 rounded-2xl rounded-tr-none">
+              <div className="max-w-[70%] bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white px-4 py-3 rounded-2xl rounded-tr-none">
                 <p>{message.content}</p>
               </div>
             ) : (
               <div className="max-w-[85%] space-y-3">
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex-shrink-0">
+                  <div className="p-2 bg-gradient-to-br from-[#C6A664] to-[#8B7355] rounded-full flex-shrink-0">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 bg-white dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-md">
@@ -290,12 +290,12 @@ const EnhancedAIAssistant = () => {
                     {/* Insights */}
                     {message.insights && message.insights.length > 0 && (
                       <div className="mt-3 space-y-2">
-                        <p className="text-sm font-semibold text-blue-600 dark:text-blue-400 flex items-center">
+                        <p className="text-sm font-semibold text-[#C6A664] dark:text-[#C6A664] flex items-center">
                           <Lightbulb className="w-4 h-4 mr-2" />
                           Insights:
                         </p>
                         {message.insights.map((insight, i) => (
-                          <div key={i} className="pl-4 border-l-2 border-blue-400 text-sm text-gray-700 dark:text-gray-300">
+                          <div key={i} className="pl-4 border-l-2 border-[#C6A664] text-sm text-gray-700 dark:text-gray-300">
                             {insight}
                           </div>
                         ))}
@@ -305,20 +305,20 @@ const EnhancedAIAssistant = () => {
                     {/* Recommendations */}
                     {message.recommendations && message.recommendations.length > 0 && (
                       <div className="mt-3 space-y-2">
-                        <p className="text-sm font-semibold text-green-600 dark:text-green-400 flex items-center">
+                        <p className="text-sm font-semibold text-[#8B7355] dark:text-[#C6A664] flex items-center">
                           <Target className="w-4 h-4 mr-2" />
                           Recomendaciones:
                         </p>
                         {message.recommendations.map((rec, i) => (
                           <div
                             key={i}
-                            className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+                            className="p-3 bg-[#C6A664]/10 dark:bg-[#C6A664]/20 rounded-lg border border-[#C6A664]/30 dark:border-[#C6A664]/40"
                           >
-                            <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                               {rec.title || rec}
                             </p>
                             {rec.description && (
-                              <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                              <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
                                 {rec.description}
                               </p>
                             )}
@@ -334,7 +334,7 @@ const EnhancedAIAssistant = () => {
                           <button
                             key={i}
                             onClick={() => sendMessage(suggestion)}
-                            className="text-xs px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                            className="text-xs px-3 py-1.5 bg-[#C6A664]/20 dark:bg-[#C6A664]/30 text-[#8B7355] dark:text-[#C6A664] rounded-full hover:bg-[#C6A664]/30 dark:hover:bg-[#C6A664]/50 transition-colors"
                           >
                             {suggestion}
                           </button>
@@ -380,16 +380,28 @@ const EnhancedAIAssistant = () => {
 
       {/* Input */}
       <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-xl">
+        {isListening && (
+          <div className="mb-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center space-x-2">
+            <div className="flex space-x-1">
+              <div className="w-1 h-4 bg-red-500 rounded-full animate-pulse" />
+              <div className="w-1 h-4 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
+              <div className="w-1 h-4 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
+            </div>
+            <span className="text-sm text-red-700 dark:text-red-300 font-medium">
+              Escuchando... Habla ahora
+            </span>
+          </div>
+        )}
         <div className="flex items-center space-x-2">
           <button
             onClick={toggleVoiceInput}
             disabled={loading}
             className={`p-3 rounded-lg transition-all ${
               isListening
-                ? 'bg-red-500 text-white animate-pulse'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-red-500 text-white shadow-lg shadow-red-500/50'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-[#C6A664]/20 dark:hover:bg-[#C6A664]/30'
             }`}
-            title={isListening ? 'Detener grabación' : 'Usar voz'}
+            title={isListening ? 'Detener grabación' : 'Usar voz (Chrome/Edge)'}
           >
             {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
           </button>
@@ -401,13 +413,13 @@ const EnhancedAIAssistant = () => {
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             disabled={loading}
             placeholder="Pregúntame sobre tus finanzas..."
-            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C6A664] disabled:opacity-50"
           />
 
           <button
             onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
-            className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="p-3 bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white rounded-lg hover:from-[#8B7355] hover:to-[#C6A664] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
             title="Enviar mensaje"
           >
             <Send className="w-5 h-5" />

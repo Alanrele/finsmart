@@ -121,11 +121,19 @@ function isTransactionalEmail(subject, content) {
         'realizaste consumo',
         'consumo realizado',
         'consumo tarjeta de débito',
+        'consumo tarjeta de debito',
         'transferencia realizada',
         'constancia de transferencia',
         'constancia de pago',
         'pago de tarjeta',
-        'devolución'
+        'devolución',
+        'devolucion',
+        'retiro de efectivo',
+        'depósito recibido',
+        'deposito recibido',
+        'pago de servicio',
+        'cargo efectuado',
+        'abono recibido'
     ];
 
     // Patrones de evidencia adicional

@@ -271,6 +271,31 @@ class EmailSyncService {
             console.warn(`⚠️ Skipping email-derived transaction with unrealistic amount: ${parsedData.amount}. Subject: ${message.subject}`);
             continue;
           }
+
+          // Verificar duplicados por número de operación
+          if (parsedData.operationNumber) {
+            const existingTransaction = await Transaction.findOne({
+              userId: user._id,
+              'metadata.operationNumber': parsedData.operationNumber
+            });
+
+            if (existingTransaction) {
+              console.log(`⚠️ Transaction already exists with operation number: ${parsedData.operationNumber}`);
+              continue;
+            }
+          }
+
+          // Verificar duplicados por messageId
+          const existingByMessageId = await Transaction.findOne({
+            userId: user._id,
+            messageId: message.id
+          });
+
+          if (existingByMessageId) {
+            console.log(`⚠️ Transaction already exists for message ID: ${message.id}`);
+            continue;
+          }
+
           // Create transaction
           const transactionData = emailParserService.createTransactionFromEmail(
             parsedData,
