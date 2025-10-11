@@ -49,7 +49,7 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-class PieErrorBoundary extends React.Component {
+class ChartErrorBoundary extends React.Component {
   constructor(props) {
     super(props)
     this.state = { hasError: false }
@@ -58,7 +58,7 @@ class PieErrorBoundary extends React.Component {
     return { hasError: true }
   }
   componentDidCatch(error, info) {
-    console.error('Pie chart render error:', error, info)
+    console.error('Chart render error:', error, info)
   }
   render() {
     if (this.state.hasError) {
@@ -349,7 +349,7 @@ const Dashboard = () => {
             Gastos por Categoría
           </h3>
           {categoryData.length > 0 ? (
-            <PieErrorBoundary>
+            <ChartErrorBoundary>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart key={pieKey}>
                 {/* Effects */}
@@ -378,58 +378,6 @@ const Dashboard = () => {
                   isAnimationActive={false}
                   // Avoid potential label payload edge-cases by not using a function label
                   label={false}
-                  onMouseEnter={(_, index) => {
-                    if (!isMounted || categoryData.length < 2) return
-                    setActiveSlice(index)
-                  }}
-                  onMouseLeave={() => {
-                    if (!isMounted) return
-                    setActiveSlice(-1)
-                  }}
-                  onClick={(_, index) => {
-                    if (!isMounted || categoryData.length < 2) return
-                    setActiveSlice(prev => (prev === index ? -1 : index))
-                  }}
-                  onTouchStart={(_, index) => {
-                    if (!isMounted || categoryData.length < 2) return
-                    setActiveSlice(index)
-                  }}
-                  activeIndex={safeActiveIndex}
-                  activeShape={safeActiveIndex !== undefined && categoryData.length > 1 ? ((props) => {
-                    const depth = 8
-                    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props || {}
-                    if ([cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill].some(v => v == null)) {
-                      return null
-                    }
-                    return (
-                      <g>
-                        <g transform={`translate(0, ${depth})`}>
-                          <Sector
-                            cx={cx}
-                            cy={cy}
-                            innerRadius={innerRadius}
-                            outerRadius={outerRadius}
-                            startAngle={startAngle}
-                            endAngle={endAngle}
-                            fill={fill}
-                            opacity={0.35}
-                          />
-                        </g>
-                        <Sector
-                          cx={cx}
-                          cy={cy}
-                          innerRadius={innerRadius}
-                          outerRadius={outerRadius + 6}
-                          startAngle={startAngle}
-                          endAngle={endAngle}
-                          fill={fill}
-                          filter="url(#dropShadow)"
-                          stroke="#ffffff"
-                          strokeWidth={1}
-                        />
-                      </g>
-                    )
-                  }) : undefined}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} cursor="pointer" />
@@ -439,7 +387,7 @@ const Dashboard = () => {
                 <Legend verticalAlign="bottom" height={24} />
               </PieChart>
             </ResponsiveContainer>
-            </PieErrorBoundary>
+            </ChartErrorBoundary>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
               No hay datos de categorías disponibles
@@ -521,21 +469,24 @@ const Dashboard = () => {
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Tendencia de Gastos (Últimos 7 días)
           </h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={spendingTrend}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis formatter={(value) => formatCurrency(value)} />
-              <Tooltip formatter={(value) => [formatCurrency(value), 'Gasto']} />
-              <Line
-                type="monotone"
-                dataKey="amount"
-                stroke="#C6A664"
-                strokeWidth={3}
-                dot={{ fill: '#C6A664', strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <ChartErrorBoundary>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={spendingTrend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis formatter={(value) => formatCurrency(value)} />
+                <Tooltip formatter={(value) => [formatCurrency(value), 'Gasto']} />
+                <Line
+                  isAnimationActive={false}
+                  type="monotone"
+                  dataKey="amount"
+                  stroke="#C6A664"
+                  strokeWidth={3}
+                  dot={{ fill: '#C6A664', strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartErrorBoundary>
         </motion.div>
       )}
 
