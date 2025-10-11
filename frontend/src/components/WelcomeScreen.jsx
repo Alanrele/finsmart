@@ -16,24 +16,28 @@ const WelcomeScreen = ({ onAuthenticated }) => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [loginMode, setLoginMode] = useState('login'); // 'login' | 'register'
 
-  // FinSmart Upgrade: Animación de entrada del hero
+  // FinSmart Upgrade: Animación de entrada del hero (más lenta y apreciable)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        duration: 0.6,
-        staggerChildren: 0.2
+        duration: 1.2,
+        staggerChildren: 0.4,
+        delayChildren: 0.2
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5 }
+      transition: { 
+        duration: 0.8,
+        ease: "easeOut"
+      }
     }
   };
 
@@ -55,16 +59,18 @@ const WelcomeScreen = ({ onAuthenticated }) => {
         initial="hidden"
         animate="visible"
       >
-        {/* Header con logo */}
+        {/* Header con logo - mejorado para modo claro */}
         <motion.header
-          className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10"
-          variants={itemVariants}
+          className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800"
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <div className="flex items-center space-x-2">
-            <Wallet className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            <span className="text-2xl font-bold text-gray-800 dark:text-white">FinSmart</span>
+          <div className="flex items-center space-x-3">
+            <Wallet className="w-9 h-9 text-blue-600 dark:text-blue-400" />
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">FinSmart</span>
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="text-xs text-gray-600 dark:text-gray-400 font-medium">
             © 2025 Alan Reyes Leandro
           </div>
         </motion.header>
@@ -75,15 +81,23 @@ const WelcomeScreen = ({ onAuthenticated }) => {
             className="max-w-4xl mx-auto text-center"
             variants={itemVariants}
           >
-            {/* Logo principal */}
+            {/* Logo principal con animación más lenta */}
             <motion.div
-              className="mb-8 flex justify-center"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
+              className="mb-10 flex justify-center"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ 
+                duration: 1,
+                delay: 0.3,
+                type: "spring", 
+                stiffness: 200,
+                damping: 15
+              }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
             >
               <div className="relative">
-                <div className="absolute inset-0 bg-blue-500 blur-3xl opacity-20 rounded-full"></div>
-                <Wallet className="w-24 h-24 text-blue-600 dark:text-blue-400 relative z-10" />
+                <div className="absolute inset-0 bg-blue-500 blur-3xl opacity-30 rounded-full animate-pulse"></div>
+                <Wallet className="w-28 h-28 text-blue-600 dark:text-blue-400 relative z-10" />
               </div>
             </motion.div>
 
@@ -110,72 +124,103 @@ const WelcomeScreen = ({ onAuthenticated }) => {
               integración con Outlook y asistente AI personalizado
             </motion.p>
 
-            {/* Botones de acción */}
+            {/* Botones de acción con animaciones mejoradas */}
             <motion.div
-              className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
+              className="flex flex-col sm:flex-row gap-5 justify-center mb-20"
               variants={itemVariants}
             >
               <motion.button
                 onClick={() => handleOpenLogin('login')}
-                className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-200 flex items-center justify-center space-x-2"
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(59, 130, 246, 0.3)" }}
+                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 text-lg"
+                whileHover={{ 
+                  scale: 1.08, 
+                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.4)",
+                  y: -3
+                }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.3 }}
               >
-                <Mail className="w-5 h-5" />
+                <Mail className="w-6 h-6" />
                 <span>Iniciar Sesión</span>
               </motion.button>
 
               <motion.button
                 onClick={() => handleOpenLogin('register')}
-                className="px-8 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-white font-semibold rounded-lg shadow-lg border-2 border-gray-200 dark:border-gray-700 transition-all duration-200 flex items-center justify-center space-x-2"
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                className="px-10 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-bold rounded-xl shadow-xl border-2 border-gray-300 dark:border-gray-700 transition-all duration-300 flex items-center justify-center space-x-2 text-lg"
+                whileHover={{ 
+                  scale: 1.08, 
+                  boxShadow: "0 25px 30px -5px rgba(0, 0, 0, 0.15)",
+                  y: -3
+                }}
                 whileTap={{ scale: 0.95 }}
+                transition={{ duration: 0.3 }}
               >
-                <User className="w-5 h-5" />
+                <User className="w-6 h-6" />
                 <span>Crear Cuenta</span>
               </motion.button>
             </motion.div>
 
-            {/* Features grid */}
+            {/* Features grid con animaciones individuales más lentas */}
             <motion.div
               className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto"
               variants={itemVariants}
             >
               <motion.div
-                className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
-                whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                className="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.2 }}
+                whileHover={{ 
+                  y: -8, 
+                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
+                  scale: 1.03
+                }}
               >
-                <TrendingUp className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">
+                <TrendingUp className="w-14 h-14 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
                   Análisis Inteligente
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed">
                   AI que categoriza automáticamente tus transacciones
                 </p>
               </motion.div>
 
               <motion.div
-                className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
-                whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                className="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.4 }}
+                whileHover={{ 
+                  y: -8, 
+                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
+                  scale: 1.03
+                }}
               >
-                <Mail className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">
+                <Mail className="w-14 h-14 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
                   Integración Outlook
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed">
                   Sincroniza notificaciones bancarias automáticamente
                 </p>
               </motion.div>
 
               <motion.div
-                className="p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg"
-                whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                className="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 1.6 }}
+                whileHover={{ 
+                  y: -8, 
+                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
+                  scale: 1.03
+                }}
               >
-                <Shield className="w-12 h-12 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2 text-gray-800 dark:text-white">
+                <Shield className="w-14 h-14 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
                   Seguro y Privado
                 </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-700 dark:text-gray-400 leading-relaxed">
                   Tus datos están protegidos con encriptación de nivel bancario
                 </p>
               </motion.div>
@@ -183,15 +228,17 @@ const WelcomeScreen = ({ onAuthenticated }) => {
           </motion.div>
         </div>
 
-        {/* Footer */}
+        {/* Footer - mejorado para modo claro */}
         <motion.footer
-          className="absolute bottom-0 left-0 right-0 p-6 text-center text-sm text-gray-500 dark:text-gray-400"
-          variants={itemVariants}
+          className="absolute bottom-0 left-0 right-0 p-6 text-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800"
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
         >
-          <p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">
             FinSmart © 2025 – Todos los derechos reservados
           </p>
-          <p className="text-xs mt-1">
+          <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
             Desarrollado por Alan Reyes Leandro | alanreyesleandro5@gmail.com
           </p>
         </motion.footer>
