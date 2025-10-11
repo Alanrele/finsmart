@@ -96,22 +96,8 @@ const Dashboard = () => {
     loadDashboardData();
   }, [loadDashboardData]);
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <LoadingCard />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <LoadingCard key={i} />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <LoadingCard />
-          <LoadingCard />
-        </div>
-      </div>
-    )
-  }
+  const [activeSlice, setActiveSlice] = useState(-1)
+  const [pieKey, setPieKey] = useState(0)
 
   const {
     summary = {},
@@ -141,14 +127,6 @@ const Dashboard = () => {
     return translations[category?.toLowerCase()] || category || 'Otros'
   }
 
-  const [activeSlice, setActiveSlice] = useState(-1)
-  const [isMounted, setIsMounted] = useState(true)
-  const [pieKey, setPieKey] = useState(0)
-  useEffect(() => {
-    setIsMounted(true)
-    return () => setIsMounted(false)
-  }, [])
-
   const categoryData = Array.isArray(topCategories)
     ? topCategories
         .map((cat) => ({
@@ -174,6 +152,23 @@ const Dashboard = () => {
     // Force remount when slice count changes to avoid internal state inconsistencies
     setPieKey((k) => k + 1)
   }, [categoryData.length])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <LoadingCard />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <LoadingCard key={i} />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <LoadingCard />
+          <LoadingCard />
+        </div>
+      </div>
+    )
+  }
 
   const safeActiveIndex = Number.isInteger(activeSlice) && activeSlice >= 0 && activeSlice < categoryData.length
     ? activeSlice
