@@ -223,7 +223,9 @@ class EmailSyncService {
         // Early gate: subject/bodyPreview transactional check to avoid heavy work
         const subj = message.subject || '';
         const bodyPreview = message.bodyPreview || '';
-        if (!emailParserService.isTransactionalEmail(subj, bodyPreview)) {
+        const sender = message.from?.emailAddress?.address || '';
+        
+        if (!emailParserService.isTransactionalEmail(subj, bodyPreview, { from: sender })) {
           continue;
         }
 
@@ -260,7 +262,7 @@ class EmailSyncService {
   const parsedData = emailParserService.parseEmailContent(emailContent);
 
         // Double-check transactional nature with full content
-        if (!emailParserService.isTransactionalEmail(subj, emailContent)) {
+        if (!emailParserService.isTransactionalEmail(subj, emailContent, { from: sender })) {
           continue;
         }
 

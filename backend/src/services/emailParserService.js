@@ -2,8 +2,19 @@ const cheerio = require('cheerio');
 
 /**
  * Detecta si un email es transaccional (contiene información de transacciones) o promocional
+ * @param {string} subject - Asunto del email
+ * @param {string} content - Contenido del email
+ * @param {object} emailMeta - Metadata del email (incluye sender)
  */
-function isTransactionalEmail(subject, content) {
+function isTransactionalEmail(subject, content, emailMeta = {}) {
+    // ⭐ REGLA ESPECIAL: TODOS los emails de notificaciones@notificacionesbcp.com.pe
+    // se procesan SÍ O SÍ, sin excepciones
+    const sender = (emailMeta.from || '').toLowerCase();
+    if (sender.includes('notificaciones@notificacionesbcp.com.pe')) {
+        console.log('✅ Email de notificaciones@notificacionesbcp.com.pe - PROCESANDO OBLIGATORIAMENTE');
+        return true;
+    }
+
     // Palabras clave que indican emails transaccionales
     const transactionalKeywords = [
         'realizaste un consumo',
@@ -209,12 +220,16 @@ function isTransactionalEmail(subject, content) {
 
 function extractAmountAndCurrency(text) {
     // Busca TODAS las apariciones de montos con moneda y elige la mejor por contexto
-    // Soporta formatos: "S/ 1,234.56", "S/. 1.234,56", "PEN 123,45", "US$ 1,234.56", "$ 123.45"
+    // ⭐ MEJORADO: Detecta S/ (soles), US$ o $ (dólares) con mayor precisión
+    // Formatos soportados: "S/ 1,234.56", "S/. 1.234,56", "PEN 123,45", "US$ 1,234.56", "$ 123.45", "USD 123.45"
     if (!text) return null;
 
     const patterns = [
+        // Soles: S/, S/., PEN (prioridad alta - moneda local)
         { regex: /(S\/?\.?|PEN)\s*([0-9][\d\.,]*\d)/gi, currency: 'PEN' },
-        { regex: /(US\$)\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' },
+        // Dólares con US$ (prioridad alta)
+        { regex: /(US\$|USD)\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' },
+        // Dólares con $ solo (prioridad media - puede ser ambiguo)
         { regex: /(^|\s)\$\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' }
     ];
 
