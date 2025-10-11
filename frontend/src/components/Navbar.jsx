@@ -12,7 +12,9 @@ import {
   X,
   Sun,
   Moon,
-  FileText
+  FileText,
+  Brain,
+  Calculator
 } from 'lucide-react'
 import useAppStore from '../stores/appStore'
 
@@ -29,6 +31,8 @@ const Navbar = () => {
     { name: 'Transacciones', href: '/transactions', icon: CreditCard },
     { name: 'Análisis', href: '/analysis', icon: TrendingUp },
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
+    { name: 'Asistente IA+', href: '/ai-assistant', icon: Brain },
+    { name: 'Herramientas', href: '/tools', icon: Calculator },
     { name: 'Outlook', href: '/outlook', icon: Mail },
     ...(debugEnabled ? [{ name: 'Email Parser', href: '/email-parser', icon: FileText }] : []),
     { name: 'Configuración', href: '/settings', icon: Settings },
