@@ -124,7 +124,7 @@ class EmailSyncService {
           .filter(filter)
           .select('id,subject,body,receivedDateTime,from,hasAttachments')
           .orderby('receivedDateTime desc')
-          .top(50)
+          .top(150)
           .get();
       };
 
@@ -137,7 +137,7 @@ class EmailSyncService {
             .filter(`receivedDateTime ge ${last24Hours}`)
             .select('id,subject,body,receivedDateTime,from,hasAttachments')
             .orderby('receivedDateTime desc')
-            .top(20)
+            .top(100)
             .get();
 
           // Filter BCP emails manually by strict whitelist
@@ -158,7 +158,7 @@ class EmailSyncService {
             .api('/me/messages')
             .select('id,subject,body,receivedDateTime,from,hasAttachments')
             .orderby('receivedDateTime desc')
-            .top(10)
+            .top(50)
             .get();
 
           // Filter both by date and BCP manually (strict whitelist)
@@ -182,7 +182,7 @@ class EmailSyncService {
           console.log('🔍 Executing absolute minimal query...');
           const result = await graphClient
             .api('/me/messages')
-            .top(5)
+            .top(25)
             .get();
 
           // Filter everything manually (strict whitelist)
@@ -224,7 +224,7 @@ class EmailSyncService {
         const subj = message.subject || '';
         const bodyPreview = message.bodyPreview || '';
         const sender = message.from?.emailAddress?.address || '';
-        
+
         if (!emailParserService.isTransactionalEmail(subj, bodyPreview, { from: sender })) {
           continue;
         }
@@ -429,7 +429,7 @@ class EmailSyncService {
 
       let allEmails = [];
       let skipToken = null;
-      const pageSize = 50;
+      const pageSize = 100; // Increased from 50 to fetch more emails per page
 
       // Fetch all historical BCP emails with pagination
       do {
@@ -471,7 +471,7 @@ class EmailSyncService {
           console.error('❌ Error fetching email page:', error);
           break; // Stop pagination on error
         }
-      } while (skipToken && allEmails.length < 1000); // Limit to 1000 emails max
+      } while (skipToken && allEmails.length < 3000); // Limit to 3000 emails max
 
       console.log(`📨 Found ${allEmails.length} total BCP emails for reprocessing`);
 
