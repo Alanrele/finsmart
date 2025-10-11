@@ -38,6 +38,7 @@ const app = express();
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 5000;
+console.log(`Resolved PORT: ${PORT} (process.env.PORT=${process.env.PORT || 'undefined'})`);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart')
@@ -348,3 +349,27 @@ server.listen(PORT, '0.0.0.0', () => {
 });
 
 module.exports = app;
+
+// Graceful shutdown handlers to diagnose container stops
+const shutdown = async (signal) => {
+  try {
+    console.log(`\n🔻 Received ${signal}. Shutting down gracefully...`);
+    server.close(() => {
+      console.log('HTTP server closed');
+    });
+    try {
+      await mongoose.connection.close(false);
+      console.log('MongoDB connection closed');
+    } catch (e) {
+      console.warn('MongoDB close error:', e.message);
+    }
+  } catch (e) {
+    console.error('Error during shutdown:', e);
+  } finally {
+    process.exit(0);
+  }
+}
+
+['SIGTERM', 'SIGINT'].forEach(sig => {
+  process.on(sig, () => shutdown(sig));
+});
