@@ -128,13 +128,13 @@ const resources = [
 
 console.log('🔍 Verificando recursos...');
 
-Promise.all(resources.map(url => 
+Promise.all(resources.map(url =>
   fetch(window.location.origin + url)
     .then(r => ({ url, status: r.status }))
     .catch(e => ({ url, status: 'ERROR', error: e.message }))
 )).then(results => {
   console.table(results);
-  
+
   const errors = results.filter(r => r.status !== 200);
   if (errors.length === 0) {
     console.log('✅ Todos los recursos están disponibles');
@@ -255,6 +255,6 @@ git push origin master
 
 ---
 
-**Última actualización:** 2025-10-11  
-**Estado del servidor:** ✅ OPERACIONAL (todos los recursos responden 200)  
+**Última actualización:** 2025-10-11
+**Estado del servidor:** ✅ OPERACIONAL (todos los recursos responden 200)
 **Causa más probable:** Cache del navegador o Service Worker antiguo

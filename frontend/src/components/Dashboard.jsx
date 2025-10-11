@@ -34,6 +34,15 @@ import LoadingCard from './LoadingCard';
 import EmailSyncControl from './EmailSyncControl';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
 
+// Import Enhanced Charts
+import {
+  Enhanced3DDonutChart,
+  EnhancedBarChart,
+  IncomeExpenseAreaChart,
+  FinancialHealthRadar,
+  MonthOverMonthComparison
+} from './EnhancedCharts';
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
 
 const CustomTooltip = ({ active, payload }) => {
@@ -340,53 +349,20 @@ const Dashboard = () => {
           transition={{ delay: 0.4 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Gastos por Categoría
-          </h3>
           {categoryData.length > 0 ? (
-            <ChartErrorBoundary>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart key={pieKey}>
-                {/* Effects */}
-                <defs>
-                  <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
-                    <feOffset dx="1" dy="2" result="offsetblur" />
-                    <feComponentTransfer>
-                      <feFuncA type="linear" slope="0.3" />
-                    </feComponentTransfer>
-                    <feMerge>
-                      <feMergeNode />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={55}
-                  outerRadius={95}
-                  dataKey="value"
-                  minAngle={0}
-                  labelLine={false}
-                  isAnimationActive={false}
-                  // Avoid potential label payload edge-cases by not using a function label
-                  label={false}
-                >
-                  {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} cursor="pointer" />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Legend verticalAlign="bottom" height={24} />
-              </PieChart>
-            </ResponsiveContainer>
-            </ChartErrorBoundary>
+            <Enhanced3DDonutChart 
+              data={categoryData} 
+              title="Gastos por Categoría"
+            />
           ) : (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              No hay datos de categorías disponibles
-            </div>
+            <>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Gastos por Categoría
+              </h3>
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No hay datos de categorías disponibles
+              </div>
+            </>
           )}
         </motion.div>
 

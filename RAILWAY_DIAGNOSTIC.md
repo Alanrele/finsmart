@@ -203,7 +203,7 @@ Filtra por `login` y verifica:
 ### Paso 5: Probar Flujo de Autenticación Microsoft
 
 1. **Click en "Login with Microsoft"**
-   
+
    **Console logs esperados:**
    ```javascript
    🚀 Starting Microsoft login redirect...
@@ -211,7 +211,7 @@ Filtra por `login` y verifica:
    ```
 
 2. **Redirige a Microsoft**
-   
+
    URL esperada:
    ```
    https://login.microsoftonline.com/common/oauth2/v2.0/authorize?
@@ -221,12 +221,12 @@ Filtra por `login` y verifica:
    ```
 
 3. **Microsoft redirige de vuelta**
-   
+
    URL esperada:
    ```
    https://finsmart.up.railway.app/auth/ms-callback#code=...
    ```
-   
+
    **Console logs esperados:**
    ```javascript
    📱 AuthCallback component mounted
@@ -235,7 +235,7 @@ Filtra por `login` y verifica:
    ```
 
 4. **Backend exchange**
-   
+
    Network tab debería mostrar:
    ```
    POST /api/auth/microsoft/callback
@@ -451,7 +451,7 @@ Antes de reportar que todo está funcionando:
 
 ---
 
-**Fecha de última actualización:** 2025-10-11  
+**Fecha de última actualización:** 2025-10-11
 **Commits relevantes:**
 - `bec8de7` - Remove prestart, add frontend verification
 - `524cca5` - Use dynamic redirectUri from railway config

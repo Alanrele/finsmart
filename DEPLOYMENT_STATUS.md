@@ -1,6 +1,6 @@
 # 🚀 Estado del Deployment - FinSmart
 
-**Última actualización:** 2025-10-11 05:36 UTC  
+**Última actualización:** 2025-10-11 05:36 UTC
 **Estado:** ✅ **OPERACIONAL**
 
 ---
@@ -139,21 +139,21 @@
 ## 🐛 Problemas Conocidos Resueltos
 
 ### ❌ Error: "404 on /login"
-**Estado:** ✅ RESUELTO  
-**Solución:** 
+**Estado:** ✅ RESUELTO
+**Solución:**
 - Dockerfile ahora construye el frontend en etapa separada
 - Copia correctamente `dist/` a `backend/public/`
 - Verificación automática de `index.html` en build
 
 ### ❌ Error: "404 on /api/auth/microsoft/callback"
-**Estado:** ⏳ PARCIALMENTE RESUELTO  
-**Nota:** 
+**Estado:** ⏳ PARCIALMENTE RESUELTO
+**Nota:**
 - La ruta existe y el backend responde
 - Requiere validación manual del flujo completo de Microsoft OAuth
 - El test muestra que el API está funcionando (401 esperado sin token)
 
 ### ❌ Error: "hardcoded redirectUri"
-**Estado:** ✅ RESUELTO  
+**Estado:** ✅ RESUELTO
 **Solución:**
 - `useMicrosoftAuth.js` ahora usa `getRailwayConfig()`
 - redirectUri se construye dinámicamente basado en hostname
@@ -228,6 +228,6 @@ Si encuentras problemas:
 
 ---
 
-**🚀 Deployment Status:** ✅ **OPERACIONAL Y ESTABLE**  
-**📅 Última verificación exitosa:** 2025-10-11 05:36 UTC  
+**🚀 Deployment Status:** ✅ **OPERACIONAL Y ESTABLE**
+**📅 Última verificación exitosa:** 2025-10-11 05:36 UTC
 **🔄 Próxima acción:** Validación manual del flujo de login con Microsoft

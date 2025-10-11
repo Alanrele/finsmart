@@ -29,6 +29,10 @@ import AuthStorageDebug from './components/AuthStorageDebug'
 import EmailParserTester from './components/EmailParserTester'
 import SocketDebugPanel from './components/SocketDebugPanel'
 
+// Enhanced Components
+import EnhancedAIAssistant from './components/EnhancedAIAssistant'
+import FinancialTools from './components/FinancialTools'
+
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = useAuthStore(state => state.isAuthenticated)
@@ -235,6 +239,8 @@ function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="analysis" element={<Analysis />} />
           <Route path="chat" element={<ChatIA />} />
+          <Route path="ai-assistant" element={<EnhancedAIAssistant />} />
+          <Route path="tools" element={<FinancialTools />} />
           <Route path="outlook" element={<OutlookConnect />} />
           <Route path="settings" element={<Settings />} />
           {debugEnabled && <Route path="email-parser" element={<EmailParserTester />} />}

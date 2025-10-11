@@ -11,7 +11,9 @@ import {
   LogOut,
   Sun,
   Moon,
-  User
+  User,
+  Brain,
+  Calculator
 } from 'lucide-react'
 import useAuthStore from '../stores/authStore'
 import useAppStore from '../stores/appStore'
@@ -27,6 +29,8 @@ const Sidebar = () => {
     { name: 'Transacciones', href: '/transactions', icon: CreditCard },
     { name: 'Análisis', href: '/analysis', icon: TrendingUp },
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
+    { name: 'Asistente IA+', href: '/ai-assistant', icon: Brain },
+    { name: 'Herramientas', href: '/tools', icon: Calculator },
     { name: 'Outlook', href: '/outlook', icon: Mail },
     { name: 'Configuración', href: '/settings', icon: Settings },
   ]
