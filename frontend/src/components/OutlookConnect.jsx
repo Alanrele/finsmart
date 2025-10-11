@@ -100,13 +100,19 @@ const OutlookConnect = () => {
     } catch (error) {
       console.error('Error al conectar Outlook:', error)
       
-      // Check if it's a Microsoft authentication error
-      if (error.message?.includes('No accounts found') || 
-          error.message?.includes('token acquisition failed') ||
-          error.message?.includes('grant permission')) {
-        toast.error(error.message || 'Por favor, inicia sesión con Microsoft primero')
+      // Handle specific error types
+      if (error.message?.includes('cancelada') || error.message?.includes('cancelled')) {
+        toast.error('Conexión cancelada. Vuelve a intentar cuando estés listo.')
+      } else if (error.message?.includes('No accounts found')) {
+        toast.error('Por favor, inicia sesión con Microsoft primero desde la página de Login')
+      } else if (error.message?.includes('grant permission') || error.message?.includes('consent')) {
+        toast.error('Debes aceptar los permisos para acceder a tus emails de Outlook')
+      } else if (error.message?.includes('token acquisition failed')) {
+        toast.error('Error al obtener acceso. Por favor, inicia sesión nuevamente.')
+      } else if (error.response?.status === 400) {
+        toast.error('Token inválido. Por favor, cierra sesión e inicia sesión nuevamente.')
       } else {
-        toast.error(error.message || 'Error al conectar Outlook')
+        toast.error(error.message || 'Error al conectar Outlook. Por favor, intenta nuevamente.')
       }
     } finally {
       setLoading(false)

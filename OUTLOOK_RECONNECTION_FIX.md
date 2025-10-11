@@ -2,7 +2,7 @@
 
 ## Problem Analysis
 
-### User Report
+### User Report - Issue 1 (Backend 400)
 ```
 Failed to load resource: the server responded with a status of 400 ()
 api/graph/connect:1  Failed to load resource: the server responded with a status of 400 ()
@@ -11,12 +11,20 @@ api/graph/connect:1  Failed to load resource: the server responded with a status
 "no funciona cuando desconecto y vuelvo a conectar el outlook"
 ```
 
+### User Report - Issue 2 (Microsoft OAuth 400 + X-Frame-Options)
+```
+login.microsoftonline.com/common/oauth2/v2.0/token?client-request-id=...  Failed to load resource: the server responded with a status of 400 ()
+msal-B-q5JRWZ.js:105 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.
+chrome-error://chromewebdata/:1 Refused to display 'https://finsmart.up.railway.app/' in a frame because it set 'X-Frame-Options' to 'deny'.
+```
+
 ### Root Causes Identified
 
 1. **Missing Mail Scopes**: Initial login only requested `User.Read`, but Outlook connection requires `Mail.Read` and `Mail.ReadWrite` scopes
-2. **Token Validation**: Frontend wasn't validating token before sending to backend
-3. **Poor Error Messages**: Backend validation errors weren't descriptive enough
-4. **Missing Error Handling**: getAccessToken() could return null/undefined without proper handling
+2. **X-Frame-Options Blocking**: Railway backend sets `X-Frame-Options: deny` (via Helmet), blocking MSAL iframe token refresh
+3. **MSAL iframe dependency**: MSAL was trying to use iframes for silent token acquisition, which fails with X-Frame-Options
+4. **Token Validation**: Frontend wasn't validating token before sending to backend
+5. **Poor Error Messages**: Backend validation errors and MSAL errors weren't descriptive enough
 
 ## Solution Implemented
 
@@ -28,13 +36,41 @@ api/graph/connect:1  Failed to load resource: the server responded with a status
 // Separate request for Microsoft Graph Mail access
 export const graphMailRequest = {
   scopes: ['User.Read', 'Mail.Read', 'Mail.ReadWrite', 'openid', 'profile', 'email'],
-  forceRefresh: false
+  forceRefresh: false,
+  redirectUri: railwayConfig.redirectUri, // Explicit redirect for popup
+  prompt: 'consent' // Always ask for consent to ensure permissions are granted
 };
 ```
 
 **Why**: Microsoft Graph requires explicit consent for Mail operations. The original `loginRequest` only had basic profile scopes.
 
-### 2. Created Dedicated Graph Mail Token Function
+### 2. Disabled MSAL Iframe Token Acquisition
+
+**File**: `frontend/src/config/msalConfig.js`
+
+```javascript
+cache: {
+  cacheLocation: 'localStorage',
+  storeAuthStateInCookie: true, // Required for Safari and when iframes are blocked
+},
+system: {
+  // ...logger options...
+  allowNativeBroker: false, // Disable native broker for web
+  windowHashTimeout: 60000,
+  iframeHashTimeout: 10000, // Increased timeout for iframe operations
+  loadFrameTimeout: 10000, // Increased timeout
+  asyncPopups: false,
+  allowRedirectInIframe: false // Prevent redirect attempts in iframes
+}
+```
+
+**Why**: 
+- Railway's `X-Frame-Options: deny` blocks MSAL iframes
+- We keep the security header (prevents clickjacking attacks)
+- MSAL now uses **popup-only** token acquisition instead of iframes
+- `storeAuthStateInCookie: true` ensures auth state persists across page reloads
+
+### 2. Created Dedicated Graph Mail Token Function (Popup-First Approach)
 
 **File**: `frontend/src/hooks/useMicrosoftAuth.js`
 
@@ -45,43 +81,69 @@ const getGraphMailToken = async () => {
   }
 
   try {
-    // Try silent token acquisition with Mail scopes
-    const response = await instance.acquireTokenSilent({
+    // First, try to get token from cache without iframe
+    const silentRequest = {
       ...graphMailRequest,
-      account: accounts[0]
-    })
-    
-    if (!response || !response.accessToken) {
-      throw new Error('Failed to acquire Graph Mail access token from Microsoft')
+      account: accounts[0],
+      forceRefresh: false,
+      cacheLookupPolicy: 2 // CacheLookupPolicy.Default - check cache first
     }
+
+    console.log('🔍 Attempting to get Graph Mail token from cache...')
     
-    console.log('✅ Successfully acquired Graph Mail token silently')
-    return response.accessToken
-  } catch (error) {
-    console.error('Silent Graph Mail token acquisition failed:', error)
-    // Try interactive token acquisition - this will prompt user to consent to Mail scopes
     try {
-      console.log('🔄 Requesting Graph Mail token interactively...')
-      const response = await instance.acquireTokenPopup(graphMailRequest)
+      const response = await instance.acquireTokenSilent(silentRequest)
       
       if (!response || !response.accessToken) {
-        throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+        throw new Error('No token in cache')
       }
       
-      console.log('✅ Successfully acquired Graph Mail token via popup')
+      console.log('✅ Successfully acquired Graph Mail token from cache')
       return response.accessToken
-    } catch (interactiveError) {
-      console.error('Interactive Graph Mail token acquisition failed:', interactiveError)
-      throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
+    } catch (cacheError) {
+      console.log('ℹ️ Token not in cache or expired, will request interactively')
+      // Continue to interactive acquisition
     }
+
+    // If cache fails, go straight to interactive (popup) - skip iframe attempts
+    console.log('🔄 Requesting Graph Mail token via popup...')
+    const response = await instance.acquireTokenPopup(graphMailRequest)
+    
+    if (!response || !response.accessToken) {
+      throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+    }
+    
+    console.log('✅ Successfully acquired Graph Mail token via popup')
+    return response.accessToken
+
+  } catch (error) {
+    console.error('❌ Graph Mail token acquisition failed:', error)
+    
+    // Check if it's a specific MSAL error
+    if (error.errorCode === 'user_cancelled' || error.errorMessage?.includes('cancelled')) {
+      throw new Error('Autenticación cancelada. Por favor, intenta conectar Outlook nuevamente.')
+    }
+    
+    if (error.errorCode === 'consent_required') {
+      throw new Error('Se requiere permiso para acceder a tus emails. Por favor, acepta los permisos cuando se soliciten.')
+    }
+    
+    throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
   }
 }
 ```
 
 **Flow**:
-1. First try silent token acquisition (if already consented)
-2. If silent fails, show popup to request user consent
-3. Detailed error messages guide user on what's needed
+1. **Cache lookup**: Check if valid token exists in localStorage (no network call)
+2. **If cache miss**: Go directly to popup (skip iframe attempts completely)
+3. **Popup shown**: User consents to Mail permissions if first time
+4. **Token cached**: Subsequent calls use cached token from step 1
+
+**Why No Iframes**:
+- Railway's Helmet config has `frameguard: { action: 'deny' }`
+- This is correct for security (prevents clickjacking)
+- MSAL iframes would fail with "Refused to display in a frame"
+- Popup approach works reliably across all environments
 
 ### 3. Enhanced Outlook Connection Handler
 

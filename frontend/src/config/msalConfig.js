@@ -22,7 +22,7 @@ export const msalConfig = {
   },
   cache: {
     cacheLocation: 'localStorage',
-    storeAuthStateInCookie: false,
+    storeAuthStateInCookie: true, // Required for Safari and when iframes are blocked
   },
   system: {
     loggerOptions: {
@@ -49,23 +49,28 @@ export const msalConfig = {
       },
       logLevel: railwayConfig.isDevelopment ? LogLevel.Verbose : LogLevel.Warning,
     },
+    allowNativeBroker: false, // Disable native broker for web
     windowHashTimeout: 60000,
-    iframeHashTimeout: 6000,
-    loadFrameTimeout: 0,
-    asyncPopups: false
+    iframeHashTimeout: 10000, // Increased timeout for iframe operations
+    loadFrameTimeout: 10000, // Increased timeout
+    asyncPopups: false,
+    allowRedirectInIframe: false // Prevent redirect attempts in iframes
   }
 };
 
 export const loginRequest = {
   scopes: ['User.Read', 'openid', 'profile', 'email'],
   forceRefresh: false,
-  prompt: 'select_account'
+  prompt: 'select_account',
+  redirectUri: railwayConfig.redirectUri // Explicit redirect for popup
 };
 
 // Separate request for Microsoft Graph Mail access
 export const graphMailRequest = {
   scopes: ['User.Read', 'Mail.Read', 'Mail.ReadWrite', 'openid', 'profile', 'email'],
-  forceRefresh: false
+  forceRefresh: false,
+  redirectUri: railwayConfig.redirectUri, // Explicit redirect for popup
+  prompt: 'consent' // Always ask for consent to ensure permissions are granted
 };
 
 export const graphConfig = {

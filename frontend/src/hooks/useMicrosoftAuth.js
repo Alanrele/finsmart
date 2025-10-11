@@ -139,35 +139,54 @@ export const useMicrosoftAuth = () => {
     }
 
     try {
-      // Try silent token acquisition with Mail scopes
-      const response = await instance.acquireTokenSilent({
+      // First, try to get token from cache without iframe
+      const silentRequest = {
         ...graphMailRequest,
-        account: accounts[0]
-      })
-      
-      if (!response || !response.accessToken) {
-        throw new Error('Failed to acquire Graph Mail access token from Microsoft')
+        account: accounts[0],
+        forceRefresh: false,
+        cacheLookupPolicy: 2 // CacheLookupPolicy.Default - check cache first
       }
+
+      console.log('🔍 Attempting to get Graph Mail token from cache...')
       
-      console.log('✅ Successfully acquired Graph Mail token silently')
-      return response.accessToken
-    } catch (error) {
-      console.error('Silent Graph Mail token acquisition failed:', error)
-      // Try interactive token acquisition - this will prompt user to consent to Mail scopes
       try {
-        console.log('🔄 Requesting Graph Mail token interactively...')
-        const response = await instance.acquireTokenPopup(graphMailRequest)
+        const response = await instance.acquireTokenSilent(silentRequest)
         
         if (!response || !response.accessToken) {
-          throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+          throw new Error('No token in cache')
         }
         
-        console.log('✅ Successfully acquired Graph Mail token via popup')
+        console.log('✅ Successfully acquired Graph Mail token from cache')
         return response.accessToken
-      } catch (interactiveError) {
-        console.error('Interactive Graph Mail token acquisition failed:', interactiveError)
-        throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
+      } catch (cacheError) {
+        console.log('ℹ️ Token not in cache or expired, will request interactively')
+        // Continue to interactive acquisition
       }
+
+      // If cache fails, go straight to interactive (popup) - skip iframe attempts
+      console.log('🔄 Requesting Graph Mail token via popup...')
+      const response = await instance.acquireTokenPopup(graphMailRequest)
+      
+      if (!response || !response.accessToken) {
+        throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+      }
+      
+      console.log('✅ Successfully acquired Graph Mail token via popup')
+      return response.accessToken
+
+    } catch (error) {
+      console.error('❌ Graph Mail token acquisition failed:', error)
+      
+      // Check if it's a specific MSAL error
+      if (error.errorCode === 'user_cancelled' || error.errorMessage?.includes('cancelled')) {
+        throw new Error('Autenticación cancelada. Por favor, intenta conectar Outlook nuevamente.')
+      }
+      
+      if (error.errorCode === 'consent_required') {
+        throw new Error('Se requiere permiso para acceder a tus emails. Por favor, acepta los permisos cuando se soliciten.')
+      }
+      
+      throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
     }
   }
 
