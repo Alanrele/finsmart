@@ -228,7 +228,7 @@ Devuelve un objeto JSON con esta estructura:
       // Prepare transaction context
       const transactionContext = this.prepareTransactionSummary(transactions.slice(0, 20));
 
-      const prompt = `
+  const prompt = `
 Eres un asistente financiero personal especializado en análisis de gastos.
 
 Contexto de transacciones del usuario:
@@ -236,7 +236,14 @@ ${JSON.stringify(transactionContext, null, 2)}
 
 Pregunta del usuario: ${userMessage}
 
-Responde de manera conversacional, amigable y útil. Usa los datos de transacciones para dar respuestas específicas y personalizadas. Si no tienes suficiente información, menciona qué datos adicionales serían útiles.
+Formato y reglas obligatorias al responder:
+- No uses markdown ni asteriscos (**), subrayados (__), ni bloques de código.
+- Cuando menciones montos en soles peruanos, usa siempre el formato: S/ 1,234.56 (es-PE: coma para miles, punto para decimales).
+- No mezcles símbolos (no escribas $ junto a S/). Para USD, usa US$ 1,234.56.
+- Si no estás absolutamente seguro de un valor, no lo inventes: di que no hay suficientes datos.
+- Sé breve y directo. Si el usuario pidió un cálculo, muéstralo claro con 2 decimales.
+
+Responde de forma conversacional y útil. Usa los datos de transacciones para dar respuestas específicas y personalizadas. Si no tienes suficiente información, menciona qué datos adicionales serían útiles.
 `;
 
       const response = await this.openai.chat.completions.create({
@@ -251,7 +258,7 @@ Responde de manera conversacional, amigable y útil. Usa los datos de transaccio
             content: prompt
           }
         ],
-        temperature: 0.7,
+        temperature: 0.2,
         max_tokens: 1000
       });
 

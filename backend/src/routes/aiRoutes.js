@@ -236,6 +236,14 @@ router.post('/chat', [
     }
 
     const { message } = req.body;
+    // Guard: reject trivial messages that lead to generic responses
+    const trivial = ['hola', 'buenas', 'hi', 'hello'];
+    if (trivial.includes(message.trim().toLowerCase())) {
+      return res.json({
+        response: '¿Qué te gustaría analizar? Puedes preguntar, por ejemplo: “¿Cuál es mi balance actual de este mes?” o “Muéstrame mis tres mayores gastos recientes.”',
+        timestamp: new Date()
+      });
+    }
     const userId = req.user._id;
 
     // Check if it's a demo user - return demo data only when explicitly allowed
@@ -304,7 +312,11 @@ router.post('/chat', [
     const aiText = await aiAnalysisService.generateChatResponse(message, recentTransactions);
 
     // Build a safe, currency-correct response
-    const breakdownLines = summary.topCategories.map(c => `- ${c.name.charAt(0).toUpperCase() + c.name.slice(1)}: ${formatPEN(c.amount)}`);
+    const translate = (name) => {
+      const dict = { transfer: 'Transferencias', shopping: 'Compras', utilities: 'Servicios', other: 'Otros', food: 'Comida', transport: 'Transporte', entertainment: 'Entretenimiento', healthcare: 'Salud', education: 'Educación', travel: 'Viajes', investment: 'Inversiones', income: 'Ingresos' };
+      return dict[name] || (name ? name.charAt(0).toUpperCase() + name.slice(1) : 'Otros');
+    };
+    const breakdownLines = summary.topCategories.map(c => `- ${translate(c.name)}: ${formatPEN(c.amount)}`);
     const safePrefix = [
       `Balance actual: ${formatPEN(summary.balance)}`,
       `Ingresos: ${formatPEN(summary.totalIncome)} · Gastos: ${formatPEN(summary.totalExpenses)}`,
