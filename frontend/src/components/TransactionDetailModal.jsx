@@ -79,7 +79,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
             className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-4 text-white">
+            <div className="bg-gradient-to-r from-dark-primary to-dark-accent px-6 py-4 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className={`p-2 rounded-lg bg-white/20`}>
@@ -91,7 +91,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
                   </div>
                   <div>
                     <h2 className="text-xl font-bold">Detalles de Transacción</h2>
-                    <p className="text-blue-100">
+                    <p className="text-white/80">
                       {transaction.description || transaction.merchant || 'Transacción bancaria'}
                     </p>
                   </div>
@@ -134,7 +134,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
                         Saldo después
                       </span>
                     </div>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-2xl font-bold text-dark-primary">
                       {formatCurrency(transaction.balance)}
                     </p>
                   </div>
@@ -285,7 +285,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
             <div className="bg-gray-50 dark:bg-gray-700/50 px-6 py-4 flex justify-end">
               <button
                 onClick={onClose}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="btn-secondary"
               >
                 Cerrar
               </button>
