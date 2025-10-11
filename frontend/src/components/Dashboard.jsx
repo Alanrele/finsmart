@@ -134,6 +134,17 @@ const Dashboard = () => {
         }))
     : [];
 
+  // Reset active slice if data size changes or index is out of range
+  useEffect(() => {
+    if (activeSlice >= categoryData.length) {
+      setActiveSlice(-1)
+    }
+  }, [categoryData.length])
+
+  const safeActiveIndex = Number.isInteger(activeSlice) && activeSlice >= 0 && activeSlice < categoryData.length
+    ? activeSlice
+    : undefined
+
   const spendingTrend = Array.isArray(recentTransactions) && recentTransactions.length > 0
     ? recentTransactions.slice(0, 7).reverse().map((transaction, index) => ({
         day: `Día ${index + 1}`,
@@ -332,10 +343,10 @@ const Dashboard = () => {
                   label={({ name, percentage }) => `${name} ${Number(percentage || 0).toFixed(1)}%`}
                   onMouseEnter={(_, index) => setActiveSlice(index)}
                   onMouseLeave={() => setActiveSlice(-1)}
-                  onClick={(_, index) => setActiveSlice(index)}
+                  onClick={(_, index) => setActiveSlice(prev => (prev === index ? -1 : index))}
                   onTouchStart={(_, index) => setActiveSlice(index)}
-                  activeIndex={activeSlice >= 0 ? activeSlice : undefined}
-                  activeShape={(props) => {
+                  activeIndex={safeActiveIndex}
+                  activeShape={safeActiveIndex !== undefined ? ((props) => {
                     const depth = 8
                     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props || {}
                     if ([cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill].some(v => v == null)) {
@@ -369,7 +380,7 @@ const Dashboard = () => {
                         />
                       </g>
                     )
-                  }}
+                  }) : undefined}
                 >
                   {categoryData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" />
