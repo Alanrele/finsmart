@@ -22,6 +22,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   LineChart,
   Line,
   Sector
@@ -141,6 +142,11 @@ const Dashboard = () => {
   }
 
   const [activeSlice, setActiveSlice] = useState(-1)
+  const [isMounted, setIsMounted] = useState(true)
+  useEffect(() => {
+    setIsMounted(true)
+    return () => setIsMounted(false)
+  }, [])
 
   const categoryData = Array.isArray(topCategories)
     ? topCategories
@@ -361,13 +367,26 @@ const Dashboard = () => {
                   minAngle={4}
                   labelLine={false}
                   isAnimationActive={false}
-                  label={({ name, percentage }) => `${name} ${Number(percentage || 0).toFixed(1)}%`}
-                  onMouseEnter={(_, index) => setActiveSlice(index)}
-                  onMouseLeave={() => setActiveSlice(-1)}
-                  onClick={(_, index) => setActiveSlice(prev => (prev === index ? -1 : index))}
-                  onTouchStart={(_, index) => setActiveSlice(index)}
+                  // Avoid potential label payload edge-cases by not using a function label
+                  label={false}
+                  onMouseEnter={(_, index) => {
+                    if (!isMounted || categoryData.length < 2) return
+                    setActiveSlice(index)
+                  }}
+                  onMouseLeave={() => {
+                    if (!isMounted) return
+                    setActiveSlice(-1)
+                  }}
+                  onClick={(_, index) => {
+                    if (!isMounted || categoryData.length < 2) return
+                    setActiveSlice(prev => (prev === index ? -1 : index))
+                  }}
+                  onTouchStart={(_, index) => {
+                    if (!isMounted || categoryData.length < 2) return
+                    setActiveSlice(index)
+                  }}
                   activeIndex={safeActiveIndex}
-                  activeShape={safeActiveIndex !== undefined ? ((props) => {
+                  activeShape={safeActiveIndex !== undefined && categoryData.length > 1 ? ((props) => {
                     const depth = 8
                     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props || {}
                     if ([cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill].some(v => v == null)) {
@@ -408,6 +427,7 @@ const Dashboard = () => {
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => formatCurrency(value)} />
+                <Legend verticalAlign="bottom" height={24} />
               </PieChart>
             </ResponsiveContainer>
             </PieErrorBoundary>
