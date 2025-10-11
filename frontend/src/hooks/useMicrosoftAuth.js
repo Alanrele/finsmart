@@ -143,8 +143,7 @@ export const useMicrosoftAuth = () => {
       const silentRequest = {
         ...graphMailRequest,
         account: accounts[0],
-        forceRefresh: false,
-        cacheLookupPolicy: 2 // CacheLookupPolicy.Default - check cache first
+        forceRefresh: false
       }
 
       console.log('🔍 Attempting to get Graph Mail token from cache...')
@@ -163,16 +162,33 @@ export const useMicrosoftAuth = () => {
         // Continue to interactive acquisition
       }
 
-      // If cache fails, go straight to interactive (popup) - skip iframe attempts
+      // If cache fails, try popup with proper scopes
       console.log('🔄 Requesting Graph Mail token via popup...')
-      const response = await instance.acquireTokenPopup(graphMailRequest)
+      
+      try {
+        const response = await instance.acquireTokenPopup({
+          ...graphMailRequest,
+          account: accounts[0]
+        })
 
-      if (!response || !response.accessToken) {
-        throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+        if (!response || !response.accessToken) {
+          throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
+        }
+
+        console.log('✅ Successfully acquired Graph Mail token via popup')
+        return response.accessToken
+      } catch (popupError) {
+        console.error('Popup failed, trying redirect...', popupError)
+        
+        // If popup fails (blocked, closed, etc), try redirect as fallback
+        await instance.acquireTokenRedirect({
+          ...graphMailRequest,
+          account: accounts[0]
+        })
+        
+        // acquireTokenRedirect doesn't return - page will reload
+        throw new Error('Redirecting to Microsoft for authentication...')
       }
-
-      console.log('✅ Successfully acquired Graph Mail token via popup')
-      return response.accessToken
 
     } catch (error) {
       console.error('❌ Graph Mail token acquisition failed:', error)
@@ -184,6 +200,10 @@ export const useMicrosoftAuth = () => {
 
       if (error.errorCode === 'consent_required') {
         throw new Error('Se requiere permiso para acceder a tus emails. Por favor, acepta los permisos cuando se soliciten.')
+      }
+      
+      if (error.message?.includes('Redirecting')) {
+        throw error // Pass through redirect message
       }
 
       throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
