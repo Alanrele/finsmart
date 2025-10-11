@@ -12,9 +12,9 @@ if (Test-Path $msalConfigPath) {
     Write-Host "Archivo de configuracion encontrado:" -ForegroundColor Green
     Write-Host $msalConfigPath
     Write-Host ""
-    
+
     $content = Get-Content $msalConfigPath -Raw
-    
+
     # Extraer Client ID
     if ($content -match "clientId:\s*'([^']+)'") {
         $clientId = $matches[1]
@@ -22,7 +22,7 @@ if (Test-Path $msalConfigPath) {
         Write-Host "  $clientId" -ForegroundColor White
         Write-Host ""
     }
-    
+
     # Extraer Authority
     if ($content -match "authority:\s*'([^']+)'") {
         $authority = $matches[1]
@@ -30,13 +30,13 @@ if (Test-Path $msalConfigPath) {
         Write-Host "  $authority" -ForegroundColor White
         Write-Host ""
     }
-    
+
     Write-Host "Redirect URIs que deberian estar registrados en Azure:" -ForegroundColor Yellow
     Write-Host "  http://localhost:3001/auth/ms-callback" -ForegroundColor Cyan
     Write-Host "  http://localhost:5000/auth/ms-callback" -ForegroundColor Cyan
     Write-Host "  https://finsmart.up.railway.app/auth/ms-callback" -ForegroundColor Cyan
     Write-Host ""
-    
+
 } else {
     Write-Host "ERROR: No se encuentra el archivo de configuracion" -ForegroundColor Red
     Write-Host $msalConfigPath

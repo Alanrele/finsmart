@@ -14,7 +14,7 @@
 - ✅ Importados los nuevos componentes:
   - `EnhancedAIAssistant` desde `./components/EnhancedAIAssistant`
   - `FinancialTools` desde `./components/FinancialTools`
-  
+
 - ✅ Agregadas nuevas rutas protegidas:
   ```jsx
   <Route path="ai-assistant" element={<EnhancedAIAssistant />} />
@@ -35,7 +35,7 @@
 - ✅ Importados nuevos iconos de Lucide React:
   - `Brain` → Para Asistente IA+
   - `Calculator` → Para Herramientas
-  
+
 - ✅ Agregados nuevos items al menú de navegación:
   ```jsx
   { name: 'Asistente IA+', href: '/ai-assistant', icon: Brain },
@@ -65,7 +65,7 @@
   - `IncomeExpenseAreaChart`
   - `FinancialHealthRadar`
   - `MonthOverMonthComparison`
-  
+
 - ✅ Reemplazado el gráfico básico de "Gastos por Categoría" con `Enhanced3DDonutChart`:
   - Efectos 3D con sombras SVG
   - Gradientes animados
@@ -81,8 +81,8 @@
 
 **Después:**
 ```jsx
-<Enhanced3DDonutChart 
-  data={categoryData} 
+<Enhanced3DDonutChart
+  data={categoryData}
   title="Gastos por Categoría"
 />
 ```

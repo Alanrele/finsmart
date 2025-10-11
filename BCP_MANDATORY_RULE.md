@@ -21,11 +21,11 @@ if (sender.includes('notificaciones@notificacionesbcp.com.pe')) {
 ```
 
 ### Características
-✅ **Bypass total** de todos los filtros (promocionales, informativos, etc.)  
-✅ **Case-insensitive** (funciona con mayúsculas/minúsculas)  
-✅ **Prioridad máxima** (se ejecuta ANTES de cualquier otro filtro)  
-✅ **No requiere keywords** transaccionales  
-✅ **No requiere montos** ni fechas  
+✅ **Bypass total** de todos los filtros (promocionales, informativos, etc.)
+✅ **Case-insensitive** (funciona con mayúsculas/minúsculas)
+✅ **Prioridad máxima** (se ejecuta ANTES de cualquier otro filtro)
+✅ **No requiere keywords** transaccionales
+✅ **No requiere montos** ni fechas
 
 ---
 
@@ -136,25 +136,25 @@ if (sender.includes('notificaciones@notificacionesbcp.com.pe')) {
 
 1. **Consumos** (débito/crédito)
    - ✅ "Realizaste un consumo con tu Tarjeta de Débito BCP"
-   
+
 2. **Transferencias** (propias/terceros/otros bancos)
    - ✅ "Constancia de transferencia a otros bancos"
-   
+
 3. **Pagos** (servicios/tarjetas)
    - ✅ "Constancia de pago de servicio"
-   
+
 4. **Devoluciones**
    - ✅ "Realizamos una devolución de una operación"
-   
+
 5. **Depósitos**
    - ✅ "Recibiste un depósito en tu cuenta"
-   
+
 6. **Retiros**
    - ✅ "Retiro en cajero automático"
-   
+
 7. **Estados de cuenta** (antes se saltaban)
    - ✅ "Tu estado de cuenta ya está disponible"
-   
+
 8. **Emails informativos** (antes se saltaban)
    - ✅ Cualquier comunicación oficial de BCP
 
@@ -255,7 +255,7 @@ if (trustedSenders.some(ts => sender.includes(ts))) {
 
 ---
 
-**Implementado:** 11 de octubre, 2025  
-**Tests:** 9/9 pasados (100%)  
-**Despliegue:** Automático vía Railway  
+**Implementado:** 11 de octubre, 2025
+**Tests:** 9/9 pasados (100%)
+**Despliegue:** Automático vía Railway
 **Estado:** ✅ PRODUCTION READY

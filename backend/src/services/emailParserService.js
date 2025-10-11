@@ -588,18 +588,18 @@ function classifyTransactionType(parsedData) {
 
         // Categorización basada en patrones reales de BCP
         // Delivery & Restaurantes
-        if (entity.includes('pedidosya') || entity.includes('rappi') || entity.includes('uber eats') || 
-            entity.includes('didi food') || entity.includes('dlc*') || entity.includes('restaurante') || 
+        if (entity.includes('pedidosya') || entity.includes('rappi') || entity.includes('uber eats') ||
+            entity.includes('didi food') || entity.includes('dlc*') || entity.includes('restaurante') ||
             entity.includes('restaurant') || entity.includes('comida') || entity.includes('pyu*')) {
             category = 'food';
         }
         // Supermercados
-        else if (entity.includes('metro') || entity.includes('plaza vea') || entity.includes('tottus') || 
+        else if (entity.includes('metro') || entity.includes('plaza vea') || entity.includes('tottus') ||
                  entity.includes('wong') || entity.includes('vivanda') || entity.includes('superm')) {
             category = 'food';
         }
         // Transporte (Uber, Cabify, taxis, buses)
-        else if (entity.includes('uber') || entity.includes('cabify') || entity.includes('beat') || 
+        else if (entity.includes('uber') || entity.includes('cabify') || entity.includes('beat') ||
                  entity.includes('taxi') || entity.includes('bus') || entity.includes('movil bus') ||
                  entity.includes('gasolina') || entity.includes('grifo') || entity.includes('combustible') ||
                  entity.includes('primax') || entity.includes('repsol') || entity.includes('eess')) {
@@ -612,7 +612,7 @@ function classifyTransactionType(parsedData) {
             category = 'entertainment';
         }
         // Telecomunicaciones
-        else if (entity.includes('claro') || entity.includes('movistar') || entity.includes('entel') || 
+        else if (entity.includes('claro') || entity.includes('movistar') || entity.includes('entel') ||
                  entity.includes('bitel') || entity.includes('telefon')) {
             category = 'utilities';
         }
@@ -622,7 +622,7 @@ function classifyTransactionType(parsedData) {
             category = 'entertainment';
         }
         // Educación
-        else if (entity.includes('utp') || entity.includes('universidad') || entity.includes('instituto') || 
+        else if (entity.includes('utp') || entity.includes('universidad') || entity.includes('instituto') ||
                  entity.includes('colegio') || entity.includes('academia')) {
             category = 'education';
         }

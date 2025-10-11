@@ -43,9 +43,9 @@ router.post('/connect', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.error('Validation errors in /connect:', errors.array());
-        return res.status(400).json({ 
+        return res.status(400).json({
             message: 'Invalid request parameters',
-            errors: errors.array() 
+            errors: errors.array()
         });
     }
 

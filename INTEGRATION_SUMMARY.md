@@ -87,8 +87,8 @@ import {
 } from './EnhancedCharts';
 
 // Gráfico básico reemplazado por versión mejorada
-<Enhanced3DDonutChart 
-  data={categoryData} 
+<Enhanced3DDonutChart
+  data={categoryData}
   title="Gastos por Categoría"
 />
 ```
@@ -352,8 +352,8 @@ git push origin master
 
 ---
 
-**Fecha:** 11 de Octubre, 2025  
-**Versión:** FinSmart v2.0 Enhanced  
-**Estado:** ✅ COMPLETADO  
+**Fecha:** 11 de Octubre, 2025
+**Versión:** FinSmart v2.0 Enhanced
+**Estado:** ✅ COMPLETADO
 
 **¡Disfruta de tu aplicación financiera mejorada! 💰📊🎉**

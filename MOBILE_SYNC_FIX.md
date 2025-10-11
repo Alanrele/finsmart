@@ -120,7 +120,7 @@ Abrir DevTools (F12) y buscar errores en:
 ## 🔍 Posibles Causas del Sync No Funcionando
 
 ### Causa 1: Token Expirado ⏰
-**Síntoma:** Sync funcionó antes, ahora no funciona  
+**Síntoma:** Sync funcionó antes, ahora no funciona
 **Solución:** Reconectar Outlook en la página de configuración
 
 ```javascript
@@ -129,11 +129,11 @@ Abrir DevTools (F12) y buscar errores en:
 ```
 
 ### Causa 2: Credenciales No Guardadas 🔑
-**Síntoma:** Nunca se ha conectado Outlook  
+**Síntoma:** Nunca se ha conectado Outlook
 **Solución:** Ir a Outlook → "Conectar Outlook" → Autenticar
 
 ### Causa 3: Sync Deshabilitado ⏸️
-**Síntoma:** Backend no está ejecutando el sync periódico  
+**Síntoma:** Backend no está ejecutando el sync periódico
 **Solución:** Verificar que el servidor esté corriendo
 
 ```javascript
@@ -142,11 +142,11 @@ Abrir DevTools (F12) y buscar errores en:
 ```
 
 ### Causa 4: Errores de Red 🌐
-**Síntoma:** Requests fallan con timeout o 500  
+**Síntoma:** Requests fallan con timeout o 500
 **Solución:** Revisar logs de Railway para errores específicos
 
 ### Causa 5: Filtros Bloqueando Emails 🚫
-**Síntoma:** Sync corre pero no encuentra transacciones  
+**Síntoma:** Sync corre pero no encuentra transacciones
 **Solución:** Ya solucionado con regla BCP obligatoria
 
 ```javascript
@@ -195,11 +195,11 @@ Necesito que me proporciones:
 
 1. **Logs de Railway:**
    - Últimas 50 líneas que contengan "sync" o "email"
-   
+
 2. **Estado en Outlook página:**
    - ¿Aparece "Conectado"?
    - ¿Fecha del último sync?
-   
+
 3. **Errores en DevTools:**
    - Abrir F12 → Console
    - Copiar cualquier error rojo
@@ -246,7 +246,7 @@ console.log('🐛 [DEBUG] Transactions created:', count)
 
 ---
 
-**Generado:** 11 de octubre, 2025  
-**Issue:** Herramientas no visibles en móvil + Sync no funcionando  
-**Fix 1:** ✅ Completado  
+**Generado:** 11 de octubre, 2025
+**Issue:** Herramientas no visibles en móvil + Sync no funcionando
+**Fix 1:** ✅ Completado
 **Fix 2:** ⏳ Pendiente de diagnóstico

@@ -108,22 +108,22 @@ export const useMicrosoftAuth = () => {
         ...loginRequest,
         account: accounts[0]
       })
-      
+
       if (!response || !response.accessToken) {
         throw new Error('Failed to acquire access token from Microsoft')
       }
-      
+
       return response.accessToken
     } catch (error) {
       console.error('Silent token acquisition failed:', error)
       // Try interactive token acquisition
       try {
         const response = await instance.acquireTokenPopup(loginRequest)
-        
+
         if (!response || !response.accessToken) {
           throw new Error('Failed to acquire access token from Microsoft popup')
         }
-        
+
         return response.accessToken
       } catch (interactiveError) {
         console.error('Interactive token acquisition failed:', interactiveError)
@@ -148,14 +148,14 @@ export const useMicrosoftAuth = () => {
       }
 
       console.log('🔍 Attempting to get Graph Mail token from cache...')
-      
+
       try {
         const response = await instance.acquireTokenSilent(silentRequest)
-        
+
         if (!response || !response.accessToken) {
           throw new Error('No token in cache')
         }
-        
+
         console.log('✅ Successfully acquired Graph Mail token from cache')
         return response.accessToken
       } catch (cacheError) {
@@ -166,26 +166,26 @@ export const useMicrosoftAuth = () => {
       // If cache fails, go straight to interactive (popup) - skip iframe attempts
       console.log('🔄 Requesting Graph Mail token via popup...')
       const response = await instance.acquireTokenPopup(graphMailRequest)
-      
+
       if (!response || !response.accessToken) {
         throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
       }
-      
+
       console.log('✅ Successfully acquired Graph Mail token via popup')
       return response.accessToken
 
     } catch (error) {
       console.error('❌ Graph Mail token acquisition failed:', error)
-      
+
       // Check if it's a specific MSAL error
       if (error.errorCode === 'user_cancelled' || error.errorMessage?.includes('cancelled')) {
         throw new Error('Autenticación cancelada. Por favor, intenta conectar Outlook nuevamente.')
       }
-      
+
       if (error.errorCode === 'consent_required') {
         throw new Error('Se requiere permiso para acceder a tus emails. Por favor, acepta los permisos cuando se soliciten.')
       }
-      
+
       throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
     }
   }

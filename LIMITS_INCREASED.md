@@ -21,7 +21,7 @@
 
 ```javascript
 Query Principal:  150 emails/sincronización
-Fallback 1:       100 emails/sincronización  
+Fallback 1:       100 emails/sincronización
 Fallback 2:        50 emails/sincronización
 Fallback 3:        25 emails/sincronización
 ```
@@ -35,7 +35,7 @@ Fallback 3:        25 emails/sincronización
 
 ```javascript
 Límite total:     3,000 emails
-Tamaño página:    100 emails  
+Tamaño página:    100 emails
 Total páginas:    30 páginas máximo
 Período:          1 año (365 días)
 ```
@@ -51,17 +51,17 @@ Período:          1 año (365 días)
 
 ### Para el Usuario
 
-✅ **Cobertura completa** de todas las 1,217 transacciones reales  
-✅ **Sincronización más rápida** de emails nuevos  
-✅ **Menos tiempo de espera** para procesar historiales largos  
-✅ **Mayor capacidad** para usuarios con alto volumen de transacciones  
+✅ **Cobertura completa** de todas las 1,217 transacciones reales
+✅ **Sincronización más rápida** de emails nuevos
+✅ **Menos tiempo de espera** para procesar historiales largos
+✅ **Mayor capacidad** para usuarios con alto volumen de transacciones
 
 ### Para el Sistema
 
-✅ **Menos peticiones** (páginas más grandes = menos requests)  
-✅ **Mejor rendimiento** (menos overhead de paginación)  
-✅ **Mayor escalabilidad** (puede manejar más usuarios)  
-✅ **Resiliencia mejorada** (fallbacks más robustos)  
+✅ **Menos peticiones** (páginas más grandes = menos requests)
+✅ **Mejor rendimiento** (menos overhead de paginación)
+✅ **Mayor escalabilidad** (puede manejar más usuarios)
+✅ **Resiliencia mejorada** (fallbacks más robustos)
 
 ---
 
@@ -75,7 +75,7 @@ ANTES: 50 emails cada 5 min
 │ ███ │ 50
 └─────┘
 
-AHORA: 150 emails cada 5 min  
+AHORA: 150 emails cada 5 min
 ┌─────────────┐
 │ █████████ │ 150 ← +200%
 └─────────────┘
@@ -244,7 +244,7 @@ AHORA: 3,000 emails máximo
 
 ---
 
-**Implementado:** 11 de octubre, 2025  
-**Incremento total:** +200% en capacidad  
-**Estado:** ✅ PRODUCTION READY  
+**Implementado:** 11 de octubre, 2025
+**Incremento total:** +200% en capacidad
+**Estado:** ✅ PRODUCTION READY
 **Próximo deploy:** Automático vía Railway

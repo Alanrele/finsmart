@@ -200,23 +200,23 @@ const navigation = [
 
 ### 3. Reemplazar Charts en Dashboard.jsx (Opcional):
 ```jsx
-import { 
+import {
   Enhanced3DDonutChart,
   EnhancedBarChart,
-  IncomeExpenseAreaChart 
+  IncomeExpenseAreaChart
 } from './EnhancedCharts'
 
 // Reemplazar el PieChart existente:
-<Enhanced3DDonutChart 
-  data={categoryData} 
-  title="Gastos por Categoría" 
+<Enhanced3DDonutChart
+  data={categoryData}
+  title="Gastos por Categoría"
 />
 
 // Reemplazar BarChart:
-<EnhancedBarChart 
-  data={topCategories} 
+<EnhancedBarChart
+  data={topCategories}
   title="Top Categorías"
-  dataKey="amount" 
+  dataKey="amount"
 />
 ```
 

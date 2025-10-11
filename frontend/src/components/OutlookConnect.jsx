@@ -99,7 +99,7 @@ const OutlookConnect = () => {
 
     } catch (error) {
       console.error('Error al conectar Outlook:', error)
-      
+
       // Handle specific error types
       if (error.message?.includes('cancelada') || error.message?.includes('cancelled')) {
         toast.error('Conexión cancelada. Vuelve a intentar cuando estés listo.')

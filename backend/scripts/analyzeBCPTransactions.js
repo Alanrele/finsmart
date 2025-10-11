@@ -121,7 +121,7 @@ transactions.forEach(tx => {
       const existing = uniqueTransactions.get(opNum);
       const existingDate = new Date(existing.receivedDate);
       const currentDate = new Date(tx.receivedDate);
-      
+
       if (currentDate > existingDate) {
         uniqueTransactions.set(opNum, tx);
       }
@@ -170,7 +170,7 @@ const merchantsByCategory = {};
 topMerchants.forEach(([merchant]) => {
   const upperMerchant = merchant.toUpperCase();
   let found = false;
-  
+
   for (const [category, keywords] of Object.entries(categories)) {
     if (keywords.some(kw => upperMerchant.includes(kw))) {
       if (!merchantsByCategory[category]) {
@@ -181,7 +181,7 @@ topMerchants.forEach(([merchant]) => {
       break;
     }
   }
-  
+
   if (!found) {
     if (!merchantsByCategory['Otros']) {
       merchantsByCategory['Otros'] = [];

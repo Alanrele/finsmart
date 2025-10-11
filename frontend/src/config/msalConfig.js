@@ -1,4 +1,4 @@
-import { LogLevel } from '@azure/msal-browser';
+index-BhkPDg5G.js:224  POST https://login.microsoftonline.com/common/oauth2/v2.0/token?client-request-id=0199d481-5e32-70fb-9454-e844232e7156 400 (Bad Request)import { LogLevel } from '@azure/msal-browser';
 import { getRailwayConfig } from './railway';
 
 const railwayConfig = getRailwayConfig();

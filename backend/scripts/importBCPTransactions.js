@@ -14,72 +14,72 @@ console.log(`📦 Cargando ${bcpTransactions.length} transacciones BCP...\n`);
 // Mapeo de categorías mejorado basado en comercios reales
 function categorizeMerchant(merchant) {
     if (!merchant) return 'other';
-    
+
     const m = merchant.toLowerCase();
-    
+
     // Delivery & Restaurantes
-    if (m.includes('pedidosya') || m.includes('rappi') || m.includes('uber eats') || 
-        m.includes('didi food') || m.includes('dlc*') || m.includes('restaurante') || 
+    if (m.includes('pedidosya') || m.includes('rappi') || m.includes('uber eats') ||
+        m.includes('didi food') || m.includes('dlc*') || m.includes('restaurante') ||
         m.includes('dona marce') || m.includes('izi*')) {
         return 'food';
     }
-    
+
     // Supermercados
-    if (m.includes('metro') || m.includes('plaza vea') || m.includes('tottus') || 
+    if (m.includes('metro') || m.includes('plaza vea') || m.includes('tottus') ||
         m.includes('wong') || m.includes('vivanda') || m.includes('agora shop')) {
         return 'food';
     }
-    
+
     // Transporte
-    if (m.includes('uber') || m.includes('cabify') || m.includes('beat') || 
+    if (m.includes('uber') || m.includes('cabify') || m.includes('beat') ||
         m.includes('taxi') || m.includes('bus') || m.includes('movil bus') ||
         m.includes('primax') || m.includes('repsol') || m.includes('eess')) {
         return 'transport';
     }
-    
+
     // Servicios digitales
     if (m.includes('netflix') || m.includes('spotify') || m.includes('amazon prime') ||
         m.includes('disney') || m.includes('hbo') || m.includes('apple.com/bill') ||
         m.includes('google') || m.includes('microsoft') || m.includes('openai')) {
         return 'entertainment';
     }
-    
+
     // Telecomunicaciones
-    if (m.includes('claro') || m.includes('movistar') || m.includes('entel') || 
+    if (m.includes('claro') || m.includes('movistar') || m.includes('entel') ||
         m.includes('bitel')) {
         return 'utilities';
     }
-    
+
     // Gaming
-    if (m.includes('steam') || m.includes('playstation') || m.includes('xbox') || 
+    if (m.includes('steam') || m.includes('playstation') || m.includes('xbox') ||
         m.includes('nintendo') || m.includes('twitch')) {
         return 'entertainment';
     }
-    
+
     // Educación
     if (m.includes('utp') || m.includes('universidad') || m.includes('instituto')) {
         return 'education';
     }
-    
+
     // Pagos digitales
     if (m.includes('yape') || m.includes('plin') || m.includes('tunki')) {
         return 'transfer';
     }
-    
+
     // Compras online
     if (m.includes('aliexpress') || m.includes('amazon') || m.includes('mercado libre') ||
         m.includes('linio') || m.includes('joom')) {
         return 'shopping';
     }
-    
+
     return 'other';
 }
 
 function mapOperationType(operationType) {
     if (!operationType) return 'expense';
-    
+
     const op = operationType.toLowerCase();
-    
+
     if (op.includes('consumo') || op.includes('pago')) {
         return 'expense';
     }
@@ -95,7 +95,7 @@ function mapOperationType(operationType) {
     if (op.includes('devolución') || op.includes('devolucion')) {
         return 'income';
     }
-    
+
     return 'expense';
 }
 
@@ -107,7 +107,7 @@ async function importTransactions() {
 
         // Buscar o crear usuario de prueba
         let user = await User.findOne({ email: process.env.TEST_USER_EMAIL || 'test@example.com' });
-        
+
         if (!user) {
             console.log('⚠️  No se encontró usuario de prueba. Especifica TEST_USER_EMAIL en .env');
             console.log('   O crea un usuario primero en la aplicación.\n');

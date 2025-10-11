@@ -64,7 +64,7 @@ system: {
 }
 ```
 
-**Why**: 
+**Why**:
 - Railway's `X-Frame-Options: deny` blocks MSAL iframes
 - We keep the security header (prevents clickjacking attacks)
 - MSAL now uses **popup-only** token acquisition instead of iframes
@@ -90,14 +90,14 @@ const getGraphMailToken = async () => {
     }
 
     console.log('🔍 Attempting to get Graph Mail token from cache...')
-    
+
     try {
       const response = await instance.acquireTokenSilent(silentRequest)
-      
+
       if (!response || !response.accessToken) {
         throw new Error('No token in cache')
       }
-      
+
       console.log('✅ Successfully acquired Graph Mail token from cache')
       return response.accessToken
     } catch (cacheError) {
@@ -108,26 +108,26 @@ const getGraphMailToken = async () => {
     // If cache fails, go straight to interactive (popup) - skip iframe attempts
     console.log('🔄 Requesting Graph Mail token via popup...')
     const response = await instance.acquireTokenPopup(graphMailRequest)
-    
+
     if (!response || !response.accessToken) {
       throw new Error('Failed to acquire Graph Mail access token from Microsoft popup')
     }
-    
+
     console.log('✅ Successfully acquired Graph Mail token via popup')
     return response.accessToken
 
   } catch (error) {
     console.error('❌ Graph Mail token acquisition failed:', error)
-    
+
     // Check if it's a specific MSAL error
     if (error.errorCode === 'user_cancelled' || error.errorMessage?.includes('cancelled')) {
       throw new Error('Autenticación cancelada. Por favor, intenta conectar Outlook nuevamente.')
     }
-    
+
     if (error.errorCode === 'consent_required') {
       throw new Error('Se requiere permiso para acceder a tus emails. Por favor, acepta los permisos cuando se soliciten.')
     }
-    
+
     throw new Error('Could not acquire Microsoft Graph Mail access token. Please grant permission to access your emails.')
   }
 }
@@ -171,9 +171,9 @@ const handleConnect = async () => {
 
   } catch (error) {
     console.error('Error al conectar Outlook:', error)
-    
+
     // Check if it's a Microsoft authentication error
-    if (error.message?.includes('No accounts found') || 
+    if (error.message?.includes('No accounts found') ||
         error.message?.includes('token acquisition failed') ||
         error.message?.includes('grant permission')) {
       toast.error(error.message || 'Por favor, inicia sesión con Microsoft primero')
@@ -204,9 +204,9 @@ router.post('/connect', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         console.error('Validation errors in /connect:', errors.array());
-        return res.status(400).json({ 
+        return res.status(400).json({
             message: 'Invalid request parameters',
-            errors: errors.array() 
+            errors: errors.array()
         });
     }
     // ...
@@ -229,7 +229,7 @@ router.post('/connect', [
 1. Click "Desconectar" on Outlook page
 2. **Expected**: Toast "Outlook desconectado"
 3. Click "Conectar Outlook" again
-4. **Expected**: 
+4. **Expected**:
    - If token still valid: Silent connection (no popup)
    - If token expired: Popup for re-consent
 5. **Expected**: Toast "Outlook conectado exitosamente"
@@ -367,11 +367,11 @@ railway logs --service backend
 
 ## Success Criteria
 
-✅ User can disconnect Outlook and reconnect without 400 errors  
-✅ First-time connection prompts for Mail permissions  
-✅ Subsequent connections use silent token acquisition (no popup)  
-✅ Clear error messages guide user on permission/auth issues  
-✅ Backend logs validation errors for debugging  
+✅ User can disconnect Outlook and reconnect without 400 errors
+✅ First-time connection prompts for Mail permissions
+✅ Subsequent connections use silent token acquisition (no popup)
+✅ Clear error messages guide user on permission/auth issues
+✅ Backend logs validation errors for debugging
 ✅ Email sync works correctly after reconnection
 
 ## Related Files Modified

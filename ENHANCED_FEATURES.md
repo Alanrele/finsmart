@@ -276,9 +276,9 @@ const data = [
   { name: 'Entretenimiento', value: 500, color: '#0088FE' }
 ];
 
-<Enhanced3DDonutChart 
-  data={data} 
-  title="Gastos por Categoría" 
+<Enhanced3DDonutChart
+  data={data}
+  title="Gastos por Categoría"
 />
 ```
 
