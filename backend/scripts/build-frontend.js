@@ -4,7 +4,6 @@
 const path = require('path')
 const { execSync } = require('child_process')
 const fs = require('fs')
-const fse = require('fs-extra')
 
 const repoRoot = path.resolve(__dirname, '..', '..')
 const frontendDir = path.join(repoRoot, 'frontend')
@@ -26,9 +25,9 @@ try {
   }
   // Build frontend
   run('npm run build', frontendDir)
-  // Copy dist to backend/public
-  fse.ensureDirSync(backendPublic)
-  fse.copySync(path.join(frontendDir, 'dist'), backendPublic, { overwrite: true })
+  // Copy dist to backend/public using Node 20's fs.cpSync
+  fs.mkdirSync(backendPublic, { recursive: true })
+  fs.cpSync(path.join(frontendDir, 'dist'), backendPublic, { recursive: true, force: true })
   console.log('✅ Frontend built and copied to backend/public')
 } catch (e) {
   console.error('❌ Failed to build/copy frontend:', e.message)
