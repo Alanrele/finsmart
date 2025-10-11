@@ -121,7 +121,7 @@ const Dashboard = () => {
     return translations[category?.toLowerCase()] || category || 'Otros'
   }
 
-  const [activeSlice, setActiveSlice] = useState(null)
+  const [activeSlice, setActiveSlice] = useState(-1)
 
   const categoryData = Array.isArray(topCategories)
     ? topCategories
@@ -331,17 +331,18 @@ const Dashboard = () => {
                   labelLine={false}
                   label={({ name, percentage }) => `${name} ${Number(percentage || 0).toFixed(1)}%`}
                   onMouseEnter={(_, index) => setActiveSlice(index)}
-                  onMouseLeave={() => setActiveSlice(null)}
+                  onMouseLeave={() => setActiveSlice(-1)}
                   onClick={(_, index) => setActiveSlice(index)}
                   onTouchStart={(_, index) => setActiveSlice(index)}
-                  activeIndex={activeSlice}
+                  activeIndex={activeSlice >= 0 ? activeSlice : undefined}
                   activeShape={(props) => {
                     const depth = 8
-                    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props
-                    const darker = (c) => c
+                    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props || {}
+                    if ([cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill].some(v => v == null)) {
+                      return null
+                    }
                     return (
                       <g>
-                        {/* Depth layer */}
                         <g transform={`translate(0, ${depth})`}>
                           <Sector
                             cx={cx}
@@ -354,7 +355,6 @@ const Dashboard = () => {
                             opacity={0.35}
                           />
                         </g>
-                        {/* Top layer with highlight */}
                         <Sector
                           cx={cx}
                           cy={cy}
