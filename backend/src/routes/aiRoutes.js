@@ -266,12 +266,56 @@ router.post('/chat', [
       .sort({ date: -1 })
       .limit(50);
 
-    // Generate AI response
-    const response = await aiAnalysisService.generateChatResponse(message, recentTransactions);
+    // Deterministic financial summary (PEN) to avoid AI numeric errors
+    const formatPEN = (amount) => new Intl.NumberFormat('es-PE', {
+      style: 'currency', currency: 'PEN', minimumFractionDigits: 2, maximumFractionDigits: 2
+    }).format(amount || 0);
+
+    const summary = (() => {
+      let totalIncome = 0;
+      let totalExpenses = 0;
+      const categoryMap = {};
+
+      for (const t of recentTransactions) {
+        const amt = Math.abs(Number(t.amount) || 0);
+        const type = (t.type || '').toLowerCase();
+        const cat = (t.category || 'other').toLowerCase();
+
+        const isIncome = ['credit', 'deposit', 'income'].includes(type);
+        if (isIncome) {
+          totalIncome += amt;
+        } else {
+          totalExpenses += amt;
+          categoryMap[cat] = (categoryMap[cat] || 0) + amt;
+        }
+      }
+
+      const balance = totalIncome - totalExpenses;
+      // Top 4 categories by expense
+      const topCategories = Object.entries(categoryMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([name, amount]) => ({ name, amount }));
+
+      return { totalIncome, totalExpenses, balance, topCategories };
+    })();
+
+    // Generate AI response (advice/insights). We’ll prepend our numeric summary.
+    const aiText = await aiAnalysisService.generateChatResponse(message, recentTransactions);
+
+    // Build a safe, currency-correct response
+    const breakdownLines = summary.topCategories.map(c => `- ${c.name.charAt(0).toUpperCase() + c.name.slice(1)}: ${formatPEN(c.amount)}`);
+    const safePrefix = [
+      `Balance actual: ${formatPEN(summary.balance)}`,
+      `Ingresos: ${formatPEN(summary.totalIncome)} · Gastos: ${formatPEN(summary.totalExpenses)}`,
+      breakdownLines.length ? `Desglose por categorías (reciente):\n${breakdownLines.join('\n')}` : ''
+    ].filter(Boolean).join('\n');
+
+    const combined = `${safePrefix}\n\n${aiText}`;
 
     res.json({
       message: 'AI response generated',
-      response,
+      response: combined,
       timestamp: new Date()
     });
 
