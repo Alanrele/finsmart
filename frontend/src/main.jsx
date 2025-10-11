@@ -9,6 +9,7 @@ import useAppStore from './stores/appStore'
 import MSALInitializing from './components/MSALInitializing.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
+import { registerSW } from 'virtual:pwa-register'
 
 // Global error handlers for browser extension interference
 window.addEventListener('unhandledrejection', (event) => {
@@ -51,6 +52,19 @@ const Root = () => {
   const setAppReady = useAppStore(state => state.setAppReady)
 
   useEffect(() => {
+    // Ensure service worker updates apply immediately to avoid mixed-version UIs
+    try {
+      const updateSW = registerSW({
+        immediate: true,
+        onNeedRefresh() {
+          updateSW(true)
+        },
+        onOfflineReady() { /* noop */ }
+      })
+    } catch (e) {
+      // ignore if PWA plugin not active in this build
+    }
+
     const initializeMsal = async () => {
       try {
         await msalInstance.initialize()
