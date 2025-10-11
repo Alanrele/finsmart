@@ -115,25 +115,47 @@ function isTransactionalEmail(subject, content) {
         /⌛.*recibos.*vencer/i
     ];
 
-    // Señales fuertes de transacción
+    // Señales fuertes de transacción (basado en 1,217 transacciones reales)
     const strongTransactionalKeywords = [
+        // Consumos (729 débito + 185 crédito)
         'realizaste un consumo',
         'realizaste consumo',
         'consumo realizado',
         'consumo tarjeta de débito',
         'consumo tarjeta de debito',
-        'transferencia realizada',
-        'constancia de transferencia',
+        'consumo tarjeta de crédito',
+        'consumo tarjeta de credito',
+        // Pagos (87 servicios + 78 tarjetas)
+        'pago de servicio',
+        'pago de servicios',
         'constancia de pago',
         'pago de tarjeta',
+        'pago de tarjeta propia',
+        'pago de tarjeta de crédito',
+        // Transferencias (37 otros bancos + 24 terceros + 9 propias)
+        'transferencia realizada',
+        'constancia de transferencia',
+        'transferencia a otros bancos',
+        'transferencia a terceros',
+        'transferencia entre mis cuentas',
+        'transferencia a otro banco',
+        // Devoluciones (19 ocurrencias)
         'devolución',
         'devolucion',
-        'retiro de efectivo',
+        'realizamos una devolución',
+        // Depósitos (17 ocurrencias)
         'depósito recibido',
         'deposito recibido',
-        'pago de servicio',
+        'recibiste un depósito',
+        // Retiros (10 ocurrencias)
+        'retiro',
+        'retiro de efectivo',
+        'retiro en cajero',
+        // Otros
         'cargo efectuado',
-        'abono recibido'
+        'abono recibido',
+        'operación realizada',
+        'operacion realizada'
     ];
 
     // Patrones de evidencia adicional
@@ -549,18 +571,63 @@ function classifyTransactionType(parsedData) {
     if (merchant || beneficiary) {
         const entity = (merchant || beneficiary).toLowerCase();
 
-        if (entity.includes('supermercado') || entity.includes('market') || entity.includes('tienda')) {
+        // Categorización basada en patrones reales de BCP
+        // Delivery & Restaurantes
+        if (entity.includes('pedidosya') || entity.includes('rappi') || entity.includes('uber eats') || 
+            entity.includes('didi food') || entity.includes('dlc*') || entity.includes('restaurante') || 
+            entity.includes('restaurant') || entity.includes('comida') || entity.includes('pyu*')) {
             category = 'food';
-        } else if (entity.includes('gasolina') || entity.includes('grifo') || entity.includes('combustible')) {
+        }
+        // Supermercados
+        else if (entity.includes('metro') || entity.includes('plaza vea') || entity.includes('tottus') || 
+                 entity.includes('wong') || entity.includes('vivanda') || entity.includes('superm')) {
+            category = 'food';
+        }
+        // Transporte (Uber, Cabify, taxis, buses)
+        else if (entity.includes('uber') || entity.includes('cabify') || entity.includes('beat') || 
+                 entity.includes('taxi') || entity.includes('bus') || entity.includes('movil bus') ||
+                 entity.includes('gasolina') || entity.includes('grifo') || entity.includes('combustible') ||
+                 entity.includes('primax') || entity.includes('repsol') || entity.includes('eess')) {
             category = 'transport';
-        } else if (entity.includes('restaurante') || entity.includes('restaurant') || entity.includes('comida')) {
-            category = 'food';
-        } else if (entity.includes('farmacia') || entity.includes('clinic') || entity.includes('hospital')) {
-            category = 'healthcare';
-        } else if (entity.includes('luz') || entity.includes('agua') || entity.includes('gas') || entity.includes('telefon')) {
-            category = 'utilities';
-        } else if (entity.includes('cine') || entity.includes('entretenimiento') || entity.includes('netflix')) {
+        }
+        // Servicios de Streaming & Suscripciones
+        else if (entity.includes('netflix') || entity.includes('spotify') || entity.includes('amazon prime') ||
+                 entity.includes('disney') || entity.includes('hbo') || entity.includes('apple.com/bill') ||
+                 entity.includes('google *') || entity.includes('microsoft') || entity.includes('openai')) {
             category = 'entertainment';
+        }
+        // Telecomunicaciones
+        else if (entity.includes('claro') || entity.includes('movistar') || entity.includes('entel') || 
+                 entity.includes('bitel') || entity.includes('telefon')) {
+            category = 'utilities';
+        }
+        // Entretenimiento & Gaming
+        else if (entity.includes('cine') || entity.includes('steam') || entity.includes('playstation') ||
+                 entity.includes('xbox') || entity.includes('nintendo') || entity.includes('twitch')) {
+            category = 'entertainment';
+        }
+        // Educación
+        else if (entity.includes('utp') || entity.includes('universidad') || entity.includes('instituto') || 
+                 entity.includes('colegio') || entity.includes('academia')) {
+            category = 'education';
+        }
+        // Pagos digitales (Yape, Plin)
+        else if (entity.includes('yape') || entity.includes('plin') || entity.includes('tunki')) {
+            category = 'transfer';
+        }
+        // Compras Online
+        else if (entity.includes('aliexpress') || entity.includes('amazon') || entity.includes('mercado libre') ||
+                 entity.includes('linio') || entity.includes('joom') || entity.includes('agora shop')) {
+            category = 'shopping';
+        }
+        // Salud
+        else if (entity.includes('farmacia') || entity.includes('botica') || entity.includes('inkafarma') ||
+                 entity.includes('mifarma') || entity.includes('clinic') || entity.includes('hospital')) {
+            category = 'healthcare';
+        }
+        // Servicios básicos
+        else if (entity.includes('luz') || entity.includes('agua') || entity.includes('gas')) {
+            category = 'utilities';
         }
     }
 
