@@ -21,7 +21,7 @@ const getRailwayConfig = () => {
     return {
       ...baseConfig,
       apiUrl: `${baseConfig.protocol}//${baseConfig.hostname}`,
-      websocketUrl: `wss://${baseConfig.hostname}`,
+      websocketUrl: `${baseConfig.protocol === 'https:' ? 'wss' : 'ws'}://${baseConfig.hostname}`,
       redirectUri: `${baseConfig.protocol}//${baseConfig.hostname}/auth/ms-callback`
     };
   }

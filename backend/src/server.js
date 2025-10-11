@@ -77,6 +77,7 @@ const corsOptions = {
       'http://localhost:3000',
       'http://localhost:3001',
       'https://finsmart-production.up.railway.app',
+      'https://finsmart.up.railway.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
 

@@ -17,7 +17,7 @@ export const msalConfig = {
     redirectUri: railwayConfig.redirectUri,
     postLogoutRedirectUri: railwayConfig.isProduction
       ? `${railwayConfig.protocol}//${railwayConfig.hostname}/login`
-      : 'http://localhost:3000/login',
+      : 'http://localhost:3001/login',
     navigateToLoginRequestUrl: false,
   },
   cache: {
