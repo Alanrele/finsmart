@@ -1,53 +1,90 @@
 # Configuración de Azure AD para FinSmart
 
+## ⚠️ ERROR ACTUAL: redirect_uri no válido
+
+Si ves este error al intentar login con Microsoft:
+```
+invalid_request: The provided value for the input parameter 'redirect_uri' is not valid
+```
+
+**Causa:** El redirect_uri `https://finsmart.up.railway.app/auth/ms-callback` no está registrado en Azure AD.
+
+**Solución:** Sigue los pasos de abajo para agregarlo.
+
+---
+
 ## Información de la Aplicación
+
 - **Client ID**: `29f56526-69dc-4e89-9955-060aa8292fd0`
-- **URL del Frontend Desarrollo**: `https://localhost:3001`
-- **URL del Frontend Producción**: `https://finsmart-production.up.railway.app`
-- **URLs de Redirección**:
-  - Desarrollo: `https://localhost:3001`
-  - Producción: `https://finsmart-production.up.railway.app`
+- **Authority**: `https://login.microsoftonline.com/common`
+- **URL de Producción**: `https://finsmart.up.railway.app`
+- **URL de Desarrollo**: `http://localhost:3001`
 
-## ⚠️ ACCIÓN REQUERIDA: Actualizar URLs de Redirección
+---
 
-### 🚨 Para que funcione el login de Microsoft en Railway:
+## 🚀 ACCIÓN REQUERIDA: Registrar Redirect URIs
 
-1. **Ve a [Azure Portal](https://portal.azure.com)**
-2. **Busca "Azure Active Directory" o "Microsoft Entra ID"**
-3. **Ve a "App registrations"**
-4. **Busca la aplicación con Client ID: `29f56526-69dc-4e89-9955-060aa8292fd0`**
-5. **Click en "Authentication"**
-6. **En "Platform configurations" > "Single-page application"**
-7. **AGREGA estas URIs de redirección:**
-   - `https://finsmart-production.up.railway.app`
-   - `https://finsmart-production.up.railway.app/`
-   - `https://localhost:3001` (mantener para desarrollo)
-   - `https://localhost:3001/` (mantener para desarrollo)
+### Paso 1: Ir a Azure Portal
 
-### 📋 URIs de Redirección Completas:
+1. **Accede a:** [Azure Portal - App Registrations](https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
+2. **Busca tu aplicación** con Client ID: `29f56526-69dc-4e89-9955-060aa8292fd0`
+3. **Click en el nombre** de la aplicación
+
+### Paso 2: Configurar Authentication
+
+1. En el menú izquierdo, click en **"Authentication"** (Autenticación)
+2. Busca la sección **"Platform configurations"**
+3. Si NO existe una plataforma "Single-page application":
+   - Click en **"Add a platform"**
+   - Selecciona **"Single-page application"**
+4. Si YA existe, click en **"Add URI"** dentro de "Single-page application"
+
+### Paso 3: Agregar las URIs
+
+**IMPORTANTE:** Agrega EXACTAMENTE estas 3 URIs:
+
 ```
-https://localhost:3001
-https://localhost:3001/
-https://finsmart-production.up.railway.app
-https://finsmart-production.up.railway.app/
+http://localhost:3001/auth/ms-callback
+http://localhost:5000/auth/ms-callback
+https://finsmart.up.railway.app/auth/ms-callback
 ```
 
-## Pasos para Configurar en Azure Portal
+**Captura de pantalla de cómo debe verse:**
+```
+Platform: Single-page application
+├─ http://localhost:3001/auth/ms-callback     ✅
+├─ http://localhost:5000/auth/ms-callback     ✅
+└─ https://finsmart.up.railway.app/auth/ms-callback     ✅
+```
 
-### 1. Acceder al Azure Portal
-1. Ve a [Azure Portal](https://portal.azure.com)
-2. Busca "Azure Active Directory" o "Microsoft Entra ID"
-3. Ve a "App registrations"
-4. Busca la aplicación con Client ID: `29f56526-69dc-4e89-9955-060aa8292fd0`
+### Paso 4: Configurar Implicit Grant (Opcional pero recomendado)
 
-### 2. Configurar URIs de Redirección
-1. En la aplicación, ve a "Authentication"
-2. En "Platform configurations", busca "Single-page application"
-3. Agrega las siguientes URIs de redirección:
-   - `https://localhost:3001`
-   - `https://localhost:3001/auth-callback`
-   - `https://localhost:3000` (backup)
-   - `https://localhost:3000/auth-callback` (backup)
+En la misma página "Authentication", baja hasta **"Implicit grant and hybrid flows"**:
+
+- ✅ **Access tokens** (used for implicit flows)
+- ✅ **ID tokens** (used for implicit and hybrid flows)
+
+### Paso 5: Guardar
+
+1. Click en **"Save"** (Guardar) en la parte superior
+2. Espera a que aparezca "Successfully updated..."
+
+---
+
+## ✅ Verificación
+
+Después de guardar, verifica que la configuración sea correcta:
+
+### En Azure Portal:
+1. Ve a Authentication
+2. Verifica que las 3 URIs estén listadas
+3. Verifica que "Access tokens" e "ID tokens" estén habilitados
+
+### En tu aplicación:
+1. Cierra el navegador completamente
+2. Vuelve a abrir https://finsmart.up.railway.app
+3. Click en "Login with Microsoft"
+4. **Debería funcionar sin error de redirect_uri**
 
 ### 3. Configurar Permisos API
 1. Ve a "API permissions"
