@@ -143,6 +143,7 @@ const Dashboard = () => {
 
   const [activeSlice, setActiveSlice] = useState(-1)
   const [isMounted, setIsMounted] = useState(true)
+  const [pieKey, setPieKey] = useState(0)
   useEffect(() => {
     setIsMounted(true)
     return () => setIsMounted(false)
@@ -150,13 +151,19 @@ const Dashboard = () => {
 
   const categoryData = Array.isArray(topCategories)
     ? topCategories
-        .filter((cat) => (cat?.amount || 0) > 0)
-        .map((cat, index) => ({
+        .map((cat) => ({
           name: translateCategory(cat?.category),
-          value: Math.abs(cat?.amount || 0),
-          percentage: cat?.percentage || 0,
+          rawValue: cat?.amount,
+          percentage: Number.isFinite(cat?.percentage) ? cat?.percentage : 0
+        }))
+        .filter((d) => typeof d.name === 'string' && Number.isFinite(d.rawValue))
+        .map((d, index) => ({
+          name: d.name,
+          value: Math.max(0, Math.abs(Number(d.rawValue))),
+          percentage: Math.max(0, Number(d.percentage)),
           color: COLORS[index % COLORS.length]
         }))
+        .filter((d) => d.value > 0)
     : [];
 
   // Reset active slice if data size changes or index is out of range
@@ -164,6 +171,8 @@ const Dashboard = () => {
     if (activeSlice >= categoryData.length) {
       setActiveSlice(-1)
     }
+    // Force remount when slice count changes to avoid internal state inconsistencies
+    setPieKey((k) => k + 1)
   }, [categoryData.length])
 
   const safeActiveIndex = Number.isInteger(activeSlice) && activeSlice >= 0 && activeSlice < categoryData.length
@@ -342,7 +351,7 @@ const Dashboard = () => {
           {categoryData.length > 0 ? (
             <PieErrorBoundary>
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+                <PieChart key={pieKey}>
                 {/* Effects */}
                 <defs>
                   <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -364,7 +373,7 @@ const Dashboard = () => {
                   innerRadius={55}
                   outerRadius={95}
                   dataKey="value"
-                  minAngle={4}
+                  minAngle={0}
                   labelLine={false}
                   isAnimationActive={false}
                   // Avoid potential label payload edge-cases by not using a function label
@@ -423,7 +432,7 @@ const Dashboard = () => {
                   }) : undefined}
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" />
+                    <Cell key={`cell-${entry.name}-${index}`} fill={entry.color} cursor="pointer" />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => formatCurrency(value)} />
