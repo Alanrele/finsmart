@@ -33,7 +33,7 @@ AZURE_OCR_KEY=your_azure_ocr_key_here
 # Server Configuration
 NODE_ENV=production
 ENABLE_DEMO_LOGIN=true
-SESSION_SECRET=CaskbackSecretKey2024ProductionModeRandomString32Chars
+SESSION_SECRET=<generate-random-32-char-string>
 TRUST_PROXY=true
 
 # Security

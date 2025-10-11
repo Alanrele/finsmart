@@ -20,7 +20,7 @@ const services = [
   },
   {
     name: 'MongoDB Atlas',
-    url: 'mongodb+srv://miusuario:Alan12345@cluster0.goboze9.mongodb.net/finsmart',
+    url: process.env.MONGODB_URI || 'mongodb+srv://<username>:<password>@<cluster>.mongodb.net/finsmart',
     type: 'mongodb'
   }
 ];

@@ -53,15 +53,15 @@ FinSmart está **completamente funcional** como una aplicación PWA de análisis
 #### Variables de Entorno Configuradas
 ```env
 # Backend (.env)
-MONGODB_URI=mongodb+srv://miusuario:Alan12345@cluster0.goboze9.mongodb.net/finsmart
-JWT_SECRET=finsmart_jwt_secret_2024_production_ready
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/finsmart
+JWT_SECRET=<your-jwt-secret-here>
 OPENAI_API_KEY=sk-... (configurado)
 AZURE_OCR_KEY=... (configurado)
 AZURE_OCR_ENDPOINT=... (configurado)
 
 # Frontend (.env)
 VITE_API_URL=http://localhost:5001/api
-VITE_AZURE_CLIENT_ID=29f56526-69dc-4e89-9955-060aa8292fd0
+VITE_AZURE_CLIENT_ID=<your-azure-client-id>
 ```
 
 ### 📱 Funcionalidades Avanzadas
