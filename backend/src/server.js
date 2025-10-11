@@ -1,3 +1,11 @@
+/*
+  Proyecto: FinSmart
+  Autor: Alan Reyes Leandro
+  Correo: alanreyesleandro5@gmail.com
+  Derechos: © 2025 Alan Reyes Leandro – Todos los derechos reservados.
+  Descripción: Servidor principal Express con Socket.IO, autenticación y rutas API
+*/
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -71,10 +79,10 @@ app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig))
 // CORS configuration - externalized to environment variable
 const getCorsOrigins = () => {
   // Read from CORS_ALLOWED_ORIGINS environment variable (comma-separated)
-  const envOrigins = process.env.CORS_ALLOWED_ORIGINS 
+  const envOrigins = process.env.CORS_ALLOWED_ORIGINS
     ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
     : [];
-  
+
   // Default origins for development
   const defaultOrigins = [
     'http://localhost:3000',
@@ -83,10 +91,10 @@ const getCorsOrigins = () => {
     'https://finsmart.up.railway.app',
     process.env.FRONTEND_URL
   ].filter(Boolean);
-  
+
   // Merge and deduplicate
   const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
-  
+
   logger.info('CORS allowed origins', { origins: allOrigins });
   return allOrigins;
 };
@@ -134,7 +142,7 @@ app.use('/api/finance', authMiddleware, financeRoutes);
 app.get('/health', async (req, res) => {
   const connectedSockets = io.engine.clientsCount || 0;
   const uptime = process.uptime();
-  
+
   // MongoDB latency check
   let mongoLatency = null;
   try {
@@ -161,7 +169,7 @@ app.get('/health', async (req, res) => {
       connected_clients: connectedSockets,
     }
   };
-  
+
   logger.debug('Health check request', { metrics: healthData });
   res.status(200).json(healthData);
 });
@@ -257,7 +265,7 @@ io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     const userId = socket.handshake.auth?.userId;
 
-    logger.debug('Socket.IO handshake', { 
+    logger.debug('Socket.IO handshake', {
       token: token ? 'present' : 'missing',
       userId,
       socketId: socket.id
@@ -298,7 +306,7 @@ io.use(async (socket, next) => {
     // Validate as app JWT only (Microsoft tokens are not accepted at socket layer)
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      logger.info('Socket.IO - JWT token verified', { 
+      logger.info('Socket.IO - JWT token verified', {
         userId: decoded.userId,
         socketId: socket.id
       });
@@ -306,7 +314,7 @@ io.use(async (socket, next) => {
       // Find user in database
       const user = await User.findById(decoded.userId);
       if (!user) {
-        logger.warn('Socket.IO - User not found for JWT token', { 
+        logger.warn('Socket.IO - User not found for JWT token', {
           userId: decoded.userId,
           socketId: socket.id
         });
@@ -316,7 +324,7 @@ io.use(async (socket, next) => {
       socket.user = user;
       return next();
     } catch (jwtError) {
-      logger.error('Socket.IO - JWT validation failed', { 
+      logger.error('Socket.IO - JWT validation failed', {
         error: jwtError.message,
         socketId: socket.id
       });
@@ -324,7 +332,7 @@ io.use(async (socket, next) => {
     }
 
   } catch (error) {
-    logger.error('Socket.IO handshake error', { 
+    logger.error('Socket.IO handshake error', {
       error: error.message,
       stack: error.stack,
       socketId: socket.id
@@ -334,7 +342,7 @@ io.use(async (socket, next) => {
 });
 
 io.on('connection', (socket) => {
-  logger.info('Socket connected', { 
+  logger.info('Socket connected', {
     socketId: socket.id,
     transport: socket.conn.transport.name,
     userId: socket.user?._id?.toString?.()
@@ -374,7 +382,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', (reason) => {
-    logger.info('Socket disconnected', { 
+    logger.info('Socket disconnected', {
       socketId: socket.id,
       reason,
       userId: socket.user?._id?.toString?.()
@@ -382,7 +390,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('error', (error) => {
-    logger.error('Socket error', { 
+    logger.error('Socket error', {
       socketId: socket.id,
       error: error.message,
       stack: error.stack

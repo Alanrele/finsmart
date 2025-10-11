@@ -102,7 +102,7 @@ railway up
    ```
 
    Or set them manually in Railway Dashboard (see variables list above).
-   
+
    **New environment variables for code quality improvements:**
    - `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins (externalized CORS whitelist)
    - `ENABLE_EMAIL_SYNC` - Set to 'false' to disable periodic email sync (feature flag)

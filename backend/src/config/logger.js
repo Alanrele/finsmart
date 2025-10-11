@@ -35,20 +35,20 @@ const format = winston.format.combine(
   winston.format.json(),
   winston.format.printf((info) => {
     const { timestamp, level, message, requestId, userId, ...meta } = info;
-    
+
     let log = `${timestamp} [${level.toUpperCase()}]`;
-    
+
     // Add correlation IDs
     if (requestId) log += ` [ReqID: ${requestId}]`;
     if (userId) log += ` [User: ${userId}]`;
-    
+
     log += `: ${message}`;
-    
+
     // Add metadata if present
     if (Object.keys(meta).length > 0) {
       log += ` ${JSON.stringify(meta)}`;
     }
-    
+
     return log;
   })
 );
@@ -62,14 +62,14 @@ const transports = [
       format
     ),
   }),
-  
+
   // File transport for errors
   new winston.transports.File({
     filename: 'logs/error.log',
     level: 'error',
     format,
   }),
-  
+
   // File transport for all logs
   new winston.transports.File({
     filename: 'logs/combined.log',

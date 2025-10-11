@@ -1,3 +1,11 @@
+/*
+  Proyecto: FinSmart
+  Autor: Alan Reyes Leandro
+  Correo: alanreyesleandro5@gmail.com
+  Derechos: © 2025 Alan Reyes Leandro – Todos los derechos reservados.
+  Descripción: Componente principal de la aplicación con rutas y autenticación
+*/
+
 import React, { useEffect, useMemo, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
@@ -32,6 +40,9 @@ import SocketDebugPanel from './components/SocketDebugPanel'
 // Enhanced Components
 import EnhancedAIAssistant from './components/EnhancedAIAssistant'
 import FinancialTools from './components/FinancialTools'
+
+// FinSmart Upgrade: Pantalla de bienvenida
+import WelcomeScreen from './components/WelcomeScreen'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -193,6 +204,18 @@ function App() {
       {/* Main content */}
       <div>
       <Routes>
+        {/* FinSmart Upgrade: Ruta raíz con pantalla de bienvenida */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/dashboard" replace />
+            ) : (
+              <WelcomeScreen onAuthenticated={() => navigate('/dashboard')} />
+            )
+          }
+        />
+
         <Route
           path="/login"
           element={
@@ -209,16 +232,7 @@ function App() {
           element={<AuthCallback />}
         />
 
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <Navigate to="/login" replace />
-            )
-          }
-        />
+        {/* FinSmart Upgrade: Rutas protegidas */}
 
         <Route
           path="/dashboard"

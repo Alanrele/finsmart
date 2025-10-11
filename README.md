@@ -1,8 +1,33 @@
-# 🏦 FinSmart - Aplicación PWA de Finanzas Inteligentes
+# � FinSmart - Asistente Financiero Inteligente
+
+**© 2025 Alan Reyes Leandro – Todos los derechos reservados**  
+*Tu asistente financiero personal con inteligencia artificial*
+
+---
 
 ## 🌟 Descripción
 
 FinSmart es una Progressive Web Application (PWA) completa para gestión financiera inteligente, que combina autenticación Microsoft, inteligencia artificial y análisis automatizado de documentos.
+
+## 🆕 Nuevas Características (v2.0)
+
+### 🏠 Pantalla de Bienvenida
+- Hero animado con diseño moderno y profesional
+- Acceso directo a login/registro mediante modal no intrusivo
+- Animaciones suaves con Framer Motion
+- Features destacadas con íconos animados
+
+### 🔓 Modal de Login/Registro
+- Formulario elegante no intrusivo
+- Toggle entre login y registro sin recargar página
+- Validaciones en tiempo real
+- Soporte para correo + Microsoft Auth en un solo lugar
+
+### 🛡️ Propiedad Intelectual
+- Encabezados de copyright en todos los archivos fuente
+- LICENSE file con términos legales completos
+- Protección de marca "FinSmart"
+- Documentación de derechos de autor
 
 ## 🔗 Enlaces Importantes
 
