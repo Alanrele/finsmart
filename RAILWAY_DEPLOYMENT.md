@@ -39,6 +39,12 @@ TRUST_PROXY=true
 # Security
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+
+# CORS Configuration (comma-separated origins)
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001,https://finsmart.up.railway.app,https://finsmart-production.up.railway.app
+
+# Feature Flags
+ENABLE_EMAIL_SYNC=true  # Set to 'false' to disable periodic email sync
 ```
 
 3. **After setting variables, redeploy**:
@@ -51,7 +57,7 @@ RATE_LIMIT_MAX_REQUESTS=100
    railway logs
    ```
 
-   Look for "Connected to MongoDB" and "Server running on port" messages.
+   Look for "Server started" message with structured logging.
 
 ---
 
@@ -96,6 +102,10 @@ railway up
    ```
 
    Or set them manually in Railway Dashboard (see variables list above).
+   
+   **New environment variables for code quality improvements:**
+   - `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins (externalized CORS whitelist)
+   - `ENABLE_EMAIL_SYNC` - Set to 'false' to disable periodic email sync (feature flag)
 
 4. **Redeploy and Check**:
    ```bash

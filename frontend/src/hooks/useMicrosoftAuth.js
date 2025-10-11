@@ -164,7 +164,7 @@ export const useMicrosoftAuth = () => {
 
       // If cache fails, try popup with proper scopes
       console.log('🔄 Requesting Graph Mail token via popup...')
-      
+
       try {
         const response = await instance.acquireTokenPopup({
           ...graphMailRequest,
@@ -179,13 +179,13 @@ export const useMicrosoftAuth = () => {
         return response.accessToken
       } catch (popupError) {
         console.error('Popup failed, trying redirect...', popupError)
-        
+
         // If popup fails (blocked, closed, etc), try redirect as fallback
         await instance.acquireTokenRedirect({
           ...graphMailRequest,
           account: accounts[0]
         })
-        
+
         // acquireTokenRedirect doesn't return - page will reload
         throw new Error('Redirecting to Microsoft for authentication...')
       }
@@ -201,7 +201,7 @@ export const useMicrosoftAuth = () => {
       if (error.errorCode === 'consent_required') {
         throw new Error('Se requiere permiso para acceder a tus emails. Por favor, acepta los permisos cuando se soliciten.')
       }
-      
+
       if (error.message?.includes('Redirecting')) {
         throw error // Pass through redirect message
       }

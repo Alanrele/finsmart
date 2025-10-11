@@ -157,22 +157,27 @@ function App() {
       socketService.connect(user._id, token)
 
       // Listen for real-time notifications
-      socketService.on('notification', (notification) => {
+      const handleNotification = (notification) => {
         addNotification(notification)
-      })
+      }
 
       // Listen for new transactions
-      socketService.on('new-transaction', (transaction) => {
+      const handleNewTransaction = (transaction) => {
         addNotification({
           type: 'success',
           title: 'Nueva Transacción',
           message: `Nueva transacción detectada: ${transaction.description}`,
           priority: 'medium'
         })
-      })
+      }
 
-      // Cleanup on unmount
+      socketService.on('notification', handleNotification)
+      socketService.on('new-transaction', handleNewTransaction)
+
+      // Cleanup on unmount - properly remove listeners and disconnect
       return () => {
+        socketService.off('notification', handleNotification)
+        socketService.off('new-transaction', handleNewTransaction)
         socketService.disconnect()
       }
     }
@@ -181,9 +186,9 @@ function App() {
   return (
     <div className="App min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
 
-
-      <DebugAuth />
-      <DebugMSAL />
+      {/* Debug panels - only render when debug mode enabled */}
+      {debugEnabled && <DebugAuth />}
+      {debugEnabled && <DebugMSAL />}
 
       {/* Main content */}
       <div>

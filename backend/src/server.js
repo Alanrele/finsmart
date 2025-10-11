@@ -6,17 +6,19 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const logger = require('./config/logger');
+
 // Global error handler
 process.on('uncaughtException', (err) => {
-  console.error('❌ Uncaught Exception:', err);
-  console.error('Stack trace:', err.stack);
+  logger.error('Uncaught Exception', { error: err.message, stack: err.stack });
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  logger.error('Unhandled Rejection', { reason, promise });
   process.exit(1);
 });
+
 const authRoutes = require('./routes/authRoutes');
 const graphRoutes = require('./routes/graphRoutes');
 const aiRoutes = require('./routes/aiRoutes');
@@ -25,7 +27,7 @@ const financeRoutes = require('./routes/financeRoutes');
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
 const errorHandler = require('./middleware/errorHandler');
-const logger = require('./middleware/logger');
+const httpLogger = require('./middleware/logger');
 
 // Import services
 const EmailSyncService = require('./services/emailSyncService');
@@ -38,16 +40,16 @@ const app = express();
 const server = http.createServer(app);
 
 const PORT = process.env.PORT || 5000;
-console.log(`Resolved PORT: ${PORT} (process.env.PORT=${process.env.PORT || 'undefined'})`);
+logger.info('Server configuration', { port: PORT, envPort: process.env.PORT || 'undefined' });
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart')
 .then(async () => {
-  console.log('Connected to MongoDB');
+  logger.info('Connected to MongoDB successfully');
 
   // Only run token cleanup if MongoDB is connected
   if (mongoose.connection.readyState === 1) {
-    console.log('🧹 Performing token cleanup...');
+    logger.info('Performing token cleanup...');
     const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
     if (cleanedCount > 0) {
       console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
@@ -66,25 +68,40 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart'
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(helmet(isProduction ? productionHelmetConfig : developmentHelmetConfig));
 
-// CORS configuration for production
+// CORS configuration - externalized to environment variable
+const getCorsOrigins = () => {
+  // Read from CORS_ALLOWED_ORIGINS environment variable (comma-separated)
+  const envOrigins = process.env.CORS_ALLOWED_ORIGINS 
+    ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
+    : [];
+  
+  // Default origins for development
+  const defaultOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://finsmart-production.up.railway.app',
+    'https://finsmart.up.railway.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean);
+  
+  // Merge and deduplicate
+  const allOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+  
+  logger.info('CORS allowed origins', { origins: allOrigins });
+  return allOrigins;
+};
+
+const allowedOrigins = getCorsOrigins();
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, etc.)
+    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-
-    // Allow Railway domain and localhost for development
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://finsmart-production.up.railway.app',
-      'https://finsmart.up.railway.app',
-      process.env.FRONTEND_URL
-    ].filter(Boolean);
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
+      logger.warn('CORS blocked origin', { origin, allowedOrigins });
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -96,7 +113,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(logger);
+app.use(httpLogger);
 
 const io = socketIo(server, {
   // Mount Socket.IO under /api to avoid proxy or static route conflicts
@@ -113,23 +130,40 @@ app.use('/api/graph', authMiddleware, graphRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/finance', authMiddleware, financeRoutes);
 
-// Health check endpoint (before static files)
-app.get('/health', (req, res) => {
+// Health check endpoint with metrics (before static files)
+app.get('/health', async (req, res) => {
   const connectedSockets = io.engine.clientsCount || 0;
+  const uptime = process.uptime();
+  
+  // MongoDB latency check
+  let mongoLatency = null;
+  try {
+    const startTime = Date.now();
+    await mongoose.connection.db.admin().ping();
+    mongoLatency = Date.now() - startTime;
+  } catch (error) {
+    logger.error('Health check: MongoDB ping failed', { error: error.message });
+  }
 
-  res.status(200).json({
+  const healthData = {
     status: 'OK',
     timestamp: new Date().toISOString(),
+    uptime: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
     port: PORT,
     env: process.env.NODE_ENV,
-    mongodb: process.env.MONGODB_URI ? 'configured' : 'missing',
+    mongodb: {
+      configured: process.env.MONGODB_URI ? 'yes' : 'no',
+      latency_ms: mongoLatency
+    },
     openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
     azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing',
-    // Información de Socket.io para diagnóstico
     socketio: {
       connected_clients: connectedSockets,
     }
-  });
+  };
+  
+  logger.debug('Health check request', { metrics: healthData });
+  res.status(200).json(healthData);
 });
 
 // Eliminar el endpoint redundante /api/health
@@ -143,7 +177,8 @@ app.get('/health', (req, res) => {
 
 // Debug endpoint (development only)
 app.get('/api/debug/env', (req, res) => {
-  if (process.env.NODE_ENV !== 'production') {
+  // Only allow in development environment
+  if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({ error: 'Debug endpoint disabled in production' });
   }
 
@@ -214,7 +249,7 @@ app.get('*', (req, res, next) => {
   return next();
 });
 
-// Socket.io connection handling con logging mejorado
+// Socket.io connection handling with structured logging
 const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
 
 io.use(async (socket, next) => {
@@ -222,7 +257,11 @@ io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token;
     const userId = socket.handshake.auth?.userId;
 
-    console.log('🔌 Socket.IO handshake - Token:', token ? 'present' : 'missing');
+    logger.debug('Socket.IO handshake', { 
+      token: token ? 'present' : 'missing',
+      userId,
+      socketId: socket.id
+    });
     console.log('🔌 Socket.IO handshake - UserId:', userId || 'missing');
 
     if (!token) {
@@ -232,7 +271,7 @@ io.use(async (socket, next) => {
 
     // Basic token sanity check: app JWTs must contain two dots
     if (typeof token !== 'string' || token.split('.').length !== 3) {
-      console.log('❌ Socket.IO handshake - Malformed or non-JWT token');
+      logger.warn('Socket.IO handshake failed - Malformed token', { socketId: socket.id });
       return next(new Error('Authentication error: Malformed token'));
     }
 
@@ -243,10 +282,10 @@ io.use(async (socket, next) => {
     // Check if it's a demo token (only when explicitly allowed)
     if (token.startsWith('demo-token-')) {
       if (!ALLOW_DEMO_MODE) {
-        console.log('❌ Socket.IO - Demo token rejected (demo mode disabled)');
+        logger.warn('Socket.IO - Demo token rejected (demo mode disabled)', { socketId: socket.id });
         return next(new Error('Authentication error: Demo mode disabled'));
       }
-      console.log('🎭 Socket.IO - Demo token detected, allowing connection');
+      logger.info('Socket.IO - Demo token connection', { socketId: socket.id });
       socket.user = {
         _id: 'demo-user-id',
         firstName: 'Demo',
@@ -259,76 +298,112 @@ io.use(async (socket, next) => {
     // Validate as app JWT only (Microsoft tokens are not accepted at socket layer)
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('✅ Socket.IO - JWT token verified for user:', decoded.userId);
+      logger.info('Socket.IO - JWT token verified', { 
+        userId: decoded.userId,
+        socketId: socket.id
+      });
 
       // Find user in database
       const user = await User.findById(decoded.userId);
       if (!user) {
-        console.log('❌ Socket.IO - User not found for JWT token');
+        logger.warn('Socket.IO - User not found for JWT token', { 
+          userId: decoded.userId,
+          socketId: socket.id
+        });
         return next(new Error('Authentication error: User not found'));
       }
 
       socket.user = user;
       return next();
     } catch (jwtError) {
-      console.error('❌ Socket.IO - JWT validation failed');
-      console.error('JWT Error:', jwtError.message);
+      logger.error('Socket.IO - JWT validation failed', { 
+        error: jwtError.message,
+        socketId: socket.id
+      });
       return next(new Error('Authentication error: Invalid token'));
     }
 
   } catch (error) {
-    console.error('❌ Socket.IO handshake error:', error);
+    logger.error('Socket.IO handshake error', { 
+      error: error.message,
+      stack: error.stack,
+      socketId: socket.id
+    });
     return next(new Error('Authentication error: ' + error.message));
   }
 });
 
 io.on('connection', (socket) => {
-  console.log(`✅ Socket connected: ${socket.id} via ${socket.conn.transport.name}`);
+  logger.info('Socket connected', { 
+    socketId: socket.id,
+    transport: socket.conn.transport.name,
+    userId: socket.user?._id?.toString?.()
+  });
 
   // Log cuando cambia el transporte
   socket.conn.on('upgrade', () => {
-    console.log(`🔄 Socket ${socket.id} upgraded to ${socket.conn.transport.name}`);
+    logger.debug('Socket transport upgraded', {
+      socketId: socket.id,
+      transport: socket.conn.transport.name
+    });
   });
 
   socket.on('join-user-room', (userId) => {
     // Ensure the userId matches the authenticated socket user to prevent cross-room contamination
     const authedId = socket.user?._id?.toString?.() || socket.user?._id;
     if (!authedId || userId?.toString?.() !== authedId) {
-      console.warn(`🚫 join-user-room rejected for socket ${socket.id}. Provided: ${userId}, Authed: ${authedId}`);
+      logger.warn('join-user-room rejected - userId mismatch', {
+        socketId: socket.id,
+        providedUserId: userId,
+        authedUserId: authedId
+      });
       return;
     }
     socket.join(`user-${authedId}`);
-    console.log(`👤 User ${authedId} joined room user-${authedId} (socket: ${socket.id})`);
+    logger.info('User joined room', {
+      userId: authedId,
+      room: `user-${authedId}`,
+      socketId: socket.id
+    });
   });
 
   // Heartbeat para mantener conexiones activas en Railway
   socket.on('ping', () => {
     socket.emit('pong');
-    console.log(`💓 Heartbeat from ${socket.id}`);
+    logger.debug('Heartbeat received', { socketId: socket.id });
   });
 
   socket.on('disconnect', (reason) => {
-    console.log(`❌ Socket disconnected: ${socket.id}, reason: ${reason}`);
+    logger.info('Socket disconnected', { 
+      socketId: socket.id,
+      reason,
+      userId: socket.user?._id?.toString?.()
+    });
   });
 
   socket.on('error', (error) => {
-    console.error(`🚨 Socket error for ${socket.id}:`, error);
+    logger.error('Socket error', { 
+      socketId: socket.id,
+      error: error.message,
+      stack: error.stack
+    });
   });
 });
 
 // Make io available to routes
 app.set('io', io);
 
-// Initialize Email Sync Service
+// Initialize Email Sync Service with feature flag
 const emailSyncService = new EmailSyncService(io);
 
-// Start periodic email sync in production (every 15 minutes) - DISABLED FOR DEBUGGING
-// if (process.env.NODE_ENV === 'production') {
-//   emailSyncService.startPeriodicSync(15);
-//   console.log('📧 Periodic email sync started (15 minutes interval)');
-// } else {
-//   console.log('📧 Periodic email sync disabled in development mode');
-// }
+// Start periodic email sync (controlled by ENABLE_EMAIL_SYNC env var)
+// Default: enabled (production), can be disabled for debugging
+if (process.env.ENABLE_EMAIL_SYNC !== 'false') {
+  emailSyncService.startPeriodicSync(15);
+  logger.info('Periodic email sync started', { interval: '15 minutes' });
+} else {
+  logger.info('Periodic email sync disabled by ENABLE_EMAIL_SYNC flag');
+}
 
 // Make emailSyncService available to routes
 app.set('emailSyncService', emailSyncService);
@@ -342,11 +417,13 @@ app.use('*', (req, res) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
-  console.log(`MongoDB: ${process.env.MONGODB_URI ? 'Configured' : 'Not configured'}`);
-  console.log(`OpenAI: ${process.env.OPENAI_API_KEY ? 'Configured' : 'Not configured'}`);
-  console.log(`Azure OCR: ${process.env.AZURE_OCR_KEY ? 'Configured' : 'Not configured'}`);
+  logger.info('Server started', {
+    port: PORT,
+    env: process.env.NODE_ENV,
+    mongodb: process.env.MONGODB_URI ? 'configured' : 'not configured',
+    openai: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',
+    azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'not configured'
+  });
 });
 
 module.exports = app;
@@ -354,18 +431,18 @@ module.exports = app;
 // Graceful shutdown handlers to diagnose container stops
 const shutdown = async (signal) => {
   try {
-    console.log(`\n🔻 Received ${signal}. Shutting down gracefully...`);
+    logger.info('Shutdown signal received', { signal });
     server.close(() => {
-      console.log('HTTP server closed');
+      logger.info('HTTP server closed');
     });
     try {
       await mongoose.connection.close(false);
-      console.log('MongoDB connection closed');
+      logger.info('MongoDB connection closed');
     } catch (e) {
-      console.warn('MongoDB close error:', e.message);
+      logger.warn('MongoDB close error', { error: e.message });
     }
   } catch (e) {
-    console.error('Error during shutdown:', e);
+    logger.error('Error during shutdown', { error: e.message, stack: e.stack });
   } finally {
     process.exit(0);
   }
