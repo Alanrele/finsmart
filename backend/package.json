@@ -4,7 +4,6 @@
   "description": "Backend for FinSmart PWA - Financial Analysis Application",
   "main": "src/server.js",
   "scripts": {
-    "prestart": "node scripts/ensure-frontend.js",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "debug": "PORT=5001 NODE_ENV=development node src/server.js",

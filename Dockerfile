@@ -35,6 +35,9 @@ RUN npm ci --omit=dev --omit=optional
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist ./public
 
+# Verify frontend was copied successfully
+RUN test -f ./public/index.html || (echo "ERROR: Frontend build failed - index.html not found" && exit 1)
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
