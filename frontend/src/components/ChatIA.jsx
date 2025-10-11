@@ -19,6 +19,74 @@ const ChatIA = () => {
     scrollToBottom()
   }, [chatMessages])
 
+  // Helper: format currency with dynamic code (default PEN)
+  const formatCurrencyWith = (amount, currency = 'PEN') => {
+    try {
+      return new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)
+    } catch {
+      // Fallback to PEN if unknown currency
+      return new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount)
+    }
+  }
+
+  // Helper: sanitize AI markdown and format money values
+  const sanitizeAndFormatAiMessage = (textRaw) => {
+    if (!textRaw || typeof textRaw !== 'string') return textRaw
+
+    // 1) Strip simple markdown emphasis and code markers
+    let text = textRaw.replace(/(\*\*|__|`)/g, '')
+
+    // 2) Detect currency from context (default PEN)
+    const hasPEN = /(S\/|PEN|soles?)/i.test(text)
+    const hasUSD = /(US\$|USD|d[óo]lares?)/i.test(text)
+    const currency = hasUSD && !hasPEN ? 'USD' : 'PEN'
+
+    // 3) Replace likely money numbers with formatted currency
+    // Match numbers with optional thousand separators or decimals, avoid times/dates/percents
+    const numberRegex = /(?<![A-Za-z0-9/:])(?:\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})|\d+(?:[.,]\d{2})?)(?![A-Za-z0-9%/:])/g
+
+    text = text.replace(numberRegex, (match) => {
+      // Skip if too short and integer (< 2 digits) and no decimals
+      const hasDecimal = /[.,]\d{1,}/.test(match)
+      if (!hasDecimal && /^\d{1}$/.test(match)) return match
+
+      // Normalize: treat comma as thousands if both separators present; otherwise handle comma-decimal or dot-decimal
+      let normalized = match
+      // If both ',' and '.' exist, assume ',' thousands, '.' decimals
+      if (/,/.test(match) && /\./.test(match)) {
+        normalized = match.replace(/,/g, '')
+      } else if (/,\d{2}$/.test(match)) {
+        // comma as decimal
+        normalized = match.replace(/\./g, '').replace(',', '.')
+      } else {
+        // remove thousands dots like 1.234.567
+        const parts = match.split('.')
+        if (parts.length > 2) normalized = parts.join('')
+      }
+
+      const num = Number(normalized)
+      if (!isFinite(num)) return match
+
+      // Heuristic: format when decimals exist OR integer has >=2 digits
+      if (hasDecimal || Math.abs(num) >= 10) {
+        return formatCurrencyWith(num, currency)
+      }
+      return match
+    })
+
+    return text
+  }
+
   const handleSendMessage = async (e) => {
     e.preventDefault()
 
@@ -38,10 +106,11 @@ const ChatIA = () => {
     try {
       const response = await chatWithAI(userMessage)
 
+      const sanitized = sanitizeAndFormatAiMessage(response.response)
       // Add AI response
       addChatMessage({
         type: 'ai',
-        content: response.response
+        content: sanitized
       })
     } catch (error) {
       toast.error(error.message || 'Error procesando la consulta')
