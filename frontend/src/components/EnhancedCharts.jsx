@@ -103,16 +103,7 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
   return (
     <div ref={chartRef} className="relative">
       {title && (
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <button
-            onClick={exportChart}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Descargar gráfico"
-          >
-            <Download className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-          </button>
-        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
       )}
       <ChartErrorBoundary>
         <ResponsiveContainer width="100%" height={350}>
