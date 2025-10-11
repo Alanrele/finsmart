@@ -23,7 +23,8 @@ import {
   CartesianGrid,
   Tooltip,
   LineChart,
-  Line
+  Line,
+  Sector
 } from 'recharts';
 import useAppStore from '../stores/appStore';
 import { getDashboardData } from '../services/api'; // Importar directamente
@@ -119,6 +120,8 @@ const Dashboard = () => {
     }
     return translations[category?.toLowerCase()] || category || 'Otros'
   }
+
+  const [activeSlice, setActiveSlice] = useState(null)
 
   const categoryData = Array.isArray(topCategories)
     ? topCategories
@@ -303,18 +306,73 @@ const Dashboard = () => {
           {categoryData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
+                {/* Effects */}
+                <defs>
+                  <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+                    <feOffset dx="1" dy="2" result="offsetblur" />
+                    <feComponentTransfer>
+                      <feFuncA type="linear" slope="0.3" />
+                    </feComponentTransfer>
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
                 <Pie
                   data={categoryData}
                   cx="50%"
                   cy="50%"
-                  outerRadius={90}
+                  innerRadius={55}
+                  outerRadius={95}
                   dataKey="value"
                   minAngle={4}
                   labelLine={false}
                   label={({ name, percentage }) => `${name} ${Number(percentage || 0).toFixed(1)}%`}
+                  onMouseEnter={(_, index) => setActiveSlice(index)}
+                  onMouseLeave={() => setActiveSlice(null)}
+                  onClick={(_, index) => setActiveSlice(index)}
+                  onTouchStart={(_, index) => setActiveSlice(index)}
+                  activeIndex={activeSlice}
+                  activeShape={(props) => {
+                    const depth = 8
+                    const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props
+                    const darker = (c) => c
+                    return (
+                      <g>
+                        {/* Depth layer */}
+                        <g transform={`translate(0, ${depth})`}>
+                          <Sector
+                            cx={cx}
+                            cy={cy}
+                            innerRadius={innerRadius}
+                            outerRadius={outerRadius}
+                            startAngle={startAngle}
+                            endAngle={endAngle}
+                            fill={fill}
+                            opacity={0.35}
+                          />
+                        </g>
+                        {/* Top layer with highlight */}
+                        <Sector
+                          cx={cx}
+                          cy={cy}
+                          innerRadius={innerRadius}
+                          outerRadius={outerRadius + 6}
+                          startAngle={startAngle}
+                          endAngle={endAngle}
+                          fill={fill}
+                          filter="url(#dropShadow)"
+                          stroke="#ffffff"
+                          strokeWidth={1}
+                        />
+                      </g>
+                    )
+                  }}
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell key={`cell-${index}`} fill={entry.color} cursor="pointer" />
                   ))}
                 </Pie>
                 <Tooltip formatter={(value) => formatCurrency(value)} />
