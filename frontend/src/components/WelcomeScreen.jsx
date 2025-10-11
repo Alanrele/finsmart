@@ -34,7 +34,7 @@ const WelcomeScreen = ({ onAuthenticated }) => {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { 
+      transition: {
         duration: 0.8,
         ease: "easeOut"
       }
@@ -86,10 +86,10 @@ const WelcomeScreen = ({ onAuthenticated }) => {
               className="mb-10 flex justify-center"
               initial={{ scale: 0, rotate: -180 }}
               animate={{ scale: 1, rotate: 0 }}
-              transition={{ 
+              transition={{
                 duration: 1,
                 delay: 0.3,
-                type: "spring", 
+                type: "spring",
                 stiffness: 200,
                 damping: 15
               }}
@@ -132,8 +132,8 @@ const WelcomeScreen = ({ onAuthenticated }) => {
               <motion.button
                 onClick={() => handleOpenLogin('login')}
                 className="px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 text-lg"
-                whileHover={{ 
-                  scale: 1.08, 
+                whileHover={{
+                  scale: 1.08,
                   boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.4)",
                   y: -3
                 }}
@@ -147,8 +147,8 @@ const WelcomeScreen = ({ onAuthenticated }) => {
               <motion.button
                 onClick={() => handleOpenLogin('register')}
                 className="px-10 py-4 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white font-bold rounded-xl shadow-xl border-2 border-gray-300 dark:border-gray-700 transition-all duration-300 flex items-center justify-center space-x-2 text-lg"
-                whileHover={{ 
-                  scale: 1.08, 
+                whileHover={{
+                  scale: 1.08,
                   boxShadow: "0 25px 30px -5px rgba(0, 0, 0, 0.15)",
                   y: -3
                 }}
@@ -170,8 +170,8 @@ const WelcomeScreen = ({ onAuthenticated }) => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.2 }}
-                whileHover={{ 
-                  y: -8, 
+                whileHover={{
+                  y: -8,
                   boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
                   scale: 1.03
                 }}
@@ -190,8 +190,8 @@ const WelcomeScreen = ({ onAuthenticated }) => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.4 }}
-                whileHover={{ 
-                  y: -8, 
+                whileHover={{
+                  y: -8,
                   boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
                   scale: 1.03
                 }}
@@ -210,8 +210,8 @@ const WelcomeScreen = ({ onAuthenticated }) => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.6 }}
-                whileHover={{ 
-                  y: -8, 
+                whileHover={{
+                  y: -8,
                   boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
                   scale: 1.03
                 }}

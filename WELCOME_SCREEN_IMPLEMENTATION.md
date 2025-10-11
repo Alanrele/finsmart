@@ -344,10 +344,10 @@ npm run dev
 
 ## 📞 Soporte
 
-**Autor**: Alan Reyes Leandro  
-**Email**: alanreyesleandro5@gmail.com  
-**Proyecto**: FinSmart  
-**Versión**: 2.0  
+**Autor**: Alan Reyes Leandro
+**Email**: alanreyesleandro5@gmail.com
+**Proyecto**: FinSmart
+**Versión**: 2.0
 **Fecha**: Octubre 2025
 
 ---

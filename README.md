@@ -1,6 +1,6 @@
 # � FinSmart - Asistente Financiero Inteligente
 
-**© 2025 Alan Reyes Leandro – Todos los derechos reservados**  
+**© 2025 Alan Reyes Leandro – Todos los derechos reservados**
 *Tu asistente financiero personal con inteligencia artificial*
 
 ---
