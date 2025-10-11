@@ -74,20 +74,21 @@ const Analysis = () => {
         </p>
       </div>
 
-      {/* Start CTA */}
+      {/* Start CTA - simplified content and clear spacing */}
       {!hasStarted && !aiAnalysis && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card flex items-center justify-between"
+          className="card"
         >
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Análisis inteligente</h2>
-            <p className="text-gray-500 dark:text-gray-400">Pulsa el botón para comenzar el análisis y generar insights. Evitamos gastar tokens innecesariamente.</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <p className="text-gray-600 dark:text-gray-300">
+              Pulsa el botón para comenzar el análisis
+            </p>
+            <button onClick={handleStart} className="btn-primary sm:self-auto self-start">
+              Comenzar análisis
+            </button>
           </div>
-          <button onClick={handleStart} className="btn-primary">
-            Comenzar análisis
-          </button>
         </motion.div>
       )}
 
