@@ -274,7 +274,7 @@ const ChatIA = () => {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Pregunta sobre tus finanzas..."
               disabled={isLoading}
-              className="input-field pr-12"
+              className="input-field input-field--with-suffix-icon"
             />
             <button
               type="submit"

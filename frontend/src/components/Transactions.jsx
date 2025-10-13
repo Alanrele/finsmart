@@ -167,7 +167,7 @@ const Transactions = () => {
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({...filters, search: e.target.value, page: 1})}
-                className="input-field pl-10"
+                className="input-field input-field--with-prefix-icon"
                 placeholder="Descripción, comercio..."
               />
             </div>
