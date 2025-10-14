@@ -1,0 +1,90 @@
+const logger = require('../../../config/logger');
+const { NormalizedTransactionSchema } = require('../../../domain/NormalizedTransaction');
+const { normalizeEmailBody } = require('../normalize');
+const { detectTemplate } = require('./detectTemplate');
+const { parseCardPurchase } = require('./parsers/cardPurchase');
+
+const parsers = {
+  card_purchase: parseCardPurchase,
+};
+
+function parseBcpEmailV2({ subject, html, text, receivedAt } = {}) {
+  const normalized = normalizeEmailBody(html || text || '');
+  const detection = detectTemplate(subject, normalized);
+
+  if (!detection) {
+    return {
+      version: 'v2',
+      success: false,
+      confidence: 0,
+      notes: ['template_not_detected'],
+    };
+  }
+
+  const parser = parsers[detection.template];
+
+  if (!parser) {
+    logger.warn('BCP parser V2 template without implementation', {
+      template: detection.template,
+    });
+    return {
+      version: 'v2',
+      success: false,
+      template: detection.template,
+      confidence: 0,
+      notes: ['parser_not_implemented'],
+    };
+  }
+
+  let parsed;
+  try {
+    parsed = parser(normalized, { receivedAt });
+  } catch (error) {
+    logger.warn('BCP parser V2 failed to parse email', {
+      template: detection.template,
+      error: error.message,
+    });
+    return {
+      version: 'v2',
+      success: false,
+      template: detection.template,
+      confidence: 0,
+      notes: [`parser_error:${error.message}`],
+    };
+  }
+
+  const validation = NormalizedTransactionSchema.safeParse(parsed);
+  if (!validation.success) {
+    const issues = validation.error && validation.error.issues
+      ? validation.error.issues.map((issue) => issue.message)
+      : [validation.error ? validation.error.message : 'validation_failed'];
+
+    logger.warn('BCP parser V2 validation failed', {
+      template: detection.template,
+      issues,
+    });
+
+    return {
+      version: 'v2',
+      success: false,
+      template: detection.template,
+      confidence: 0,
+      notes: issues,
+    };
+  }
+
+  const transaction = validation.data;
+
+  return {
+    version: 'v2',
+    success: true,
+    template: detection.template,
+    transaction,
+    confidence: transaction.confidence,
+  };
+}
+
+module.exports = {
+  parseBcpEmailV2,
+};
+
