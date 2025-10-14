@@ -125,7 +125,7 @@ const Settings = () => {
               <input
                 type="email"
                 value={user?.email || ''}
-                className="input-field pl-10"
+                className="input-field input-field--with-prefix-icon"
                 disabled
               />
             </div>

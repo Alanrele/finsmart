@@ -141,7 +141,7 @@ const Login = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
-                      className="input-field pl-10"
+                      className="input-field input-field--with-prefix-icon"
                       placeholder="Tu nombre"
                       required
                     />
@@ -159,7 +159,7 @@ const Login = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
-                      className="input-field pl-10"
+                      className="input-field input-field--with-prefix-icon"
                       placeholder="Tu apellido"
                       required
                     />
@@ -180,7 +180,7 @@ const Login = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="input-field pl-10"
+                  className="input-field input-field--with-prefix-icon"
                   placeholder="tu@email.com"
                   required
                 />
@@ -199,7 +199,7 @@ const Login = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="input-field pl-10"
+                  className="input-field input-field--with-prefix-icon input-field--with-suffix-icon"
                   placeholder="Tu contraseña"
                   required
                 />
@@ -226,7 +226,7 @@ const Login = () => {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className="input-field pl-10"
+                    className="input-field input-field--with-prefix-icon input-field--with-suffix-icon"
                     placeholder="Confirma tu contraseña"
                     required
                   />

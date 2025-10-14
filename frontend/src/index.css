@@ -116,6 +116,14 @@ body {
   @apply w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-dark-primary focus:border-transparent transition-all duration-300;
 }
 
+.input-field--with-prefix-icon {
+  @apply pl-12;
+}
+
+.input-field--with-suffix-icon {
+  @apply pr-12;
+}
+
 /* Animation classes */
 .animate-float {
   animation: float 3s ease-in-out infinite;
