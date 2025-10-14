@@ -229,15 +229,21 @@ class EmailSyncService {
           continue;
         }
 
-        let emailContent = '';
+        let htmlBody;
+        let emailText = '';
 
         // Extract content (defensive: body may be missing in some fallbacks)
         if (message.body && message.body.content) {
-          emailContent = message.body.content;
+          const contentType = (message.body.contentType || '').toLowerCase();
+          if (contentType === 'html') {
+            htmlBody = message.body.content;
+          } else {
+            emailText = message.body.content;
+          }
         } else if (message.bodyPreview) {
-          emailContent = message.bodyPreview;
+          emailText = message.bodyPreview;
         } else {
-          emailContent = subj;
+          emailText = subj;
         }
 
         // Process attachments if any
@@ -250,7 +256,7 @@ class EmailSyncService {
             for (const attachment of attachments.value) {
               if (attachment.contentType && attachment.contentType.startsWith('image/')) {
                 const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                emailContent += '\n\nOCR Content:\n' + ocrText;
+                emailText += '\n\nOCR Content:\n' + ocrText;
               }
             }
           } catch (attachmentError) {
@@ -259,30 +265,37 @@ class EmailSyncService {
         }
 
         // Parse email content
-  const parsedData = emailParserService.parseEmailContent(emailContent);
+        const parseResult = emailParserService.parseEmailContent({
+          subject: subj,
+          html: htmlBody,
+          text: emailText,
+          receivedAt: message.receivedDateTime,
+        });
 
         // Double-check transactional nature with full content
-        if (!emailParserService.isTransactionalEmail(subj, emailContent, { from: sender })) {
+        if (!emailParserService.isTransactionalEmail(subj, emailText || htmlBody || '', { from: sender })) {
           continue;
         }
 
-  if (emailParserService.isValidParsedTransaction(parsedData, { subject: subj, receivedDateTime: message.receivedDateTime })) {
+        if (emailParserService.isValidParsedTransaction(parseResult, { subject: subj, receivedDateTime: message.receivedDateTime })) {
+          const normalizedTx = parseResult.transaction;
+          const amountValue = parseFloat(normalizedTx.amount.value);
           // Sanity guard: evitar montos absurdamente grandes por parsing incorrecto
           const MAX_ALLOWED_AMOUNT = 10_000_000; // S/ 10 millones
-          if (parsedData.amount > MAX_ALLOWED_AMOUNT) {
-            console.warn(`⚠️ Skipping email-derived transaction with unrealistic amount: ${parsedData.amount}. Subject: ${message.subject}`);
+          if (amountValue > MAX_ALLOWED_AMOUNT) {
+            console.warn(`⚠️ Skipping email-derived transaction with unrealistic amount: ${amountValue}. Subject: ${message.subject}`);
             continue;
           }
 
           // Verificar duplicados por número de operación
-          if (parsedData.operationNumber) {
+          if (normalizedTx.operationId) {
             const existingTransaction = await Transaction.findOne({
               userId: user._id,
-              'metadata.operationNumber': parsedData.operationNumber
+              operationNumber: normalizedTx.operationId
             });
 
             if (existingTransaction) {
-              console.log(`⚠️ Transaction already exists with operation number: ${parsedData.operationNumber}`);
+              console.log(`⚠️ Transaction already exists with operation number: ${normalizedTx.operationId}`);
               continue;
             }
           }
@@ -300,7 +313,7 @@ class EmailSyncService {
 
           // Create transaction
           const transactionData = emailParserService.createTransactionFromEmail(
-            parsedData,
+            parseResult,
             user._id,
             {
               id: message.id,
@@ -312,7 +325,7 @@ class EmailSyncService {
           const transaction = new Transaction({
             ...transactionData,
             messageId: message.id,
-            rawText: emailContent.substring(0, 1000),
+            rawText: (textBody || htmlBody || message.subject || ').substring(0, 1000),
             isProcessed: true,
             createdAt: new Date(message.receivedDateTime)
           });
@@ -497,13 +510,18 @@ class EmailSyncService {
               userId: user._id
             });
 
-            let emailContent = '';
+            let htmlBody;
+            let textBody = '';
 
             // Extract content
             if (message.body.contentType === 'html') {
-              emailContent = message.body.content;
+              htmlBody = message.body.content;
             } else {
-              emailContent = message.body.content;
+              textBody = message.body.content;
+            }
+
+            if (!htmlBody && !textBody) {
+              textBody = message.bodyPreview || message.subject || '';
             }
 
             // Process attachments if any
@@ -516,7 +534,7 @@ class EmailSyncService {
                 for (const attachment of attachments.value) {
                   if (attachment.contentType && attachment.contentType.startsWith('image/')) {
                     const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                    emailContent += '\n\nOCR Content:\n' + ocrText;
+                    textBody += '\n\nOCR Content:\n' + ocrText;
                   }
                 }
               } catch (attachmentError) {
@@ -525,12 +543,20 @@ class EmailSyncService {
             }
 
             // Parse email content
-            const parsedData = emailParserService.parseEmailContent(emailContent);
+            const parseResult = emailParserService.parseEmailContent({
+              subject: message.subject || '',
+              html: htmlBody,
+              text: textBody,
+              receivedAt: message.receivedDateTime,
+            });
 
-            if (parsedData && parsedData.amount && parsedData.amount > 0) {
+            const normalizedTx = parseResult && parseResult.transaction;
+            const amountValue = normalizedTx ? parseFloat(normalizedTx.amount.value) : null;
+
+            if (parseResult?.success && amountValue && amountValue > 0) {
               // Create transaction data
               const transactionData = emailParserService.createTransactionFromEmail(
-                parsedData,
+                parseResult,
                 user._id,
                 {
                   id: message.id,
@@ -541,7 +567,7 @@ class EmailSyncService {
 
               if (existingTransaction) {
                 // Check if there are meaningful changes
-                const hasChanges = this.hasMeaningfulChanges(existingTransaction, transactionData, parsedData);
+                const hasChanges = this.hasMeaningfulChanges(existingTransaction, transactionData, normalizedTx);
 
                 if (hasChanges) {
                   // Update the existing transaction
@@ -552,7 +578,7 @@ class EmailSyncService {
                   existingTransaction.description = transactionData.description;
                   existingTransaction.merchant = transactionData.merchant;
                   existingTransaction.location = transactionData.location;
-                  existingTransaction.rawText = emailContent.substring(0, 1000);
+                  existingTransaction.rawText = (textBody || htmlBody || message.subject || '').substring(0, 1000);
                   existingTransaction.lastUpdated = new Date();
                   existingTransaction.reprocessCount = (existingTransaction.reprocessCount || 0) + 1;
 
@@ -582,7 +608,7 @@ class EmailSyncService {
                 const transaction = new Transaction({
                   ...transactionData,
                   messageId: message.id,
-                  rawText: emailContent.substring(0, 1000),
+                  rawText: (textBody || htmlBody || message.subject || ').substring(0, 1000),
                   isProcessed: true,
                   createdAt: new Date(message.receivedDateTime)
                 });

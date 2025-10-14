@@ -1,731 +1,214 @@
-const cheerio = require('cheerio');
+const logger = require('../config/logger');
+const { normalizeEmailBody } = require('../lib/email/normalize');
+const { detectTemplate } = require('../lib/email/bcp/detectTemplate');
+const { parseBcpEmailV2 } = require('../lib/email/bcp/parseBcpEmailV2');
 
-/**
- * Detecta si un email es transaccional (contiene información de transacciones) o promocional
- * @param {string} subject - Asunto del email
- * @param {string} content - Contenido del email
- * @param {object} emailMeta - Metadata del email (incluye sender)
- */
-function isTransactionalEmail(subject, content, emailMeta = {}) {
-    // ⭐ REGLA ESPECIAL: TODOS los emails de notificaciones@notificacionesbcp.com.pe
-    // se procesan SÍ O SÍ, sin excepciones
-    const sender = (emailMeta.from || '').toLowerCase();
-    if (sender.includes('notificaciones@notificacionesbcp.com.pe')) {
-        console.log('✅ Email de notificaciones@notificacionesbcp.com.pe - PROCESANDO OBLIGATORIAMENTE');
-        return true;
-    }
+const FALLBACK_SENDERS = new Set([
+  'notificaciones@notificacionesbcp.com.pe',
+  'notificaciones@bcp.com.pe',
+  'alertas@bcp.com.pe',
+  'movimientos@bcp.com.pe',
+  'bcp@bcp.com.pe',
+]);
 
-    // Palabras clave que indican emails transaccionales
-    const transactionalKeywords = [
-        'realizaste un consumo',
-        'realizaste consumo',
-        'consumo realizado',
-        'transferencia realizada',
-        'transferencia recibida',
-        'constancia de transferencia',
-        'constancia de pago',
-        'pago de servicio',
-        'pago de tarjeta',
-        'retiro',
-        'depósito',
-        'numero de operacion',
-        'número de operación',
-        'fecha y hora',
-        'movimiento realizado',
-        'cargo efectuado',
-        'abono recibido',
-        'devolución',
-        'devuelto'
-    ];
+const TRANSACTIONAL_HINTS = [
+  /monto/i,
+  /consumo/i,
+  /transferencia/i,
+  /abono/i,
+  /retiro/i,
+  /pago/i,
+  /n[uú]mero\s+de\s+operaci[oó]n/i,
+];
 
-    // Palabras clave que indican emails promocionales (evitar)
-    const promotionalKeywords = [
-        'descuento', 'promoción', 'oferta', 'beneficio', 'gustito',
-        'préstamo preaprobado', 'préstamo tarjetero', 'tarjeta invita',
-        'travel sale', 'shopping', 'seguro de viaje', 'date un gustito',
-        'calificas a', 'descubre beneficios', 'momento de hacer realidad',
-        'clóset con tommy', 'cafetera de regalo', 'dólar está a la baja',
-        'clara y todo lo que puede', 'ya revisaste si tienes', '15% off',
-        'off en tu seguro', 'super precio', 'regalamos una cuota',
-        'proteger tu auto', 'ya conoces a clara', 'inicio de mes',
-        'tarjeta de crédito', 'felicitaciones', 'llave a un mundo',
-        'celebra la magia', 'renueva tu clóset', 'tommy hilfiger',
-        'calvin klein', 'magia de la primavera', 'qore', 'europa',
-        'euros al exterior', 'millas en el shopping', 'latam pass',
-        'depa propio', 'activa tu préstamo', 'mejora tu mes', 'dinero de vuelta',
-        'familia protegida', 'así sí vale la pena', 'calificas a una tarjeta',
-        'entra y descubre', 'tu préstamo tarjetero', 'ya está aprobado',
-        'activa', 'mejora', 'impulso a tu mes', 'dale un impulso',
-        'revive los clásicos', 'sinatra en navidad', 'dto.',
-        'descuentos con tarjetas', 'mundo de promociones', 'está aquí',
-        'renovar', 'estado de cuenta de tu tarjeta american express',
-        'estado de cuenta', 'newsletter', 'suscríbete', 'suscribete',
-        'publicidad', 'promo', 'club', 'puntos', 'programa de beneficios',
-        // Correos corporativos informativos típicos (no transaccionales)
-        'póliza', 'poliza', 'endoso', 'buzón', 'buzon',
-        'póliza de seguro', 'poliza de seguro', 'endoso de póliza', 'endoso de poliza',
-        'este correo no requiere acción', 'este correo no requiere accion',
-        'si decides realizar el cambio', 'debes enviarnos la póliza', 'debes enviarnos la poliza'
-    ];
+const TEMPLATE_TYPE_MAP = {
+  card_purchase: 'debit',
+  online_purchase: 'debit',
+  atm_withdrawal: 'withdrawal',
+  account_transfer: 'transfer',
+  incoming_credit: 'deposit',
+  service_payment: 'payment',
+  fee_commission: 'payment',
+};
 
-    const fullText = (subject + ' ' + (content || '')).toLowerCase();
+const TEMPLATE_CATEGORY_MAP = {
+  card_purchase: 'shopping',
+  online_purchase: 'shopping',
+  atm_withdrawal: 'other',
+  account_transfer: 'transfer',
+  incoming_credit: 'income',
+  service_payment: 'utilities',
+  fee_commission: 'other',
+};
 
-    // Rechazar explícitamente frases negativas comunes
-    const negativePhrases = [
-        'no es una transaccion',
-        'no es una transacción',
-        'no es una operacion',
-        'no es una operación',
-        'no corresponde a una transaccion',
-        'no corresponde a una transacción',
-        // Bloques de avisos corporativos que causaban falsos positivos
-        'si decides realizar el cambio',
-        'debes enviarnos la póliza',
-        'debes enviarnos la poliza',
-        // Resúmenes/boletines/estado de cuenta
-    'estado de cuenta',
-        'resumen de cuenta',
-        'boletín',
-        'boletin',
-        'newsletter',
-        'correo informativo',
-    'tu estado de cuenta ya está listo',
-    'tu estado de cuenta ya esta listo',
-    'tu estado de cuenta ya está disponible',
-    'tu estado de cuenta ya esta disponible',
-    'pago mínimo',
-    'pago minimo',
-    'pago total',
-    'saldo al corte',
-        'este es un correo informativo',
-        'no responder',
-        'no responder a este correo',
-        'no conteste',
-        'no contestar'
-    ];
-    for (const phrase of negativePhrases) {
-        if (fullText.includes(phrase)) return false;
-    }
+const MIN_CONFIDENCE = Number(process.env.PARSER_V2_MIN_CONFIDENCE || '0.7');
 
-    // Detectar patrones promocionales específicos
-    const promotionalPatterns = [
-        /\d+%\s*off/i,                    // "15% OFF"
-        /💰.*gustito/i,
-        /🎁.*regalo/i,
-        /🔑.*llave.*mundo/i,
-        /🚀.*activa/i,
-        /🚨.*renueva/i,
-        /💳.*invita/i,
-        /🎉.*felicitaciones/i,
-        /👀.*inicio.*mes/i,
-        /¿.*conoces.*clara/i,
-        /¿.*calificas.*tarjeta/i,
-        /celebra.*magia.*primavera/i,
-        /momento.*hacer.*realidad.*depa/i,
-        /✨.*descubre.*beneficios/i,
-        /⌛.*recibos.*vencer/i
-    ];
-
-    // Señales fuertes de transacción (basado en 1,217 transacciones reales)
-    const strongTransactionalKeywords = [
-        // Consumos (729 débito + 185 crédito)
-        'realizaste un consumo',
-        'realizaste consumo',
-        'consumo realizado',
-        'consumo tarjeta de débito',
-        'consumo tarjeta de debito',
-        'consumo tarjeta de crédito',
-        'consumo tarjeta de credito',
-        // Pagos (87 servicios + 78 tarjetas)
-        'pago de servicio',
-        'pago de servicios',
-        'constancia de pago',
-        'pago de tarjeta',
-        'pago de tarjeta propia',
-        'pago de tarjeta de crédito',
-        // Transferencias (37 otros bancos + 24 terceros + 9 propias)
-        'transferencia realizada',
-        'constancia de transferencia',
-        'transferencia a otros bancos',
-        'transferencia a terceros',
-        'transferencia entre mis cuentas',
-        'transferencia a otro banco',
-        // Devoluciones (19 ocurrencias)
-        'devolución',
-        'devolucion',
-        'realizamos una devolución',
-        // Depósitos (17 ocurrencias)
-        'depósito recibido',
-        'deposito recibido',
-        'recibiste un depósito',
-        // Retiros (10 ocurrencias)
-        'retiro',
-        'retiro de efectivo',
-        'retiro en cajero',
-        // Otros
-        'cargo efectuado',
-        'abono recibido',
-        'operación realizada',
-        'operacion realizada'
-    ];
-
-    // Patrones de evidencia adicional
-    const hasAmount = /S\/\s*[\d\.\,]+|US\$\s*[\d\.\,]+|\$\s*[\d\.\,]+/.test(fullText);
-    const hasOperationNumber = /(n[úu]mero\s+de\s+operaci[oó]n|operaci[oó]n\s*(n[°º]|num\.?|#)\s*[:\-]?\s*\d+)/i.test(fullText);
-    const hasDate = /(fecha\s+y\s+hora|\d{1,2}\s+de\s+\w+\s+de\s+\d{4}\s*-\s*\d{1,2}:\d{2}\s*(am|pm))/i.test(fullText);
-
-    // 1) Bloquear promociones primero
-    for (const pattern of promotionalPatterns) {
-        if (pattern.test(fullText)) return false;
-    }
-    for (const keyword of promotionalKeywords) {
-        if (fullText.includes(keyword.toLowerCase())) return false;
-    }
-
-    // 2) Aceptar solo si hay señales transaccionales + evidencia (monto u otro)
-    //    pero rechazar si también hay indicadores corporativos
-    const corporateBlockers = [
-        /p[óo]liza/,
-        /endoso/,
-        /si decides realizar el cambio/,
-        /debes enviarnos la p[óo]liza/,
-        /estado de cuenta/,
-        /resumen de cuenta/,
-        /bolet[íi]n/,
-        /newsletter/,
-        /correo informativo/,
-        /tu estado de cuenta ya est[áa] (listo|disponible)/,
-        /pago m[íi]nimo/,
-        /pago total/,
-        /saldo al corte/,
-        /no responder/,
-        /no contest(e|ar)/
-    ];
-    if (corporateBlockers.some(rx => rx.test(fullText))) {
-        return false;
-    }
-
-    if (strongTransactionalKeywords.some(k => fullText.includes(k))) {
-        // Requiere número de operación o monto+fecha (más estricto)
-        return hasOperationNumber || (hasAmount && hasDate);
-    }
-    if (transactionalKeywords.some(k => fullText.includes(k))) {
-        // Requiere monto+ (op# o fecha) o número de operación
-        return (hasAmount && (hasOperationNumber || hasDate)) || hasOperationNumber;
-    }
-
-    // 3) Si no hay palabras transaccionales, aunque haya monto, NO aceptar
+function isKnownBcpSender(sender) {
+  if (!sender) {
     return false;
-}
-
-function extractAmountAndCurrency(text) {
-    // Busca TODAS las apariciones de montos con moneda y elige la mejor por contexto
-    // ⭐ MEJORADO: Detecta S/ (soles), US$ o $ (dólares) con mayor precisión
-    // Formatos soportados: "S/ 1,234.56", "S/. 1.234,56", "PEN 123,45", "US$ 1,234.56", "$ 123.45", "USD 123.45"
-    if (!text) return null;
-
-    const patterns = [
-        // Soles: S/, S/., PEN (prioridad alta - moneda local)
-        { regex: /(S\/?\.?|PEN)\s*([0-9][\d\.,]*\d)/gi, currency: 'PEN' },
-        // Dólares con US$ (prioridad alta)
-        { regex: /(US\$|USD)\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' },
-        // Dólares con $ solo (prioridad media - puede ser ambiguo)
-        { regex: /(^|\s)\$\s*([0-9][\d\.,]*\d)/gi, currency: 'USD' }
-    ];
-
-    const normalizeNumber = (raw) => {
-        if (!raw) return NaN;
-        let s = String(raw).replace(/\s+/g, '').trim();
-
-        // Decidir separador decimal por el último símbolo entre coma y punto
-        const lastComma = s.lastIndexOf(',');
-        const lastDot = s.lastIndexOf('.');
-        if (lastComma !== -1 && lastDot !== -1) {
-            const decimalIsComma = lastComma > lastDot;
-            if (decimalIsComma) {
-                s = s.replace(/\./g, '');
-                s = s.replace(/,/g, '.');
-            } else {
-                s = s.replace(/,/g, '');
-            }
-        } else if (lastComma !== -1) {
-            s = s.replace(/\./g, '');
-            s = s.replace(/,/g, '.');
-        } else {
-            s = s.replace(/,/g, '');
-        }
-
-        const num = parseFloat(s);
-        if (!isFinite(num)) return NaN;
-        return Math.round(num * 100) / 100;
-    };
-
-    const candidates = [];
-    for (const p of patterns) {
-        let match;
-        while ((match = p.regex.exec(text)) !== null) {
-            const idx = match.index || 0;
-            const amountStr = match[2];
-            const amount = normalizeNumber(amountStr);
-            if (isNaN(amount)) continue;
-
-            // Contexto alrededor del match para puntuar
-            const start = Math.max(0, idx - 60);
-            const end = Math.min(text.length, idx + (match[0]?.length || 0) + 40);
-            const ctx = text.substring(start, end).toLowerCase();
-            // Ventanas locales inmediatas para etiquetas cercanas
-            const preLocal = text.substring(Math.max(0, idx - 24), idx).toLowerCase();
-            const postLocal = text.substring(idx, Math.min(text.length, idx + 24)).toLowerCase();
-
-            let score = 0;
-            const positiveLabelRx = /monto|importe|consumo|pagado|pago|transferencia|transferido|devoluci[óo]n|cargo|abono/;
-            const negativeLabelRx = /saldo|disponible|l[íi]mite|estado de cuenta|l[íi]nea de cr[ée]dito/;
-
-            // Señales positivas (cercanía vale más)
-            const hasPositiveNear = positiveLabelRx.test(preLocal) || positiveLabelRx.test(postLocal);
-            const hasPositiveCtx = positiveLabelRx.test(ctx);
-            if (hasPositiveNear) score += 6; // inmediato al número
-            else if (hasPositiveCtx) score += 2; // mencionado en el entorno
-            if (/:\s*(s\/?|us\$|\$)/i.test(preLocal + postLocal)) score += 1; // etiqueta inmediata "monto: S/"
-
-            // Señales negativas: saldos, límites, disponible
-            if (negativeLabelRx.test(preLocal) || /^\s*(saldo|disponible)/.test(postLocal)) score -= 9; // etiqueta local
-            else if (negativeLabelRx.test(ctx)) score -= 3; // mencionar lejos penaliza menos
-
-            // Contexto corporativo (seguros/pólizas) que no debe contar como monto de transacción
-            if (/p[óo]liza|endoso|seguro|cotizaci[óo]n|prima|n[°º]\s*de\s*p[óo]liza/.test(ctx)) score -= 8;
-
-            // Penaliza cantidades anormalmente grandes (posible concatenación errónea)
-            if (amount > 50_000_000) score -= 10;
-
-            // Medir distancia a etiqueta positiva más cercana (dentro de 20 chars)
-            let boundDistance = Infinity;
-            const window = text.substring(Math.max(0, idx - 20), Math.min(text.length, idx + 20)).toLowerCase();
-            const labelMatch = window.match(positiveLabelRx);
-            if (labelMatch) {
-                const labelIndexInWindow = window.indexOf(labelMatch[0]);
-                boundDistance = Math.abs(labelIndexInWindow - 20); // aprox distancia relativa al número
-            }
-
-            candidates.push({ amount, currency: p.currency, score, idx, boundDistance });
-        }
-    }
-
-    if (candidates.length === 0) return null;
-
-    // Preferir candidatos ligados a etiqueta positiva cercana (boundDistance < 20)
-    const bound = candidates.filter(c => Number.isFinite(c.boundDistance) && c.boundDistance < 20);
-    let best;
-    if (bound.length > 0) {
-        bound.sort((a, b) => (a.boundDistance - b.boundDistance) || (b.score - a.score) || (a.idx - b.idx));
-        best = bound[0];
-    } else {
-        // Orden general por score
-        candidates.sort((a, b) => (b.score - a.score) || (a.idx - b.idx));
-        best = candidates[0];
-    }
-
-    // Filtro final adicional: descartar montos provenientes de "saldo" si dominaron el contexto
-    if (best.score <= -1) {
-        // Buscar siguiente candidato no negativo
-        const pool = bound.length > 0 ? bound : candidates;
-        const alt = pool.find(c => c.score >= 0);
-        if (alt) return { amount: alt.amount, currency: alt.currency };
-    }
-
-    // Si no hay vínculo con etiqueta positiva cercana y el contexto no indica monto/importe/consumo, descartar
-    const positiveLabelRx = /monto|importe|consumo|pagado|pago|transferencia|transferido|devoluci[óo]n|cargo|abono/;
-    const start = Math.max(0, best.idx - 60);
-    const end = Math.min(text.length, best.idx + 40);
-    const ctx = text.substring(start, end).toLowerCase();
-    const preLocal = text.substring(Math.max(0, best.idx - 24), best.idx).toLowerCase();
-    const postLocal = text.substring(best.idx, Math.min(text.length, best.idx + 24)).toLowerCase();
-    const hasPositiveNear = positiveLabelRx.test(preLocal) || positiveLabelRx.test(postLocal);
-    const hasPositiveCtx = positiveLabelRx.test(ctx);
-    if (!hasPositiveNear && !hasPositiveCtx) {
-        return null;
-    }
-
-    return { amount: best.amount, currency: best.currency };
-}
-
-function parseSpanishDate(dateStr) {
-    if (!dateStr) return null;
-    const months = {
-        enero: '01', febrero: '02', marzo: '03', abril: '04',
-        mayo: '05', junio: '06', julio: '07', agosto: '08',
-        setiembre: '09', septiembre: '09', octubre: '10',
-        noviembre: '11', diciembre: '12'
-    };
-
-    const dateMatch = dateStr.match(/(\d{1,2})\s+de\s+(\w+)\s+de\s+(\d{4})\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (!dateMatch) return null;
-
-    const [, day, monthName, year, hour, minute, period] = dateMatch;
-    const month = months[monthName.toLowerCase()] || '01';
-    let h = parseInt(hour, 10);
-    const isPM = period.toUpperCase() === 'PM';
-    if (isPM && h < 12) h += 12;
-    if (!isPM && h === 12) h = 0;
-    const hour24 = h.toString().padStart(2, '0');
-    const dayPadded = day.padStart(2, '0');
-    return `${year}-${month}-${dayPadded} ${hour24}:${minute}`;
-}
-
-function parseEmailContent(fullText) {
-    let amountInfo = extractAmountAndCurrency(fullText);
-    let date = null;
-    let originAccount = null;
-    let cardLast4 = null;
-    let bankDest = null;
-    let operationNumber = null;
-    let channel = null;
-    let beneficiary = null;
-    let merchant = null;
-    let operationType = null;
-    let sendingType = null;
-    let paymentType = null;
-    let currency = amountInfo?.currency || null;
-
-    if (fullText.includes('<html') || fullText.includes('<body')) {
-        const $ = cheerio.load(fullText);
-
-        $('table tr').each((i, row) => {
-            const $row = $(row);
-            const $cells = $row.find('td');
-            if ($cells.length < 2) return;
-
-            const label = $cells.first().text().trim().replace(/\s+/g, ' ');
-            let value = $cells.last().text().trim().replace(/\s+/g, ' ');
-            value = value.replace(/\*\*\*\*\s*/g, '').split('\n')[0].trim();
-
-            const lowerLabel = label.toLowerCase();
-
-            if (lowerLabel.includes('fecha y hora')) {
-                date = parseSpanishDate(value);
-            } else if (lowerLabel.includes('banco destino')) {
-                bankDest = value;
-            } else if (lowerLabel.includes('número de operación') || lowerLabel.includes('numero de operacion')) {
-                operationNumber = value;
-            } else if (lowerLabel.includes('canal')) {
-                channel = value;
-            } else if (lowerLabel.includes('desde') && value.match(/\d{4}$/)) {
-                const match = value.match(/(\d{4})$/);
-                originAccount = match ? match[1] : null;
-            } else if (lowerLabel.includes('enviado a') || lowerLabel.includes('beneficiario')) {
-                // Eliminar últimos 4 dígitos si están al final del nombre
-                beneficiary = value.replace(/\s*\d{4}$/, '').trim();
-            } else if (lowerLabel.includes('operación realizada') || lowerLabel.includes('operacion realizada')) {
-                operationType = value;
-            } else if (lowerLabel.includes('tipo de envío') || lowerLabel.includes('tipo de envio')) {
-                sendingType = value;
-            } else if ((/monto|importe/.test(lowerLabel)) && !/saldo|disponible/.test(lowerLabel)) {
-                // Extraer monto preferentemente de la fila "Monto" o "Importe"
-                const extracted = extractAmountAndCurrency(value);
-                if (extracted) {
-                    amountInfo = extracted;
-                    currency = extracted.currency;
-                } else {
-                    // Si no trae moneda, intentar normalizar solo el número y usar moneda detectada en texto
-                    const numMatch = value.match(/[0-9][\d\.,]*\d/);
-                    if (numMatch) {
-                        const tmp = numMatch[0];
-                        // Reutilizamos la normalización interna de extractAmountAndCurrency
-                        const n = (function normalizeForTable(raw){
-                            let s = String(raw).replace(/\s+/g,'').trim();
-                            const lastComma = s.lastIndexOf(',');
-                            const lastDot = s.lastIndexOf('.');
-                            if (lastComma !== -1 && lastDot !== -1) {
-                                const decimalIsComma = lastComma > lastDot;
-                                if (decimalIsComma) { s = s.replace(/\./g,''); s = s.replace(/,/g,'.'); }
-                                else { s = s.replace(/,/g,''); }
-                            } else if (lastComma !== -1) { s = s.replace(/\./g,''); s = s.replace(/,/g,'.'); }
-                            else { s = s.replace(/,/g,''); }
-                            const num = parseFloat(s);
-                            return isFinite(num) ? Math.round(num*100)/100 : NaN;
-                        })(tmp);
-                        if (!isNaN(n)) {
-                            amountInfo = { amount: n, currency: currency || null };
-                        }
-                    }
-                }
-            }
-            // --- Nuevos campos ---
-            else if (lowerLabel.includes('pagado a')) {
-                const match = value.match(/(\d{4})$/);
-                cardLast4 = match ? match[1] : null;
-                // Extract merchant name before the masked digits if present
-                const cleaned = value.replace(/\s*(\*{4,}|[*•]{4,})?\s*\d{4}\s*$/, '').trim();
-                if (cleaned) merchant = cleaned;
-            } else if (lowerLabel.includes('tipo de pago')) {
-                paymentType = value;
-            } else if (
-                lowerLabel.includes('número de tarjeta de débito') ||
-                lowerLabel.includes('numero de tarjeta de debito') ||
-                lowerLabel.includes('número de tarjeta') ||
-                lowerLabel.includes('numero de tarjeta')
-            ) {
-                const match = value.match(/(\d{4})$/);
-                cardLast4 = match ? match[1] : null;
-            } else if (lowerLabel.includes('empresa') || lowerLabel.includes('comercio') || lowerLabel.includes('nombre del comercio')) {
-                merchant = value;
-            }
-        });
-
-        // Buscar monto en negritas si no se encontró
-        if (!amountInfo) {
-            $('b').each((i, el) => {
-                const text = $(el).text();
-                const match = extractAmountAndCurrency(text);
-                if (match) {
-                    amountInfo = match;
-                    currency = match.currency;
-                }
-            });
-        }
-    }
-
-    // Fallbacks when HTML table doesn't include explicit fields
-    // 1) Try to detect last 4 digits from mask patterns in free text
-    if (!cardLast4) {
-        const maskMatch = fullText.match(/(?:\*{4,}|[*•]{4,})\s*([0-9]{4})/);
-        if (maskMatch) {
-            cardLast4 = maskMatch[1];
-        }
-    }
-
-    // 2) Infer operation type from narrative text if missing
-    if (!operationType) {
-        const txt = fullText.toLowerCase();
-        if (/(devoluci[óo]n|devuelto)/i.test(txt)) {
-            operationType = 'Devolución';
-        } else if (/realizaste\s+un\s+consumo|consumo\s+tarjeta/i.test(txt)) {
-            operationType = 'Consumo Tarjeta de Débito';
-        } else if (/pago\s+de\s+tarjeta/i.test(txt)) {
-            operationType = 'Pago de tarjeta';
-        }
-    }
-
-    // 3) Infer currency if missing
-    if (!currency) {
-        if (/US\$|\bUSD\b|\$\s*\d/.test(fullText)) {
-            currency = 'USD';
-        } else if (/moneda\s+sol(es)?/i.test(fullText) || /S\/?\s*\d/.test(fullText)) {
-            currency = 'PEN';
-        }
-    }
-
-    return {
-        amount: amountInfo?.amount || null,
-        currency: currency || null,
-        date: date || null,
-        originAccount: originAccount || null,
-        cardLast4: cardLast4 || null,
-        bankDest: bankDest || null,
-        operationNumber: operationNumber || null,
-        channel: channel || null,
-        beneficiary: beneficiary || null,
-        merchant: merchant || null,
-        operationType: operationType || null,
-        sendingType: sendingType || null,
-        paymentType: paymentType || null
-    };
-}
-
-/**
- * Clasifica el tipo de transacción basado en la información extraída
- */
-function classifyTransactionType(parsedData) {
-    const { operationType, sendingType, paymentType, merchant, beneficiary, amount } = parsedData;
-
-    // Determinar si es ingreso o gasto
-    let type = 'payment'; // Default type that exists in enum
-    let category = 'other'; // Default category in lowercase
-
-    if (operationType) {
-        const opType = operationType.toLowerCase();
-
-        // Ingresos
-        if (opType.includes('depósito') || opType.includes('deposito') ||
-            opType.includes('transferencia recibida') || opType.includes('abono')) {
-            type = 'deposit';
-            category = 'income'; // 'income' is valid in enum
-        }
-        // Devoluciones / reembolsos
-        else if (opType.includes('devoluci') || opType.includes('devuelto') || opType.includes('reembolso')) {
-            type = 'deposit';
-            category = 'income';
-        }
-        // Transferencias enviadas
-        else if (opType.includes('transferencia') || opType.includes('envío')) {
-            type = 'transfer';
-            category = 'transfer';
-        }
-        // Pagos
-        else if (opType.includes('pago')) {
-            type = 'payment';
-            if (merchant) {
-                category = 'shopping';
-            } else {
-                category = 'other';
-            }
-        }
-        // Retiros
-        else if (opType.includes('retiro')) {
-            type = 'withdrawal';
-            category = 'other';
-        }
-        // Compras/consumos
-        else if (opType.includes('consumo') || opType.includes('compra')) {
-            type = 'debit';
-            category = 'shopping';
-        }
-    }
-
-    // Categorización más específica basada en el beneficiario o comercio
-    if (merchant || beneficiary) {
-        const entity = (merchant || beneficiary).toLowerCase();
-
-        // Categorización basada en patrones reales de BCP
-        // Delivery & Restaurantes
-        if (entity.includes('pedidosya') || entity.includes('rappi') || entity.includes('uber eats') ||
-            entity.includes('didi food') || entity.includes('dlc*') || entity.includes('restaurante') ||
-            entity.includes('restaurant') || entity.includes('comida') || entity.includes('pyu*')) {
-            category = 'food';
-        }
-        // Supermercados
-        else if (entity.includes('metro') || entity.includes('plaza vea') || entity.includes('tottus') ||
-                 entity.includes('wong') || entity.includes('vivanda') || entity.includes('superm')) {
-            category = 'food';
-        }
-        // Transporte (Uber, Cabify, taxis, buses)
-        else if (entity.includes('uber') || entity.includes('cabify') || entity.includes('beat') ||
-                 entity.includes('taxi') || entity.includes('bus') || entity.includes('movil bus') ||
-                 entity.includes('gasolina') || entity.includes('grifo') || entity.includes('combustible') ||
-                 entity.includes('primax') || entity.includes('repsol') || entity.includes('eess')) {
-            category = 'transport';
-        }
-        // Servicios de Streaming & Suscripciones
-        else if (entity.includes('netflix') || entity.includes('spotify') || entity.includes('amazon prime') ||
-                 entity.includes('disney') || entity.includes('hbo') || entity.includes('apple.com/bill') ||
-                 entity.includes('google *') || entity.includes('microsoft') || entity.includes('openai')) {
-            category = 'entertainment';
-        }
-        // Telecomunicaciones
-        else if (entity.includes('claro') || entity.includes('movistar') || entity.includes('entel') ||
-                 entity.includes('bitel') || entity.includes('telefon')) {
-            category = 'utilities';
-        }
-        // Entretenimiento & Gaming
-        else if (entity.includes('cine') || entity.includes('steam') || entity.includes('playstation') ||
-                 entity.includes('xbox') || entity.includes('nintendo') || entity.includes('twitch')) {
-            category = 'entertainment';
-        }
-        // Educación
-        else if (entity.includes('utp') || entity.includes('universidad') || entity.includes('instituto') ||
-                 entity.includes('colegio') || entity.includes('academia')) {
-            category = 'education';
-        }
-        // Pagos digitales (Yape, Plin)
-        else if (entity.includes('yape') || entity.includes('plin') || entity.includes('tunki')) {
-            category = 'transfer';
-        }
-        // Compras Online
-        else if (entity.includes('aliexpress') || entity.includes('amazon') || entity.includes('mercado libre') ||
-                 entity.includes('linio') || entity.includes('joom') || entity.includes('agora shop')) {
-            category = 'shopping';
-        }
-        // Salud
-        else if (entity.includes('farmacia') || entity.includes('botica') || entity.includes('inkafarma') ||
-                 entity.includes('mifarma') || entity.includes('clinic') || entity.includes('hospital')) {
-            category = 'healthcare';
-        }
-        // Servicios básicos
-        else if (entity.includes('luz') || entity.includes('agua') || entity.includes('gas')) {
-            category = 'utilities';
-        }
-    }
-
-    return { type, category };
-}
-
-/**
- * Convierte la información parseada en una transacción para la base de datos
- */
-function mapChannel(value) {
-    if (!value) return 'other';
-    const v = String(value).toLowerCase();
-    if (v.includes('atm') || v.includes('cajero')) return 'atm';
-    if (v.includes('pos') || v.includes('terminal') || v.includes('comercio')) return 'pos';
-    if (v.includes('móvil') || v.includes('movil') || v.includes('app')) return 'mobile';
-    if (v.includes('web') || v.includes('online') || v.includes('internet')) return 'online';
-    if (v.includes('agencia') || v.includes('sucursal') || v.includes('branch')) return 'branch';
-    return 'other';
-}
-
-function isValidParsedTransaction(parsedData, emailMeta = {}) {
-    if (!parsedData) return false;
-    // Must have positive amount and a currency
-    if (!parsedData.amount || parsedData.amount <= 0) return false;
-    if (!parsedData.currency) return false;
-    // Must contain at least one identifier to give context
-    const hasIdentifier = !!(parsedData.operationNumber || parsedData.merchant || parsedData.beneficiary || parsedData.operationType);
-    if (!hasIdentifier) return false;
-    // Subject/received date are expected from email meta but not strictly required here
+  }
+  const normalized = sender.toLowerCase();
+  if (normalized.endsWith('@bcp.com.pe')) {
     return true;
+  }
+
+  for (const allowed of FALLBACK_SENDERS) {
+    if (normalized.includes(allowed)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
-function createTransactionFromEmail(parsedData, userId, emailData) {
-    const { type, category } = classifyTransactionType(parsedData);
+function hasTransactionalHints(subject, body) {
+  const combined = `${subject || ''}\n${body || ''}`;
+  return TRANSACTIONAL_HINTS.some((regex) => regex.test(combined));
+}
 
-    // Generar descripción
-    let description = 'Transacción bancaria';
-    if (parsedData.merchant) {
-        description = `Pago a ${parsedData.merchant}`;
-    } else if (parsedData.beneficiary) {
-        description = `Transferencia a ${parsedData.beneficiary}`;
-    } else if (parsedData.operationType) {
-        description = parsedData.operationType;
+function mapChannel(value) {
+  if (!value) {
+    return 'other';
+  }
+
+  const normalized = String(value).toLowerCase();
+  if (normalized.includes('atm') || normalized.includes('cajero')) {
+    return 'atm';
+  }
+  if (normalized.includes('pos') || normalized.includes('terminal') || normalized.includes('comercio')) {
+    return 'pos';
+  }
+  if (normalized.includes('móvil') || normalized.includes('movil') || normalized.includes('app')) {
+    return 'mobile';
+  }
+  if (normalized.includes('web') || normalized.includes('online') || normalized.includes('internet')) {
+    return 'online';
+  }
+  if (normalized.includes('agencia') || normalized.includes('sucursal') || normalized.includes('branch')) {
+    return 'branch';
+  }
+  return 'other';
+}
+
+function buildDescription(transaction) {
+  if (transaction.merchant) {
+    return `Pago en ${transaction.merchant}`;
+  }
+  if (transaction.accountRef) {
+    return `Operación ${transaction.accountRef}`;
+  }
+  if (transaction.notes) {
+    return transaction.notes;
+  }
+  return `Transacción ${transaction.template.replace(/_/g, ' ')}`;
+}
+
+function isTransactionalEmail(subject, content, emailMeta = {}) {
+  const normalizedBody = normalizeEmailBody(content || '');
+  const detection = detectTemplate(subject, normalizedBody);
+
+  if (detection) {
+    return true;
+  }
+
+  const sender = emailMeta.from ? String(emailMeta.from).toLowerCase() : '';
+  if (isKnownBcpSender(sender) && hasTransactionalHints(subject, normalizedBody)) {
+    logger.debug('Parser V2 fallback transactional detection triggered', {
+      subject,
+      sender,
+    });
+    return true;
+  }
+
+  return false;
+}
+
+function parseEmailContent(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('parseEmailContent expects an object with subject, html or text');
+  }
+
+  const {
+    subject = '',
+    html,
+    text,
+    receivedAt,
+  } = payload;
+
+  return parseBcpEmailV2({
+    subject,
+    html,
+    text,
+    receivedAt,
+  });
+}
+
+function isValidParsedTransaction(result) {
+  if (!result || !result.success || !result.transaction) {
+    return false;
+  }
+
+  const tx = result.transaction;
+  const amount = parseFloat(tx.amount?.value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return false;
+  }
+
+  return tx.confidence >= MIN_CONFIDENCE;
+}
+
+function createTransactionFromEmail(result, userId, emailMeta = {}) {
+  if (!result || !result.transaction) {
+    throw new Error('Normalized transaction result is required');
+  }
+
+  const tx = result.transaction;
+  const amount = parseFloat(tx.amount.value);
+
+  if (!Number.isFinite(amount)) {
+    throw new Error(`Invalid transaction amount received: ${tx.amount.value}`);
+  }
+
+  const type = TEMPLATE_TYPE_MAP[tx.template] || 'debit';
+  const category = TEMPLATE_CATEGORY_MAP[tx.template] || 'other';
+  const description = buildDescription(tx);
+
+  let balanceValue;
+  if (tx.balanceAfter) {
+    const parsedBalance = parseFloat(tx.balanceAfter);
+    if (Number.isFinite(parsedBalance)) {
+      balanceValue = parsedBalance;
     }
+  }
 
-    // Guardrail adicional por si llegara un monto inflado
-    const MAX_REASONABLE_AMOUNT = 10_000_000; // 10 millones
-    const safeAmount = Math.min(Math.abs(parsedData.amount || 0), MAX_REASONABLE_AMOUNT);
+  const occurredAt = tx.occurredAt
+    ? new Date(tx.occurredAt)
+    : (emailMeta.receivedDateTime ? new Date(emailMeta.receivedDateTime) : new Date());
 
-    return {
-        userId,
-        amount: safeAmount,
-        type,
-        category,
-        description,
-        date: parsedData.date ? new Date(parsedData.date) : (emailData?.receivedDateTime ? new Date(emailData.receivedDateTime) : new Date()),
-        currency: parsedData.currency || 'PEN',
-        channel: mapChannel(parsedData.channel),
-        merchant: parsedData.merchant || parsedData.beneficiary || undefined,
-        operationNumber: parsedData.operationNumber || undefined,
-        cardNumber: parsedData.cardLast4 ? `****${parsedData.cardLast4}` : undefined,
-        isAI: true, // Marcamos como procesado por IA
-        metadata: {
-            emailId: emailData.id,
-            emailSubject: emailData.subject,
-            operationNumber: parsedData.operationNumber,
-            originAccount: parsedData.originAccount,
-            cardLast4: parsedData.cardLast4,
-            bankDest: parsedData.bankDest,
-            sendingType: parsedData.sendingType,
-            paymentType: parsedData.paymentType,
-            receivedDate: emailData.receivedDateTime ? new Date(emailData.receivedDateTime) : undefined,
-            processedAt: new Date()
-        }
-    };
+  return {
+    userId,
+    amount,
+    currency: tx.amount.currency,
+    type,
+    category,
+    merchant: tx.merchant || undefined,
+    description,
+    channel: mapChannel(tx.channel),
+    operationNumber: tx.operationId || undefined,
+    cardNumber: tx.cardLast4 ? `****${tx.cardLast4}` : undefined,
+    date: occurredAt,
+    balance: balanceValue,
+    location: tx.location || undefined,
+    aiAnalysis: {
+      confidence: tx.confidence,
+    },
+  };
 }
 
 module.exports = {
-    parseEmailContent,
-    extractAmountAndCurrency,
-    parseSpanishDate,
-    classifyTransactionType,
-    createTransactionFromEmail,
-    isTransactionalEmail,
-    isValidParsedTransaction
+  isTransactionalEmail,
+  parseEmailContent,
+  isValidParsedTransaction,
+  createTransactionFromEmail,
 };

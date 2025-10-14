@@ -1,27 +1,70 @@
-const parser = require('../emailParserService');
+const fs = require('fs');
+const path = require('path');
 
-describe('emailParserService', () => {
-  test('blocks corporate/insurance notices as non-transactional', () => {
-    const subject = 'Alerta BCP: Si decides realizar el cambio, debes enviarnos la Póliza';
-    const content = 'Este correo informativo sobre tu póliza no requiere acción';
-    expect(parser.isTransactionalEmail(subject, content)).toBe(false);
+const emailParserService = require('../emailParserService');
+
+function loadFixture(name) {
+  const fixturePath = path.resolve(
+    __dirname,
+    '../../../tests/email/bcp/fixtures',
+    name,
+  );
+  const raw = fs.readFileSync(fixturePath, 'utf8');
+  return JSON.parse(raw);
+}
+
+describe('emailParserService (V2)', () => {
+  const cardPurchaseFixture = loadFixture('card_purchase_pen.json');
+  const nonTransactionalFixture = loadFixture('non_transactional.json');
+
+  test('detects transactional emails from BCP card purchase notifications', () => {
+    const detected = emailParserService.isTransactionalEmail(
+      cardPurchaseFixture.subject,
+      cardPurchaseFixture.text,
+      { from: 'notificaciones@bcp.com.pe' },
+    );
+
+    expect(detected).toBe(true);
   });
 
-  test('accepts transactional email with sufficient evidence', () => {
-    const subject = 'BCP: Realizaste un consumo';
-    const content = 'Monto: S/ 123.45 en TIENDA XYZ. Número de Operación 123456';
-    expect(parser.isTransactionalEmail(subject, content)).toBe(true);
+  test('parses card purchase email into normalized transaction and maps to persistence payload', () => {
+    const parseResult = emailParserService.parseEmailContent({
+      subject: cardPurchaseFixture.subject,
+      text: cardPurchaseFixture.text,
+      receivedAt: '2024-05-10T15:32:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('card_purchase');
+
+    const transactionData = emailParserService.createTransactionFromEmail(
+      parseResult,
+      'user-id-sample',
+      {
+        id: 'message-id',
+        subject: cardPurchaseFixture.subject,
+        receivedDateTime: '2024-05-10T15:32:00-05:00',
+      },
+    );
+
+    expect(transactionData.amount).toBeCloseTo(78.9, 2);
+    expect(transactionData.type).toBe('debit');
+    expect(transactionData.category).toBe('shopping');
+    expect(transactionData.aiAnalysis.confidence).toBeGreaterThan(0.7);
   });
 
-  test('prefers consumption amount over saldo disponible in context', () => {
-    const text1 = 'Saldo disponible: S/ 5,678.90. Monto de consumo: S/ 78.90';
-    const parsed1 = parser.parseEmailContent(text1);
-    expect(parsed1.amount).toBeCloseTo(78.90, 2);
-    expect(parsed1.currency).toBe('PEN');
+  test('flags non-transactional emails as invalid for persistence', () => {
+    const parseResult = emailParserService.parseEmailContent({
+      subject: nonTransactionalFixture.subject,
+      text: nonTransactionalFixture.text,
+    });
 
-    const text2 = 'Monto de consumo: S/ 78.90. Saldo disponible: S/ 5,678.90';
-    const parsed2 = parser.parseEmailContent(text2);
-    expect(parsed2.amount).toBeCloseTo(78.90, 2);
-    expect(parsed2.currency).toBe('PEN');
+    expect(parseResult.success).toBe(false);
+    expect(parseResult.confidence).toBe(0);
+    expect(
+      emailParserService.isValidParsedTransaction(parseResult, {
+        subject: nonTransactionalFixture.subject,
+      }),
+    ).toBe(false);
   });
 });

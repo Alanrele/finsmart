@@ -279,10 +279,29 @@ router.post('/sync-emails', async (req, res) => {
         // Quick check if email is likely transactional before processing
         // Handle case where body might be missing from fallback query
         const emailSubject = message.subject || '';
-        const emailBodyContent = message.body?.content || message.bodyPreview || '';
+        const senderAddress = message.from?.emailAddress?.address;
+
+        let htmlBody;
+        let textBody = '';
+
+        if (message.body && message.body.content) {
+          const contentType = (message.body.contentType || '').toLowerCase();
+          if (contentType === 'html') {
+            htmlBody = message.body.content;
+          } else {
+            textBody = message.body.content;
+          }
+        } else if (message.bodyPreview) {
+          textBody = message.bodyPreview;
+        } else {
+          textBody = emailSubject;
+        }
+
+        const transactionalCheckBody = textBody || htmlBody || '';
         const isLikelyTransactional = emailParserService.isTransactionalEmail(
           emailSubject,
-          emailBodyContent
+          transactionalCheckBody,
+          { from: senderAddress }
         );
 
         if (!isLikelyTransactional) {
@@ -296,23 +315,23 @@ router.post('/sync-emails', async (req, res) => {
 
         console.log(`💳 Processing potential transaction email: ${emailSubject}`);
 
-        let emailContent = '';
+        let emailText = textBody;
 
         // Extract content from email body (handle various Graph API response formats)
         if (message.body && message.body.content) {
           if (message.body.contentType === 'html') {
-            emailContent = message.body.content;
+            emailText = textBody;
           } else {
-            emailContent = message.body.content;
+            emailText = message.body.content;
           }
         } else if (message.bodyPreview) {
           // Fallback to bodyPreview if available (default Graph API response)
           console.log(`⚠️ Using bodyPreview as fallback for: ${emailSubject}`);
-          emailContent = message.bodyPreview;
+          emailText = message.bodyPreview;
         } else {
           // Last resort: use subject only
           console.log(`⚠️ No body content available, using subject only: ${emailSubject}`);
-          emailContent = emailSubject;
+          emailText = emailSubject;
         }
 
         // Process attachments for OCR if any (only if hasAttachments property is available)
@@ -326,7 +345,7 @@ router.post('/sync-emails', async (req, res) => {
             for (const attachment of attachments.value) {
               if (attachment.contentType && attachment.contentType.startsWith('image/')) {
                 const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                emailContent += '\n\nOCR Content:\n' + ocrText;
+                emailText += '\n\nOCR Content:\n' + ocrText;
               }
             }
           } catch (attachmentError) {
@@ -339,13 +358,19 @@ router.post('/sync-emails', async (req, res) => {
         // Parse email content
         console.log('🔍 Parsing email:', emailSubject);
 
-        let parsedData;
+        let parseResult;
         try {
-          parsedData = emailParserService.parseEmailContent(emailContent);
+          parseResult = emailParserService.parseEmailContent({
+            subject: emailSubject,
+            html: htmlBody,
+            text: emailText,
+            receivedAt: message.receivedDateTime,
+          });
           console.log('📊 Parsed result:', {
-            hasAmount: !!parsedData?.amount,
-            amount: parsedData?.amount,
-            type: parsedData?.type
+            success: parseResult?.success,
+            amount: parseResult?.transaction?.amount?.value,
+            template: parseResult?.transaction?.template,
+            confidence: parseResult?.transaction?.confidence
           });
         } catch (parseError) {
           console.error('❌ Email parsing failed:', parseError);
@@ -356,13 +381,13 @@ router.post('/sync-emails', async (req, res) => {
           continue;
         }
 
-        if (emailParserService.isValidParsedTransaction(parsedData, { subject: emailSubject, receivedDateTime: message.receivedDateTime })) {
+        if (emailParserService.isValidParsedTransaction(parseResult, { subject: emailSubject, receivedDateTime: message.receivedDateTime })) {
           console.log('💰 Creating transaction from parsed data...');
 
           let transactionData;
           try {
             transactionData = emailParserService.createTransactionFromEmail(
-              parsedData,
+              parseResult,
               user._id,
               {
                 id: message.id,
@@ -384,12 +409,32 @@ router.post('/sync-emails', async (req, res) => {
             continue;
           }
 
-          // Create transaction record
+        const normalizedTx = parseResult.transaction;
+        const amountValue = parseFloat(normalizedTx.amount.value);
+        const MAX_ALLOWED_AMOUNT = 10_000_000; // S/ 10 millones
+        if (amountValue > MAX_ALLOWED_AMOUNT) {
+          console.warn(`�s���? Skipping email-derived transaction with unrealistic amount: ${amountValue}. Subject: ${emailSubject}`);
+          continue;
+        }
+
+        if (normalizedTx.operationId) {
+          const existingTransaction = await Transaction.findOne({
+            userId: user._id,
+            operationNumber: normalizedTx.operationId
+          });
+
+          if (existingTransaction) {
+            console.log(`�s���? Transaction already exists with operation number: ${normalizedTx.operationId}`);
+            continue;
+          }
+        }
+
+        // Create transaction record
           try {
             const transaction = new Transaction({
               ...transactionData,
               messageId: message.id,
-              rawText: emailContent.substring(0, 1000), // Store first 1000 chars for debugging
+              rawText: (emailText || htmlBody || emailSubject).substring(0, 1000), // Store first 1000 chars for debugging
               isProcessed: true,
               createdAt: new Date(message.receivedDateTime)
             });
@@ -665,32 +710,49 @@ router.get('/sync-status', async (req, res) => {
 // Test email parsing endpoint (for development)
 router.post('/test-email-parser', async (req, res) => {
   try {
-    const { emailContent } = req.body;
+    const { subject, html, text, emailContent } = req.body;
+    const bodyText = text || emailContent;
 
-    if (!emailContent) {
+    if (!bodyText && !html) {
       return res.status(400).json({ error: 'Email content is required' });
     }
 
-    console.log('🧪 Testing email parser with content length:', emailContent.length);
+    console.log('🧪 Testing email parser with content length:', (bodyText || '').length);
 
     // Parse the email content
-    const parsedData = emailParserService.parseEmailContent(emailContent);
+    const receivedAt = new Date().toISOString();
+    const parseResult = emailParserService.parseEmailContent({
+      subject: subject || 'Test Email',
+      html,
+      text: bodyText,
+      receivedAt,
+    });
 
-    // Create a demo transaction object
-    const transactionData = emailParserService.createTransactionFromEmail(
-      parsedData,
-      'test-user-id',
-      {
-        id: 'test-email-id',
-        subject: 'Test Email',
-        receivedDateTime: new Date().toISOString()
-      }
-    );
+    const parseMeta = {
+      subject: subject || 'Test Email',
+      receivedDateTime: receivedAt,
+    };
+
+    const isValid = emailParserService.isValidParsedTransaction(parseResult, parseMeta);
+
+    let transactionData = null;
+    if (isValid) {
+      transactionData = emailParserService.createTransactionFromEmail(
+        parseResult,
+        'test-user-id',
+        {
+          id: 'test-email-id',
+          subject: parseMeta.subject,
+          receivedDateTime: parseMeta.receivedDateTime,
+        }
+      );
+    }
 
     res.json({
-      success: true,
-      parsedData,
+      success: parseResult.success,
+      parseResult,
       transactionData,
+      isValid,
       message: 'Email parsing completed successfully'
     });
 
