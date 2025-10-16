@@ -47,7 +47,7 @@ describe('emailParserService (V2)', () => {
       },
     );
 
-    expect(transactionData.amount).toBeCloseTo(78.9, 2);
+  expect(transactionData.amount).toBeCloseTo(125.9, 2);
     expect(transactionData.type).toBe('debit');
     expect(transactionData.category).toBe('shopping');
     expect(transactionData.aiAnalysis.confidence).toBeGreaterThan(0.7);

@@ -9,6 +9,7 @@ const emailParserService = require('../services/emailParserService');
 const EmailSyncService = require('../services/emailSyncService');
 const tokenCleanup = require('../utils/tokenCleanup');
 const authMiddleware = require('../middleware/authMiddleware');
+const { dedupeAndSortTransactions } = require('../services/transactionDeduper');
 
 const router = express.Router();
 const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
@@ -506,12 +507,14 @@ router.post('/sync-emails', async (req, res) => {
       console.log('🔄 Enabled periodic sync for user');
     }
 
+    const orderedTransactions = dedupeAndSortTransactions(processedTransactions);
+
     const response = {
       message: 'Email sync completed successfully',
-      processedCount: processedTransactions.length,
+      processedCount: orderedTransactions.length,
       totalEmails: messages.value.length,
       skippedCount: skippedEmails.length,
-      transactions: processedTransactions.map(t => ({
+      transactions: orderedTransactions.map(t => ({
         id: t._id,
         amount: t.amount,
         type: t.type,
@@ -525,7 +528,7 @@ router.post('/sync-emails', async (req, res) => {
     };
 
     console.log('📊 Sync summary:', {
-      processed: processedTransactions.length,
+      processed: orderedTransactions.length,
       total: messages.value.length,
       skipped: skippedEmails.length
     });
