@@ -325,7 +325,7 @@ class EmailSyncService {
           const transaction = new Transaction({
             ...transactionData,
             messageId: message.id,
-            rawText: (textBody || htmlBody || message.subject || ').substring(0, 1000),
+            rawText: (textBody || htmlBody || message.subject || "").substring(0, 1000),
             isProcessed: true,
             createdAt: new Date(message.receivedDateTime)
           });
@@ -608,7 +608,7 @@ class EmailSyncService {
                 const transaction = new Transaction({
                   ...transactionData,
                   messageId: message.id,
-                  rawText: (textBody || htmlBody || message.subject || ').substring(0, 1000),
+                  rawText: (textBody || htmlBody || message.subject || "").substring(0, 1000),
                   isProcessed: true,
                   createdAt: new Date(message.receivedDateTime)
                 });
