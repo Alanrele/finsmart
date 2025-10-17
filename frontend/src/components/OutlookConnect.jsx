@@ -7,8 +7,7 @@ import {
   AlertTriangle,
   Mail,
   Calendar,
-  Download,
-  Trash2
+  Download
 } from 'lucide-react'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
 import {
@@ -16,8 +15,7 @@ import {
   getGraphStatus,
   disconnectGraph,
   syncEmails,
-  reprocessEmails,
-  resetAndReprocessEmails
+  reprocessEmails
 } from '../services/api'
 import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
@@ -29,7 +27,6 @@ const OutlookConnect = () => {
   const [loading, setLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [reprocessLoading, setReprocessLoading] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
 
   useEffect(() => {
@@ -188,32 +185,6 @@ const OutlookConnect = () => {
     }
   }
 
-  const handleResetAndReprocess = async () => {
-    if (!isGraphConnected) {
-      toast.error('Primero debes conectar tu cuenta de Outlook')
-      return
-    }
-
-    // Confirmar acción destructiva
-    const confirmed = window.confirm('Esto eliminará todas las transacciones importadas por correo y volverá a procesar tu historial. ¿Deseas continuar?')
-    if (!confirmed) return
-
-    setResetLoading(true)
-
-    try {
-      const data = await withTimeout(resetAndReprocessEmails(), 20000)
-      toast.success(`Se eliminaron ${data.deletedCount} transacciones. Reprocesamiento iniciado.`)
-    } catch (error) {
-      if (error?.code === 'TIMEOUT') {
-        toast('Limpieza iniciada. Te avisaremos por WebSocket al terminar.', { icon: '🧹' })
-      } else {
-        toast.error(error.message || 'Error al reiniciar y reprocesar')
-      }
-    } finally {
-      setResetLoading(false)
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -333,22 +304,6 @@ const OutlookConnect = () => {
                   <AlertTriangle className="w-4 h-4" />
                 )}
                 <span>Reprocesar Correos</span>
-              </button>
-
-              <button
-                onClick={handleResetAndReprocess}
-                disabled={resetLoading}
-                className="btn-secondary flex items-center justify-center space-x-2"
-                aria-label="Limpiar y Reprocesar"
-                title="Elimina transacciones importadas y vuelve a procesar el historial"
-                data-testid="reset-and-reprocess"
-              >
-                {resetLoading ? (
-                  <div className="loading-spinner w-4 h-4" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
-                <span>Limpiar y Reprocesar</span>
               </button>
 
               <button
