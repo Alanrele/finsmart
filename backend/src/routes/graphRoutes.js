@@ -332,7 +332,7 @@ router.post('/sync-emails', async (req, res) => {
           // Last resort: use subject only
           console.log(`⚠️ No body content available, using subject only: ${emailSubject}`);
           emailText = emailSubject;
-        }        }
+        }
 
         // Parse email content
         console.log('🔍 Parsing email:', emailSubject);
