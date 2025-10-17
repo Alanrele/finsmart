@@ -67,4 +67,53 @@ describe('emailParserService (V2)', () => {
       }),
     ).toBe(false);
   });
+
+  test('uses cheerio fallback parser when template detection fails', () => {
+    const html = `
+      <html>
+        <body>
+          <table>
+            <tr>
+              <td>Fecha y hora</td>
+              <td>15 de octubre de 2024 - 10:45 AM</td>
+            </tr>
+            <tr>
+              <td>Operación realizada</td>
+              <td>Transferencia a terceros</td>
+            </tr>
+            <tr>
+              <td>Número de operación</td>
+              <td>ABC12345</td>
+            </tr>
+            <tr>
+              <td>Canal</td>
+              <td>App BCP</td>
+            </tr>
+            <tr>
+              <td>Enviado a</td>
+              <td>Juan Perez 1234</td>
+            </tr>
+            <tr>
+              <td>Monto transferido</td>
+              <td><b>S/ 150.00</b></td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Notificacion de movimiento en tu cuenta',
+      html,
+      text: null,
+      receivedAt: '2024-10-15T15:45:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('account_transfer');
+    expect(parseResult.transaction.amount.value).toBe('150.00');
+    expect(parseResult.transaction.amount.currency).toBe('PEN');
+    expect(parseResult.transaction.operationId).toBe('ABC12345');
+    expect(parseResult.transaction.confidence).toBeGreaterThanOrEqual(0.7);
+  });
 });
