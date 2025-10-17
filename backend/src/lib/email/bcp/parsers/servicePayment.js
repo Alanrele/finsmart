@@ -14,8 +14,9 @@ function parseServicePayment(text, options = {}) {
   let usedFallbackDate = false;
 
   const amount = parseAmount(text, [
-    /Monto\s+pago:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
-    /Monto\s+de\s+pago:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
+    /Monto\s+(?:del\s+)?pago:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
+    /Monto\s+pagado:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
+    /Monto\s+total\s+pagado:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
     /Importe\s+pagado:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
   ]);
   if (!amount) {
@@ -73,7 +74,7 @@ function parseServicePayment(text, options = {}) {
     const digitCount = trimmedCode.replace(/\D/g, '').length;
     const isReliableCode = customerCodeReliability === 'lenient'
       ? trimmedCode.length > 0
-      : hasLetters || digitCount >= 9;
+      : hasLetters || digitCount >= 6;
 
     if (isReliableCode) {
       customerCode = trimmedCode;

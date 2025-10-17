@@ -90,6 +90,7 @@ const templates = [
     name: 'service_payment',
     priority: 85,
     subject: [
+      /(?:Envio\s+Automatico\s*-?\s*)?Constancia\s+de\s+Pago\s+de\s+Servicio/i,
       /Constancia\s+de\s+Pago\s+de\s+Servicio/i,
       /Pago\s+de\s+servicio/i,
       /Servicio\s+pagado/i,
