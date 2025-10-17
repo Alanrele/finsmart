@@ -152,6 +152,30 @@ function toIsoDateTime(dateString, fallback) {
   return parsed.toISOString();
 }
 
+function sanitizeMerchantName(raw) {
+  if (!raw) {
+    return undefined;
+  }
+
+  let cleaned = raw
+    .replace(/\uFFFD/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  cleaned = cleaned.replace(/(numero de operacion.*)$/i, '').trim();
+  cleaned = cleaned.replace(/(no reconoces esta operacion\??.*)$/i, '').trim();
+  cleaned = cleaned.replace(/(comunicate.*)$/i, '').trim();
+  cleaned = cleaned.replace(/\(\d{1,4}\)\s*\d{2,4}[-\s]?\d{3,4}(?:\s*anexo\s*\*?\d+)?/gi, '').trim();
+  cleaned = cleaned.replace(/\banexo\s+\*?\d+\b/gi, '').trim();
+  cleaned = cleaned.replace(/[!?.;,:\-]+$/g, '').trim();
+
+  if (!cleaned) {
+    return undefined;
+  }
+
+  return cleaned;
+}
+
 function inferTemplate({ operationType, sendingType, paymentType, merchant, channel, fullText }) {
   const haystack = [
     operationType,
@@ -250,7 +274,8 @@ function collectFieldsFromHtml(html) {
       if (match) {
         fields.cardLast4 = match[1];
       }
-      fields.merchant = value.replace(/(\d{4})$/, '').trim();
+      const merchantValue = value.replace(/(\d{4})$/, '').trim();
+      fields.merchant = sanitizeMerchantName(merchantValue) || fields.merchant;
     } else if (labelAscii.includes('tipo de pago')) {
       fields.paymentType = value;
     } else if (
@@ -262,7 +287,7 @@ function collectFieldsFromHtml(html) {
         fields.cardLast4 = match[1];
       }
     } else if (labelAscii.includes('empresa') || labelAscii.includes('comercio')) {
-      fields.merchant = value;
+      fields.merchant = sanitizeMerchantName(value) || fields.merchant;
     }
   });
 
@@ -316,6 +341,13 @@ function enrichFieldsFromText(fields, html, text) {
     const match = normalizedText.match(/beneficiario[:\s]+([^\n]+)/i);
     if (match) {
       fields.beneficiary = match[1].trim();
+    }
+  }
+
+  if (!fields.merchant) {
+    const merchantMatch = normalizedText.match(/pago en\s+([a-z0-9* ]{3,60})/i);
+    if (merchantMatch) {
+      fields.merchant = sanitizeMerchantName(`Pago en ${merchantMatch[1].trim()}`) || fields.merchant;
     }
   }
 
