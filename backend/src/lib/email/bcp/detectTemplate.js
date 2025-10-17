@@ -11,6 +11,7 @@ const templates = [
     ],
     bodyAnchors: [
       /Monto\s+(?:de\s+)?consumo/i,
+      /Total\s+(?:del\s+)?consumo/i,
       /Tarjeta\s+(?:terminada|numero|N[°º])/i,
       /Comercio/i,
       /Fecha\s+y\s+hora/i,

@@ -1,0 +1,17 @@
+{
+  "subject": "Realizaste un consumo con tu tarjeta",
+  "text": "Hola Alan Raul,\n\nRealizaste un consumo de S/ 273.13 con tu Tarjeta de Debito BCP en MP *ALIEXPRESS.\n\nPor tu seguridad, te enviamos los datos de tu operacion.\n\nTotal del consumo\tS/ 273.13\n\nOperacion realizada\tConsumo Tarjeta de Debito\nFecha y hora\t14 de octubre de 2025 - 12:09 AM\nNumero de Tarjeta de Debito\t************9493\nEmpresa\tMP *ALIEXPRESS\nNumero de operacion\t348298\n",
+  "expect": {
+    "template": "card_purchase",
+    "success": true,
+    "amount": {
+      "value": "273.13",
+      "currency": "PEN"
+    },
+    "occurredAt": "2025-10-14T00:09:00-05:00",
+    "merchant": "MP *ALIEXPRESS",
+    "cardLast4": "9493",
+    "operationId": "348298",
+    "confidence": 1
+  }
+}
