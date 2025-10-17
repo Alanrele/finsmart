@@ -24,10 +24,81 @@ function normalizeEmailBody(htmlOrText) {
     text = $('body').text();
   }
 
-  return text
+  const normalizedText = text
     .replace(/\r\n?/g, '\n')
     .replace(/\t/g, ' ')
     .replace(/\u00a0/g, ' ')
+    .replace(/\uFFFD/g, '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const LABELS = [
+    'Monto de consumo',
+    'Monto consumo',
+    'Monto de compra',
+    'Monto compra',
+    'Monto de retiro',
+    'Monto retiro',
+    'Monto de la operacion',
+    'Monto operacion',
+    'Monto transferido',
+    'Monto abonado',
+    'Monto depositado',
+    'Monto devuelto',
+    'Monto pago',
+    'Monto de comision',
+    'Importe',
+    'Tarjeta terminada',
+    'Tarjeta numero',
+    'Tarjeta n',
+    'Cuenta origen',
+    'Cuenta destino',
+    'Cuenta afectada',
+    'Beneficiario',
+    'Numero de operacion',
+    'Numero de operacin',
+    'Nmero de operacion',
+    'Nmero de operacin',
+    'Operacion',
+    'Operacin',
+    'Fecha y hora',
+    'Canal',
+    'Servicio',
+    'Motivo del cargo',
+    'Motivo',
+    'Ubicacion',
+    'Ubicacin',
+    'Cajero',
+    'CCI',
+    'Saldo disponible',
+    'Codigo de cliente',
+    'Cdigo de cliente',
+    'Origen'
+  ];
+
+  const cleaned = normalizedText.replace(/\n+/g, ' ');
+
+  let segmented = cleaned;
+  LABELS.forEach((label) => {
+    const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let regex;
+    if (label === 'Operacion' || label === 'Operacin') {
+      regex = new RegExp(`(?<!Numero\\s+de\\s+)(?<!Nmero\\s+de\\s+)${escapedLabel}:`, 'gi');
+    } else if (label === 'Origen') {
+      regex = new RegExp(`(?<!Cuenta\\s+)${escapedLabel}:`, 'gi');
+    } else if (label === 'Motivo') {
+      regex = new RegExp(`${escapedLabel}(?!\\s+del\\s+cargo):`, 'gi');
+    } else {
+      regex = new RegExp(`${escapedLabel}:`, 'gi');
+    }
+    segmented = segmented.replace(regex, (match) => `\n${match.trimStart()}`);
+  });
+  segmented = segmented
+    .replace(/-\n/g, '- ')
+    .replace(/\n{2,}/g, '\n')
+    .replace(/^\n+/, '');
+
+  return segmented
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
@@ -177,7 +248,11 @@ function parseDateTimeLima(dateStr, timeStr) {
   const pad = (value) => value.toString().padStart(2, '0');
 
   const isoString = `${year}-${pad(month)}-${pad(day)}T${pad(hours)}:${pad(minutes)}:${pad(seconds)}${LIMA_OFFSET}`;
-  return dayjs.tz(isoString, 'America/Lima').format();
+  // Validate using dayjs, but return the canonical ISO string to avoid double conversions.
+  if (!dayjs.tz(isoString, 'America/Lima').isValid()) {
+    throw new Error('Invalid date produced for Lima timezone');
+  }
+  return isoString;
 }
 
 module.exports = {
@@ -185,4 +260,7 @@ module.exports = {
   parseMoneyToCanonical,
   parseDateTimeLima,
 };
+
+
+
 
