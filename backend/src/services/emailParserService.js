@@ -2,6 +2,7 @@ const logger = require('../config/logger');
 const { normalizeEmailBody } = require('../lib/email/normalize');
 const { detectTemplate } = require('../lib/email/bcp/detectTemplate');
 const { parseBcpEmailV2 } = require('../lib/email/bcp/parseBcpEmailV2');
+const { extractAmountAndCurrency } = require('../lib/email/bcp/fallbackParser');
 
 const FALLBACK_SENDERS = new Set([
   'notificaciones@notificacionesbcp.com.pe',
@@ -212,4 +213,5 @@ module.exports = {
   parseEmailContent,
   isValidParsedTransaction,
   createTransactionFromEmail,
+  extractAmountAndCurrency,
 };

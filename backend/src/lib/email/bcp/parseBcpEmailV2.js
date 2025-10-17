@@ -9,6 +9,7 @@ const { parseAccountTransfer } = require('./parsers/accountTransfer');
 const { parseIncomingCredit } = require('./parsers/incomingCredit');
 const { parseServicePayment } = require('./parsers/servicePayment');
 const { parseFeeCommission } = require('./parsers/feeCommission');
+const { fallbackParseBcpEmail } = require('./fallbackParser');
 
 const parsers = {
   card_purchase: parseCardPurchase,
@@ -25,6 +26,11 @@ function parseBcpEmailV2({ subject, html, text, receivedAt } = {}) {
   const detection = detectTemplate(subject, normalized);
 
   if (!detection) {
+    const fallback = fallbackParseBcpEmail({ subject, html, text, receivedAt });
+    if (fallback) {
+      return fallback;
+    }
+
     return {
       version: 'v2',
       success: false,
@@ -39,6 +45,12 @@ function parseBcpEmailV2({ subject, html, text, receivedAt } = {}) {
     logger.warn('BCP parser V2 template without implementation', {
       template: detection.template,
     });
+
+    const fallback = fallbackParseBcpEmail({ subject, html, text, receivedAt });
+    if (fallback) {
+      return fallback;
+    }
+
     return {
       version: 'v2',
       success: false,
@@ -56,6 +68,12 @@ function parseBcpEmailV2({ subject, html, text, receivedAt } = {}) {
       template: detection.template,
       error: error.message,
     });
+
+    const fallback = fallbackParseBcpEmail({ subject, html, text, receivedAt });
+    if (fallback) {
+      return fallback;
+    }
+
     return {
       version: 'v2',
       success: false,
@@ -75,6 +93,11 @@ function parseBcpEmailV2({ subject, html, text, receivedAt } = {}) {
       template: detection.template,
       issues,
     });
+
+    const fallback = fallbackParseBcpEmail({ subject, html, text, receivedAt });
+    if (fallback) {
+      return fallback;
+    }
 
     return {
       version: 'v2',
