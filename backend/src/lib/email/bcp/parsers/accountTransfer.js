@@ -2,6 +2,7 @@ const {
   extractFirstMatch,
   parseAmount,
   parseDate,
+  parseSpanishDateTime,
   computeConfidence,
   sanitize,
 } = require('./utils');
@@ -26,7 +27,9 @@ function parseAccountTransfer(text, options = {}) {
   const confidenceTarget = 6;
 
   const amount = parseAmount(text, [
-    new RegExp(`Monto\\s+(?:transferido|de\\s+la\\s+${OPERATION_VARIANTS}):?\\s*((?:S\\/|US\\$|USD|\\$|PEN)?)[\\s]*([0-9][0-9.,]*)`, 'i'),
+    new RegExp(`Monto\\s+(?:transferido|de\\s+la\\s+${OPERATION_VARIANTS}|enviado):?\\s*((?:S\\/|US\\$|USD|\\$|PEN)?)[\\s]*([0-9][0-9.,]*)`, 'i'),
+    /Monto\s+total:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
+    /Total\s+cobrado\s+al\s+tipo\s+de\s+cambio:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
     /Importe:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
   ]);
   if (!amount) {
@@ -38,24 +41,44 @@ function parseAccountTransfer(text, options = {}) {
     /Fecha\s+y\s+hora:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})(?:\s+(\d{1,2}:\d{2}(?:\s*(?:a\.m\.|p\.m\.|AM|PM))?))?/i,
   ]);
   if (!occurredAt) {
+    const textualLine = extractFirstMatch(text, /Fecha\s+y\s+hora:?\s*([^\n]+)/i);
+    if (textualLine) {
+      const parsedTextual = parseSpanishDateTime(textualLine);
+      if (parsedTextual) {
+        occurredAt = parsedTextual;
+        confidenceSignals += 1;
+      }
+    }
+  } else {
+    confidenceSignals += 1;
+  }
+
+  if (!occurredAt) {
     if (options.receivedAt) {
       occurredAt = options.receivedAt;
       notes.push('datetime_fallback_received_at');
     } else {
       throw new Error('datetime_not_found');
     }
-  } else {
-    confidenceSignals += 1;
   }
 
-  const accountOrigin = extractFirstMatch(text, /Cuenta\s+origen:?\s*([^\n]+)/i);
+  const accountOrigin = extractFirstMatch(text, [
+    /Cuenta\s+de?\s+origen:?\s*([^\n]+)/i,
+    /Cuenta\s+origen:?\s*([^\n]+)/i,
+    /Desde:?\s*([^\n]+)/i,
+    /Desde\s+([^\n]+)/i,
+  ]);
   if (accountOrigin) {
     confidenceSignals += 1;
   } else {
     notes.push('account_origin_not_found');
   }
 
-  const accountDestination = extractFirstMatch(text, /Cuenta\s+destino:?\s*([^\n]+)/i);
+  const accountDestination = extractFirstMatch(text, [
+    /Cuenta\s+destino:?\s*([^\n]+)/i,
+    /Destino:?\s*([^\n]+)/i,
+    /Enviado\s+a:?\s*([^\n]+)/i,
+  ]);
   if (accountDestination) {
     confidenceSignals += 1;
   } else {
@@ -67,7 +90,10 @@ function parseAccountTransfer(text, options = {}) {
     confidenceSignals += 1;
   }
 
-  const channelRaw = extractFirstMatch(text, /Canal:?\s*([^\n]+)/i);
+  const channelRaw = extractFirstMatch(text, [
+    /Canal:?\s*([^\n]+)/i,
+    /Canal\s+([^\n]+)/i,
+  ]);
   if (channelRaw) {
     confidenceSignals += 1;
   }
@@ -86,6 +112,7 @@ function parseAccountTransfer(text, options = {}) {
   const destinationName = extractFirstMatch(text, [
     /Beneficiario:?\s*([^\n]+)/i,
     /Titular\s+destino:?\s*([^\n]+)/i,
+    /Enviado\s+a:?\s*([^\n]+)/i,
   ]);
 
   const confidence = computeConfidence(confidenceSignals, confidenceTarget);

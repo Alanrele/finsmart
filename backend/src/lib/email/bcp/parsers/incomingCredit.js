@@ -2,6 +2,7 @@ const {
   extractFirstMatch,
   parseAmount,
   parseDate,
+  parseSpanishDateTime,
   computeConfidence,
   sanitize,
 } = require('./utils');
@@ -13,6 +14,7 @@ function parseIncomingCredit(text, options = {}) {
 
   const amount = parseAmount(text, [
     /Monto\s+(?:abonado|depositado|devuelto):?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
+    /Total\s+devuelto:?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
     /Importe\s+(?:abonado|devuelto):?\s*((?:S\/|US\$|USD|\$|PEN)?)[\s]*([0-9][0-9.,]*)/i,
   ]);
   if (!amount) {
@@ -24,14 +26,25 @@ function parseIncomingCredit(text, options = {}) {
     /Fecha\s+y\s+hora:?\s*(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})(?:\s+(\d{1,2}:\d{2}(?:\s*(?:a\.m\.|p\.m\.|AM|PM))?))?/i,
   ]);
   if (!occurredAt) {
+    const textualLine = extractFirstMatch(text, /Fecha\s+y\s+hora:?\s*([^\n]+)/i);
+    if (textualLine) {
+      const parsedTextual = parseSpanishDateTime(textualLine);
+      if (parsedTextual) {
+        occurredAt = parsedTextual;
+        confidenceSignals += 1;
+      }
+    }
+  } else {
+    confidenceSignals += 1;
+  }
+
+  if (!occurredAt) {
     if (options.receivedAt) {
       occurredAt = options.receivedAt;
       notes.push('datetime_fallback_received_at');
     } else {
       throw new Error('datetime_not_found');
     }
-  } else {
-    confidenceSignals += 1;
   }
 
   const destinationAccount = extractFirstMatch(text, [
@@ -49,6 +62,11 @@ function parseIncomingCredit(text, options = {}) {
     /Procedencia:?\s*([^\n]+)/i,
   ]);
   if (origin) {
+    confidenceSignals += 1;
+  }
+
+  const cardLast4 = extractFirstMatch(text, /Numero\s+de\s+Tarjeta[^\d]*(\d{4})/i);
+  if (cardLast4) {
     confidenceSignals += 1;
   }
 
@@ -95,7 +113,7 @@ function parseIncomingCredit(text, options = {}) {
     channel: 'incoming',
     merchant: sanitize(origin),
     location: undefined,
-    cardLast4: undefined,
+    cardLast4: sanitize(cardLast4),
     accountRef: accountRefParts.length > 0 ? accountRefParts.join(' | ') : undefined,
     operationId: sanitize(operationId),
     notes: notes.length > 0 ? notes.join('; ') : undefined,
