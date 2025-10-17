@@ -7,6 +7,7 @@ const GraphErrorHandler = require('../utils/graphErrorHandler');
 const emailParserService = require('./emailParserService');
 
 const BCP_ALLOWED_SENDERS = ['notificaciones@notificacionesbcp.com.pe'];
+const BCP_HISTORICAL_START = new Date(Date.UTC(2025, 0, 1));
 
 class EmailSyncService {
   constructor(io) {
@@ -409,7 +410,7 @@ class EmailSyncService {
 
       // Get ALL BCP emails from the past (not just recent ones)
       // We'll search back up to 1 year to cover all historical emails
-      const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
+      const historicalStartIso = BCP_HISTORICAL_START.toISOString();
 
       const bcpFilters = [
         "from/emailAddress/address eq 'notificaciones@notificacionesbcp.com.pe'"
@@ -424,7 +425,7 @@ class EmailSyncService {
         try {
           const query = graphClient
             .api('/me/messages')
-            .filter(`receivedDateTime ge ${oneYearAgo}`)
+            .filter(`receivedDateTime ge ${historicalStartIso}`)
             .select('id,subject,body,receivedDateTime,from,hasAttachments')
             .orderby('receivedDateTime desc')
             .top(pageSize);
