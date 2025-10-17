@@ -38,15 +38,36 @@ router.get('/dashboard', async (req, res) => {
     const currentMonth = now.getMonth() + 1;
     const currentYear = now.getFullYear();
 
+    const requestedMonth = parseInt(req.query.month, 10);
+    const requestedYear = parseInt(req.query.year, 10);
+
+    let selectedMonth = Number.isInteger(requestedMonth) && requestedMonth >= 1 && requestedMonth <= 12
+      ? requestedMonth
+      : currentMonth;
+    let selectedYear = Number.isInteger(requestedYear)
+      ? requestedYear
+      : currentYear;
+
+    if (
+      selectedYear > currentYear ||
+      (selectedYear === currentYear && selectedMonth > currentMonth)
+    ) {
+      selectedMonth = currentMonth;
+      selectedYear = currentYear;
+    }
+
+    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
+    const endDate = new Date(selectedYear, selectedMonth, 1);
+
     // Redondear todos los valores para evitar problemas de precisión
     const roundToTwo = (num) => Math.round(num * 100) / 100;
 
-    // Get current month transactions (filtrar montos irreales)
+    // Get selected month transactions (filtrar montos irreales)
     const currentMonthTransactions = await Transaction.find({
       userId,
       date: {
-        $gte: new Date(currentYear, currentMonth - 1, 1),
-        $lt: new Date(currentYear, currentMonth, 1)
+        $gte: startDate,
+        $lt: endDate
       },
       amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
     });
@@ -72,14 +93,20 @@ router.get('/dashboard', async (req, res) => {
       }
     });
 
-    // Get recent transactions (last 10)
-    const recentTransactions = await Transaction.find({ userId })
+    // Get recent transactions (last 10 within selected period)
+    const recentTransactions = await Transaction.find({
+      userId,
+      date: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    })
       .sort({ date: -1 })
       .limit(10);
 
     // Get monthly comparison (current vs previous month)
-    const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-    const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+    const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+    const previousYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
 
     const previousMonthTransactions = await Transaction.find({
       userId,
@@ -204,8 +231,8 @@ router.get('/dashboard', async (req, res) => {
       topCategories,
       recentTransactions,
       period: {
-        month: currentMonth,
-        year: currentYear
+        month: selectedMonth,
+        year: selectedYear
       }
     });
 
