@@ -1,0 +1,18 @@
+{
+  "subject": "ENVIO AUTOMATICO - CONSTANCIA DE PAGO DE SERVICIO",
+"text": "ENVIO AUTOMATICO\n\nServicio: AGUA METROPOLITANA\nMonto del pago: S/ 89.00\nCodigo de cliente: 87654321\nCuenta origen: 123-98765432-0-10\nNumero de operacion: PAG654321\nFecha y hora: 11/08/2024 18:10\nCanal: Banca por Internet\n",
+  "expect": {
+    "template": "service_payment",
+    "success": true,
+    "amount": {
+      "value": "89.00",
+      "currency": "PEN"
+    },
+    "occurredAt": "2024-08-11T18:10:00-05:00",
+    "merchant": "AGUA METROPOLITANA",
+    "channel": "Banca por Internet",
+    "operationId": "PAG654321",
+    "accountRef": "codigo:87654321 | origen:123-98765432-0-10",
+    "confidence": 1
+  }
+}
