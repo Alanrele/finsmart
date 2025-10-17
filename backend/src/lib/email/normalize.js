@@ -32,6 +32,14 @@ function normalizeEmailBody(htmlOrText) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
+  const DISCLAIMER_PATTERNS = [
+    /recuerda\s+a\s+traves/i,
+    /juntos\s+somos\s+mas\s+seguros/i,
+    /nuestros\s+correos\s+personalizados/i,
+    /para\s+conocer\s+mas\s+sobre\s+las\s+principales/i,
+    /si\s+deseas\s+desafiliarte/i,
+  ];
+
   const LABELS = [
     'Monto de consumo',
     'Monto consumo',
@@ -103,7 +111,15 @@ function normalizeEmailBody(htmlOrText) {
 
   const cleaned = normalizedText.replace(/\n+/g, ' ');
 
-  let segmented = cleaned;
+  let disclaimerCleaned = cleaned;
+  DISCLAIMER_PATTERNS.forEach((pattern) => {
+    const match = disclaimerCleaned.match(pattern);
+    if (match && match.index >= 0) {
+      disclaimerCleaned = disclaimerCleaned.slice(0, match.index).trim();
+    }
+  });
+
+  let segmented = disclaimerCleaned;
   LABELS.forEach((label) => {
     const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     let regex;
