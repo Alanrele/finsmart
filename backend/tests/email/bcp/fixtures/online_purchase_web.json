@@ -1,0 +1,17 @@
+{
+  "subject": "Compra online confirmada",
+  "text": "Hola,\n\nMonto de compra: USD 58.30\nTarjeta terminada 9876\nComercio: DIGITAL STORE INC\nCanal: Banca por Internet\nFecha y hora: 18/08/2024 19:42\n",
+  "expect": {
+    "template": "online_purchase",
+    "success": true,
+    "amount": {
+      "value": "58.30",
+      "currency": "USD"
+    },
+    "occurredAt": "2024-08-18T19:42:00-05:00",
+    "cardLast4": "9876",
+    "merchant": "DIGITAL STORE INC",
+    "channel": "Banca por Internet",
+    "confidence": 1
+  }
+}

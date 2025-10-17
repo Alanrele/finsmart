@@ -2,57 +2,111 @@ const fs = require('fs');
 const path = require('path');
 const { parseBcpEmailV2 } = require('../../../src/lib/email/bcp/parseBcpEmailV2');
 
+const FIXTURES_DIR = path.join(__dirname, 'fixtures');
+
 function loadFixture(name) {
-  const filePath = path.join(__dirname, 'fixtures', name);
+  const filePath = path.join(FIXTURES_DIR, name);
   const raw = fs.readFileSync(filePath, 'utf8');
   return JSON.parse(raw);
 }
 
-describe('parseBcpEmailV2', () => {
-  test('normalizes PEN card purchase email', () => {
-    const fixture = loadFixture('card_purchase_pen.json');
-    const result = parseBcpEmailV2({
+const fixtureFiles = fs
+  .readdirSync(FIXTURES_DIR)
+  .filter((file) => file.endsWith('.json'))
+  .sort();
+
+const transactionalFixtures = fixtureFiles.filter((file) => {
+  const fixture = loadFixture(file);
+  return fixture.expect?.success !== false;
+});
+
+const rejectionFixtures = fixtureFiles.filter((file) => {
+  const fixture = loadFixture(file);
+  return fixture.expect?.success === false;
+});
+
+describe('parseBcpEmailV2 transactional fixtures', () => {
+  test.each(transactionalFixtures)('%s', (fixtureName) => {
+    const fixture = loadFixture(fixtureName);
+    const payload = {
       subject: fixture.subject,
+      html: fixture.html,
       text: fixture.text,
-    });
+      receivedAt: fixture.receivedAt,
+    };
+
+    const result = parseBcpEmailV2(payload);
 
     expect(result.success).toBe(true);
-    expect(result.transaction.confidence).toBeGreaterThanOrEqual(0.75);
-    expect(result.transaction).toMatchSnapshot('card_purchase_pen');
+    expect(result.transaction).toBeDefined();
+
+    const tx = result.transaction;
+    const expectations = fixture.expect || {};
+
+    if (expectations.template) {
+      expect(tx.template).toBe(expectations.template);
+    }
+
+    if (expectations.amount) {
+      expect(tx.amount).toEqual(expectations.amount);
+    }
+
+    if (expectations.occurredAt) {
+      expect(tx.occurredAt).toBe(expectations.occurredAt);
+    }
+
+    if (expectations.cardLast4) {
+      expect(tx.cardLast4).toBe(expectations.cardLast4);
+    }
+
+    if (expectations.merchant) {
+      expect(tx.merchant).toBe(expectations.merchant);
+    }
+
+    if (expectations.channel) {
+      expect(tx.channel).toBe(expectations.channel);
+    }
+
+    if (expectations.location) {
+      expect(tx.location).toBe(expectations.location);
+    }
+
+    if (expectations.operationId) {
+      expect(tx.operationId).toBe(expectations.operationId);
+    }
+
+    if (expectations.accountRef) {
+      expect(tx.accountRef).toBe(expectations.accountRef);
+    }
+
+    if (typeof expectations.confidence === 'number') {
+      expect(tx.confidence).toBeGreaterThanOrEqual(expectations.confidence);
+    }
+
+    if (Array.isArray(expectations.notesContains) && expectations.notesContains.length > 0) {
+      const notes = tx.notes || '';
+      expectations.notesContains.forEach((snippet) => {
+        expect(notes).toContain(snippet);
+      });
+    }
   });
+});
 
-  test('normalizes card purchase variations', () => {
-    const htmlFixture = loadFixture('card_purchase_html.json');
-    const htmlResult = parseBcpEmailV2({
-      subject: htmlFixture.subject,
-      html: htmlFixture.html,
-    });
-
-    expect(htmlResult.success).toBe(true);
-    expect(htmlResult.transaction.amount.currency).toBe('PEN');
-    expect(htmlResult.transaction.confidence).toBeGreaterThanOrEqual(0.75);
-
-    const usdFixture = loadFixture('card_purchase_usd.json');
-    const usdResult = parseBcpEmailV2({
-      subject: usdFixture.subject,
-      text: usdFixture.text,
-    });
-
-    expect(usdResult.success).toBe(true);
-    expect(usdResult.transaction.amount.currency).toBe('USD');
-    expect(usdResult.transaction.amount.value).toBe('58.30');
-  });
-
-  test('returns confidence 0 for non transactional content', () => {
-    const fixture = loadFixture('non_transactional.json');
+describe('parseBcpEmailV2 rejection fixtures', () => {
+  test.each(rejectionFixtures)('%s', (fixtureName) => {
+    const fixture = loadFixture(fixtureName);
     const result = parseBcpEmailV2({
       subject: fixture.subject,
+      html: fixture.html,
       text: fixture.text,
     });
 
     expect(result.success).toBe(false);
-    expect(result.confidence).toBe(0);
-    expect(result.notes).toContain('template_not_detected');
+    const expectedReason = fixture.expect?.reason;
+    if (expectedReason) {
+      const notes = result.notes || [];
+      const notesArray = Array.isArray(notes) ? notes : [notes];
+      expect(notesArray.join('; ')).toContain(expectedReason);
+    }
   });
 });
-

@@ -1,0 +1,17 @@
+{
+  "subject": "Retiro en cajero BCP",
+  "text": "Hola,\n\nMonto de retiro: S/ 350.00\nTarjeta terminada 5566\nUbicacion: BCP - Miraflores Centro\nOperacion: RET112233\nFecha y hora: 22/09/2024 07:05 a.m.\n",
+  "expect": {
+    "template": "atm_withdrawal",
+    "success": true,
+    "amount": {
+      "value": "350.00",
+      "currency": "PEN"
+    },
+    "occurredAt": "2024-09-22T07:05:00-05:00",
+    "cardLast4": "5566",
+    "location": "BCP - Miraflores Centro",
+    "operationId": "RET112233",
+    "confidence": 1
+  }
+}

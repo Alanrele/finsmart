@@ -3,9 +3,21 @@ const { NormalizedTransactionSchema } = require('../../../domain/NormalizedTrans
 const { normalizeEmailBody } = require('../normalize');
 const { detectTemplate } = require('./detectTemplate');
 const { parseCardPurchase } = require('./parsers/cardPurchase');
+const { parseOnlinePurchase } = require('./parsers/onlinePurchase');
+const { parseAtmWithdrawal } = require('./parsers/atmWithdrawal');
+const { parseAccountTransfer } = require('./parsers/accountTransfer');
+const { parseIncomingCredit } = require('./parsers/incomingCredit');
+const { parseServicePayment } = require('./parsers/servicePayment');
+const { parseFeeCommission } = require('./parsers/feeCommission');
 
 const parsers = {
   card_purchase: parseCardPurchase,
+  online_purchase: parseOnlinePurchase,
+  atm_withdrawal: parseAtmWithdrawal,
+  account_transfer: parseAccountTransfer,
+  incoming_credit: parseIncomingCredit,
+  service_payment: parseServicePayment,
+  fee_commission: parseFeeCommission,
 };
 
 function parseBcpEmailV2({ subject, html, text, receivedAt } = {}) {

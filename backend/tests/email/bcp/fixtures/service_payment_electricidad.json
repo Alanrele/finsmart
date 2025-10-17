@@ -1,0 +1,18 @@
+{
+  "subject": "Constancia de Pago de Servicio",
+  "text": "Estimado cliente,\n\nServicio: ELECTRICIDAD LUZ SUR\nMonto pago: S/ 120.45\nCodigo de cliente: 1234567890\nCuenta origen: 456-12345678-0-11\nNumero de operacion: PAG123456\nFecha y hora: 06/07/2024 09:32\nCanal: App BCP\n",
+  "expect": {
+    "template": "service_payment",
+    "success": true,
+    "amount": {
+      "value": "120.45",
+      "currency": "PEN"
+    },
+    "occurredAt": "2024-07-06T09:32:00-05:00",
+    "merchant": "ELECTRICIDAD LUZ SUR",
+    "channel": "App BCP",
+    "operationId": "PAG123456",
+    "accountRef": "codigo:1234567890 | origen:456-12345678-0-11",
+    "confidence": 1
+  }
+}

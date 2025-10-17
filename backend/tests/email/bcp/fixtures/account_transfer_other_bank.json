@@ -1,0 +1,18 @@
+{
+  "subject": "Constancia de Transferencia a Otros Bancos",
+  "text": "Estimado cliente,\n\nMonto transferido: S/ 950.75\nCuenta origen: 123-45678901-0-12\nCuenta destino: 456-98765432-0-98\nCCI: 002-123-456789012345-67\nBeneficiario: MARIA PEREZ\nNmero de operacin: TRF123456\nFecha y hora: 14/07/2024 11:28\nCanal: Banca por Internet\n",
+  "expect": {
+    "template": "account_transfer",
+    "success": true,
+    "amount": {
+      "value": "950.75",
+      "currency": "PEN"
+    },
+    "occurredAt": "2024-07-14T11:28:00-05:00",
+    "merchant": "MARIA PEREZ",
+    "channel": "Banca por Internet",
+    "accountRef": "origen:123-45678901-0-12 | destino:456-98765432-0-98 | cci:002-123-456789012345-67",
+    "operationId": "TRF123456",
+    "confidence": 1
+  }
+}

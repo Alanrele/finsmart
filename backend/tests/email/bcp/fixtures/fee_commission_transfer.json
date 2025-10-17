@@ -1,0 +1,21 @@
+{
+  "subject": "Cobro de comision por servicio",
+  "text": "Hola,\n\nMonto de comision: S/ 12.50\nCuenta afectada: 001-11223344-0-09\nMotivo del cargo: Mantenimiento de cuenta\nOperacion: COM558899\nFecha y hora: 03/03/2024 08:15\nCanal: Otros\n",
+  "expect": {
+    "template": "fee_commission",
+    "success": true,
+    "amount": {
+      "value": "12.50",
+      "currency": "PEN"
+    },
+    "occurredAt": "2024-03-03T08:15:00-05:00",
+    "merchant": "Mantenimiento de cuenta",
+    "accountRef": "afectada:001-11223344-0-09",
+    "operationId": "COM558899",
+    "channel": "Otros",
+    "confidence": 1,
+    "notesContains": [
+      "motivo:Mantenimiento de cuenta"
+    ]
+  }
+}
