@@ -1,5 +1,8 @@
 {
-  "subject": "Promoción exclusiva para ti",
-  "text": "Descubre los nuevos beneficios de tu tarjeta BCP. Aprovecha descuentos especiales en tiendas aliadas."
+  "subject": "Promocion exclusiva para ti",
+  "text": "Descubre los nuevos beneficios de tu tarjeta BCP. Aprovecha descuentos especiales en tiendas aliadas.",
+  "expect": {
+    "success": false,
+    "reason": "template_not_detected"
+  }
 }
-
