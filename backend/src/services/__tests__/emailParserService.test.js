@@ -68,6 +68,43 @@ describe('emailParserService (V2)', () => {
     ).toBe(false);
   });
 
+  test('sanitizes merchant field when description contains extra guidance text', () => {
+    const html = `
+      <html>
+        <body>
+          <table>
+            <tr>
+              <td>Fecha y hora</td>
+              <td>12 de octubre de 2024 - 09:15 PM</td>
+            </tr>
+            <tr>
+              <td>Operacion realizada</td>
+              <td>Pago</td>
+            </tr>
+            <tr>
+              <td>Empresa</td>
+              <td>Pago en MP *ALIEXPRESSNumero de operacion348298 ¿No reconoces esta operacion? Comunicate inmediatamente al (01) 311-9898</td>
+            </tr>
+            <tr>
+              <td>Monto</td>
+              <td><strong>S/ 45.90</strong></td>
+            </tr>
+          </table>
+        </body>
+      </html>
+    `;
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Notificacion de movimiento',
+      html,
+      receivedAt: '2024-10-12T21:15:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.merchant).toBe('Pago en MP *ALIEXPRESS');
+    expect(parseResult.transaction.amount.value).toBe('45.90');
+  });
+
   test('uses cheerio fallback parser when template detection fails', () => {
     const html = `
       <html>
