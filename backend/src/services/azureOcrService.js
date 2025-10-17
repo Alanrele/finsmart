@@ -4,6 +4,7 @@ const { ApiKeyCredentials } = require('@azure/ms-rest-js');
 class AzureOcrService {
   constructor() {
     this.client = null;
+    this.enabled = false;
     this.initialize();
   }
 
@@ -12,7 +13,9 @@ class AzureOcrService {
     const endpoint = process.env.AZURE_OCR_ENDPOINT;
 
     if (!key || !endpoint) {
-      console.warn('Azure OCR credentials not provided. OCR functionality will be disabled.');
+      console.info('Azure OCR disabled: credentials not provided.');
+      this.client = null;
+      this.enabled = false;
       return;
     }
 
@@ -21,15 +24,19 @@ class AzureOcrService {
         new ApiKeyCredentials({ inHeader: { 'Ocp-Apim-Subscription-Key': key } }),
         endpoint
       );
+      this.enabled = true;
       console.log('Azure OCR service initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Azure OCR service:', error);
+      this.client = null;
+      this.enabled = false;
     }
   }
 
   async extractTextFromImage(imageBuffer) {
     if (!this.client) {
-      throw new Error('Azure OCR service not initialized');
+      console.info('Skipping OCR extraction: service disabled.');
+      return '';
     }
 
     try {
@@ -85,13 +92,14 @@ class AzureOcrService {
 
     } catch (error) {
       console.error('OCR extraction error:', error);
-      throw new Error(`Failed to extract text from image: ${error.message}`);
+      return '';
     }
   }
 
   async extractTextFromUrl(imageUrl) {
     if (!this.client) {
-      throw new Error('Azure OCR service not initialized');
+      console.info('Skipping OCR extraction from URL: service disabled.');
+      return '';
     }
 
     try {
@@ -141,12 +149,12 @@ class AzureOcrService {
 
     } catch (error) {
       console.error('OCR extraction error:', error);
-      throw new Error(`Failed to extract text from image URL: ${error.message}`);
+      return '';
     }
   }
 
   isAvailable() {
-    return this.client !== null;
+    return this.enabled;
   }
 }
 
