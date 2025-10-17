@@ -1,5 +1,21 @@
 const { parseMoneyToCanonical, parseDateTimeLima } = require('../../normalize');
 
+const SPANISH_MONTHS = {
+  enero: '01',
+  febrero: '02',
+  marzo: '03',
+  abril: '04',
+  mayo: '05',
+  junio: '06',
+  julio: '07',
+  agosto: '08',
+  setiembre: '09',
+  septiembre: '09',
+  octubre: '10',
+  noviembre: '11',
+  diciembre: '12',
+};
+
 const LABEL_BOUNDARY_TOKENS = [
   'Monto de consumo',
   'Monto consumo',
@@ -14,21 +30,35 @@ const LABEL_BOUNDARY_TOKENS = [
   'Monto depositado',
   'Monto devuelto',
   'Monto pago',
+  'Monto del pago',
   'Monto pagado',
+  'Monto total pagado',
+  'Monto total',
+  'Monto total cobrado',
+  'Monto enviado',
   'Monto del consumo',
   'Total del consumo',
   'Total consumo',
+  'Total cobrado',
+  'Total cobrado al tipo de cambio',
+  'Total devuelto',
   'Monto de comision',
   'Importe',
   'Tarjeta terminada',
   'Tarjeta numero',
   'Tarjeta n',
+  'Numero de Tarjeta',
+  'Nombre del Comercio',
   'Cuenta origen',
   'Cuenta destino',
   'Cuenta abono',
   'Cuenta afectada',
+  'Desde',
+  'Enviado a',
+  'Banco destino',
   'Beneficiario',
   'Titular destino',
+  'Titular del servicio',
   'Numero de operacion',
   'Numero de operacin',
   'Nmero de operacion',
@@ -38,6 +68,8 @@ const LABEL_BOUNDARY_TOKENS = [
   'Fecha y hora',
   'Canal',
   'Servicio',
+  'Tipo de envio',
+  'Tipo de cambio',
   'Motivo',
   'Motivo del cargo',
   'Origen',
@@ -49,6 +81,7 @@ const LABEL_BOUNDARY_TOKENS = [
   'Saldo disponible',
   'Codigo de cliente',
   'Cdigo de cliente',
+  'Codigo de usuario',
   'Contrato',
   'Suministro',
 ];
@@ -96,6 +129,39 @@ function extractFirstMatch(text, patterns, groupIndex = 1) {
   }
 
   return null;
+}
+
+function parseSpanishDateTime(value) {
+  if (!value) {
+    return null;
+  }
+
+  let working = String(value).trim();
+  // Remove day-of-week prefix if present
+  working = working.replace(/^[A-Za-zÁÉÍÓÚáéíóúÑñ]+,\s*/, '');
+
+  const match = working.match(/(\d{1,2})(?:\s+de)?\s+([a-zÁÉÍÓÚáéíóúÑñ]+)\s+de?\s+(\d{4})(?:\s*[-–]?\s*(\d{1,2}:\d{2}(?:\s*(?:a\.m\.|p\.m\.|am|pm|AM|PM))?))?/i);
+  if (!match) {
+    return null;
+  }
+
+  const day = match[1].padStart(2, '0');
+  const monthRaw = match[2]
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  const month = SPANISH_MONTHS[monthRaw];
+  if (!month) {
+    return null;
+  }
+  const year = match[3];
+  const timePart = match[4] || undefined;
+
+  try {
+    return parseDateTimeLima(`${day}/${month}/${year}`, timePart);
+  } catch (error) {
+    return null;
+  }
 }
 
 function parseAmount(text, patterns) {
@@ -152,6 +218,7 @@ module.exports = {
   extractFirstMatch,
   parseAmount,
   parseDate,
+  parseSpanishDateTime,
   computeConfidence,
   sanitize,
 };

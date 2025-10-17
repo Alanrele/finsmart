@@ -6,7 +6,14 @@ const { Client } = require('@microsoft/microsoft-graph-client');
 const GraphErrorHandler = require('../utils/graphErrorHandler');
 const emailParserService = require('./emailParserService');
 
-const BCP_ALLOWED_SENDERS = ['notificaciones@notificacionesbcp.com.pe'];
+const BCP_ALLOWED_SENDERS = [
+  'notificaciones@notificacionesbcp.com.pe',
+  'notificaciones@bcp.com.pe',
+  'alertas@bcp.com.pe',
+  'movimientos@bcp.com.pe',
+  'bcp@bcp.com.pe',
+  'notificacionescrm@bcp.com.pe',
+];
 const BCP_HISTORICAL_START = new Date(Date.UTC(2025, 0, 1));
 
 class EmailSyncService {
