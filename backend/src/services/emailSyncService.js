@@ -111,8 +111,14 @@ class EmailSyncService {
 
       const graphClient = this.getGraphClient(user.accessToken);
 
-      // Get recent emails (last 24 hours for periodic sync)
-      const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const hasExistingTransactions = await Transaction.exists({ userId: user._id });
+      const regularLookbackHours = Number(process.env.SYNC_LOOKBACK_HOURS || 24);
+      const initialLookbackHours = Number(process.env.SYNC_INITIAL_LOOKBACK_HOURS || (24 * 30));
+      const lookbackHours = hasExistingTransactions ? regularLookbackHours : initialLookbackHours;
+      const lookbackDate = new Date(Date.now() - lookbackHours * 60 * 60 * 1000);
+      const lookbackIso = lookbackDate.toISOString();
+
+      console.log(`🕒 Using ${lookbackHours}h lookback window for ${hasExistingTransactions ? 'incremental' : 'initial'} sync`);
 
       const allowedSenders = BCP_ALLOWED_SENDERS;
       const bcpFilters = allowedSenders.map(a => `from/emailAddress/address eq '${a}'`);
@@ -121,7 +127,7 @@ class EmailSyncService {
 
       // Define query strategies from most specific to least specific
       const primaryQuery = async () => {
-        const filter = `(${bcpFilters.join(' or ')}) and receivedDateTime ge ${last24Hours}`;
+        const filter = `(${bcpFilters.join(' or ')}) and receivedDateTime ge ${lookbackIso}`;
         console.log('🔍 Executing complex query with multiple filters...');
         return await graphClient
           .api('/me/messages')
@@ -138,7 +144,7 @@ class EmailSyncService {
           console.log('🔍 Executing simplified query with date filter only...');
           const result = await graphClient
             .api('/me/messages')
-            .filter(`receivedDateTime ge ${last24Hours}`)
+            .filter(`receivedDateTime ge ${lookbackIso}`)
             .select('id,subject,body,receivedDateTime,from,hasAttachments')
             .orderby('receivedDateTime desc')
             .top(100)
@@ -167,13 +173,11 @@ class EmailSyncService {
 
           // Filter both by date and BCP manually (strict whitelist)
           if (result.value) {
-            const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
               const isBcp = allowedSenders.includes(fromAddress);
-              const isRecent = receivedDate >= last24HoursDate;
+              const isRecent = receivedDate >= lookbackDate;
               return isBcp && isRecent;
             });
             console.log(`📧 Manually filtered to ${result.value.length} recent BCP emails`);
@@ -191,13 +195,11 @@ class EmailSyncService {
 
           // Filter everything manually (strict whitelist)
           if (result.value) {
-            const last24HoursDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
-
             result.value = result.value.filter(msg => {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
               const isBcp = allowedSenders.includes(fromAddress);
-              const isRecent = receivedDate >= last24HoursDate;
+              const isRecent = receivedDate >= lookbackDate;
               return isBcp && isRecent;
             });
             console.log(`📧 Manually filtered to ${result.value.length} recent BCP emails from minimal set`);
