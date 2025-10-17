@@ -3,7 +3,6 @@ const { Client } = require('@microsoft/microsoft-graph-client');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
-const azureOcrService = require('../services/azureOcrService');
 const aiAnalysisService = require('../services/aiAnalysisService');
 const emailParserService = require('../services/emailParserService');
 const EmailSyncService = require('../services/emailSyncService');
@@ -333,28 +332,7 @@ router.post('/sync-emails', async (req, res) => {
           // Last resort: use subject only
           console.log(`⚠️ No body content available, using subject only: ${emailSubject}`);
           emailText = emailSubject;
-        }
-
-        // Process attachments for OCR if any (only if hasAttachments property is available)
-        if (message.hasAttachments === true) {
-          try {
-            console.log('🖼️ Processing image attachment with OCR');
-            const attachments = await graphClient
-              .api(`/me/messages/${message.id}/attachments`)
-              .get();
-
-            for (const attachment of attachments.value) {
-              if (attachment.contentType && attachment.contentType.startsWith('image/')) {
-                const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                emailText += '\n\nOCR Content:\n' + ocrText;
-              }
-            }
-          } catch (attachmentError) {
-            console.error('❌ Error processing attachments:', attachmentError);
-          }
-        } else if (message.hasAttachments === undefined) {
-          console.log('⚠️ Attachment info not available (minimal query), skipping attachment processing');
-        }
+        }        }
 
         // Parse email content
         console.log('🔍 Parsing email:', emailSubject);
