@@ -196,6 +196,7 @@ function createTransactionFromEmail(result, userId, emailMeta = {}) {
     description,
     channel: mapChannel(tx.channel),
     operationNumber: tx.operationId || undefined,
+    accountRef: tx.accountRef || undefined,
     cardNumber: tx.cardLast4 ? `****${tx.cardLast4}` : undefined,
     date: occurredAt,
     balance: balanceValue,
