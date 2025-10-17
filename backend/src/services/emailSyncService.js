@@ -5,7 +5,6 @@ const { Client } = require('@microsoft/microsoft-graph-client');
 // const TransactionExtractor = require('./transactionExtractor'); // TODO: Create if needed
 const GraphErrorHandler = require('../utils/graphErrorHandler');
 const emailParserService = require('./emailParserService');
-const azureOcrService = require('./azureOcrService');
 
 class EmailSyncService {
   constructor(io) {
@@ -244,24 +243,6 @@ class EmailSyncService {
           emailText = message.bodyPreview;
         } else {
           emailText = subj;
-        }
-
-        // Process attachments if any
-        if (message.hasAttachments) {
-          try {
-            const attachments = await graphClient
-              .api(`/me/messages/${message.id}/attachments`)
-              .get();
-
-            for (const attachment of attachments.value) {
-              if (attachment.contentType && attachment.contentType.startsWith('image/')) {
-                const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                emailText += '\n\nOCR Content:\n' + ocrText;
-              }
-            }
-          } catch (attachmentError) {
-            console.error('❌ Error processing attachments:', attachmentError);
-          }
         }
 
         // Parse email content
@@ -522,24 +503,6 @@ class EmailSyncService {
 
             if (!htmlBody && !textBody) {
               textBody = message.bodyPreview || message.subject || '';
-            }
-
-            // Process attachments if any
-            if (message.hasAttachments) {
-              try {
-                const attachments = await graphClient
-                  .api(`/me/messages/${message.id}/attachments`)
-                  .get();
-
-                for (const attachment of attachments.value) {
-                  if (attachment.contentType && attachment.contentType.startsWith('image/')) {
-                    const ocrText = await azureOcrService.extractTextFromImage(attachment.contentBytes);
-                    textBody += '\n\nOCR Content:\n' + ocrText;
-                  }
-                }
-              } catch (attachmentError) {
-                console.error('❌ Error processing attachments during reprocess:', attachmentError);
-              }
             }
 
             // Parse email content
