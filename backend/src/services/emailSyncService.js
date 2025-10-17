@@ -6,6 +6,8 @@ const { Client } = require('@microsoft/microsoft-graph-client');
 const GraphErrorHandler = require('../utils/graphErrorHandler');
 const emailParserService = require('./emailParserService');
 
+const BCP_ALLOWED_SENDERS = ['notificaciones@notificacionesbcp.com.pe'];
+
 class EmailSyncService {
   constructor(io) {
     this.io = io;
@@ -104,12 +106,7 @@ class EmailSyncService {
       // Get recent emails (last 24 hours for periodic sync)
       const last24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-      const allowedSenders = [
-        'notificaciones@bcp.com.pe',
-        'bcp@bcp.com.pe',
-        'alertas@bcp.com.pe',
-        'movimientos@bcp.com.pe'
-      ];
+      const allowedSenders = BCP_ALLOWED_SENDERS;
       const bcpFilters = allowedSenders.map(a => `from/emailAddress/address eq '${a}'`);
 
       let messages;
@@ -415,10 +412,7 @@ class EmailSyncService {
       const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString();
 
       const bcpFilters = [
-        "from/emailAddress/address eq 'notificaciones@bcp.com.pe'",
-        "from/emailAddress/address eq 'bcp@bcp.com.pe'",
-        "from/emailAddress/address eq 'alertas@bcp.com.pe'",
-        "from/emailAddress/address eq 'movimientos@bcp.com.pe'"
+        "from/emailAddress/address eq 'notificaciones@notificacionesbcp.com.pe'"
       ];
 
       let allEmails = [];
@@ -443,16 +437,9 @@ class EmailSyncService {
 
           if (response.value && response.value.length > 0) {
             // Filter BCP emails client-side to avoid complex Graph queries
-            const bcpEmails = response.value.filter(message => {
+            const bcpEmails = response.value.filter((message) => {
               const fromAddress = message.from?.emailAddress?.address?.toLowerCase();
-              return fromAddress && (
-                fromAddress.includes('bcp.com.pe') ||
-                fromAddress.includes('bcp.com') ||
-                fromAddress.includes('notificaciones@bcp.com.pe') ||
-                fromAddress.includes('alertas@bcp.com.pe') ||
-                fromAddress.includes('movimientos@bcp.com.pe') ||
-                fromAddress.includes('bcp@bcp.com.pe')
-              );
+              return fromAddress && BCP_ALLOWED_SENDERS.includes(fromAddress);
             });
 
             allEmails = allEmails.concat(bcpEmails);

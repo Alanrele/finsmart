@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -9,7 +9,9 @@ import {
   ArrowDownRight,
   Calendar,
   Target,
-  PieChart as PieChartIcon // Renombrar para evitar conflicto
+  PieChart as PieChartIcon, // Renombrar para evitar conflicto
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -80,16 +82,31 @@ class ChartErrorBoundary extends React.Component {
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore();
   const [loading, setLoading] = useState(true);
+  const currentPeriod = useMemo(() => {
+    const now = new Date();
+    return { month: now.getMonth() + 1, year: now.getFullYear() };
+  }, []);
+  const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod);
 
-  const loadDashboardData = useCallback(async () => {
+  const loadDashboardData = useCallback(async (period) => {
+    if (!period) return;
     try {
       setLoading(true);
-      const data = await getDashboardData();
+      const data = await getDashboardData({ month: period.month, year: period.year });
       setDashboardData(data);
+
+      if (data?.period?.month && data?.period?.year) {
+        const normalized = {
+          month: data.period.month,
+          year: data.period.year,
+        };
+        if (normalized.month !== period.month || normalized.year !== period.year) {
+          setSelectedPeriod(normalized);
+        }
+      }
     } catch (error) {
       console.error('❌ Dashboard loading error:', error);
       toast.error(error.message || 'Error al cargar los datos del panel.');
-      // Establecer datos vacíos por defecto para evitar errores de renderizado
       setDashboardData({
         summary: {},
         categorySpending: [],
@@ -99,14 +116,50 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [setDashboardData]);
+  }, [setDashboardData, setSelectedPeriod]);
 
   useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+    loadDashboardData(selectedPeriod);
+  }, [selectedPeriod, loadDashboardData]);
 
   const [activeSlice, setActiveSlice] = useState(-1)
   const [pieKey, setPieKey] = useState(0)
+  const isCurrentPeriod =
+    selectedPeriod.year === currentPeriod.year &&
+    selectedPeriod.month === currentPeriod.month
+
+  const formattedSelectedPeriod = useMemo(() => {
+    const formatter = new Date(selectedPeriod.year, selectedPeriod.month - 1, 1)
+      .toLocaleDateString('es-PE', { month: 'long', year: 'numeric' })
+    return formatter.charAt(0).toUpperCase() + formatter.slice(1)
+  }, [selectedPeriod])
+
+  const handlePrevPeriod = () => {
+    setSelectedPeriod((prev) => {
+      const month = prev.month === 1 ? 12 : prev.month - 1
+      const year = prev.month === 1 ? prev.year - 1 : prev.year
+      return { month, year }
+    })
+  }
+
+  const handleNextPeriod = () => {
+    if (isCurrentPeriod) return
+    setSelectedPeriod((prev) => {
+      const month = prev.month === 12 ? 1 : prev.month + 1
+      const year = prev.month === 12 ? prev.year + 1 : prev.year
+      if (
+        year > currentPeriod.year ||
+        (year === currentPeriod.year && month > currentPeriod.month)
+      ) {
+        return currentPeriod
+      }
+      return { month, year }
+    })
+  }
+
+  const handleRefresh = () => {
+    loadDashboardData(selectedPeriod)
+  }
 
   const {
     summary = {},
@@ -202,9 +255,30 @@ const Dashboard = () => {
             Resumen completo de tus finanzas personales
           </p>
         </div>
-        <div className="mt-4 sm:mt-0">
+        <div className="mt-4 sm:mt-0 flex flex-col sm:items-end gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrevPeriod}
+              className="btn-secondary p-2"
+              aria-label="Mes anterior"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-sm font-medium text-blue-700 dark:text-blue-200">
+              <Calendar className="w-4 h-4" />
+              <span className="capitalize">{formattedSelectedPeriod}</span>
+            </div>
+            <button
+              onClick={handleNextPeriod}
+              className="btn-secondary p-2"
+              aria-label="Mes siguiente"
+              disabled={isCurrentPeriod}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
           <button
-            onClick={loadDashboardData}
+            onClick={handleRefresh}
             className="btn-primary"
           >
             Actualizar
