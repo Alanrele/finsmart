@@ -7,7 +7,8 @@ import {
   AlertTriangle,
   Mail,
   Calendar,
-  Download
+  Download,
+  Trash2
 } from 'lucide-react'
 import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth'
 import {
@@ -15,7 +16,8 @@ import {
   getGraphStatus,
   disconnectGraph,
   syncEmails,
-  reprocessEmails
+  reprocessEmails,
+  resetAndReprocessEmails
 } from '../services/api'
 import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
@@ -27,6 +29,7 @@ const OutlookConnect = () => {
   const [loading, setLoading] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [reprocessLoading, setReprocessLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
 
   useEffect(() => {
@@ -56,6 +59,7 @@ const OutlookConnect = () => {
         `Reprocesamiento completado: ${data.updated} actualizadas, ${data.errors} errores, ${data.skipped} omitidas`
       )
       setReprocessLoading(false)
+      setResetLoading(false)
     }
 
     socketService.on('reprocess-completed', handleReprocessCompleted)
@@ -177,11 +181,39 @@ const OutlookConnect = () => {
     } catch (error) {
       if (error?.code === 'TIMEOUT') {
         toast('El servidor está procesando. Te avisaremos cuando termine.', { icon: '⏳' })
-      } else {
-        toast.error(error.message || 'Error al reprocesar')
+        return
       }
-    } finally {
+
+      toast.error(error.message || 'Error al reprocesar')
       setReprocessLoading(false)
+    }
+  }
+
+  const handleResetAndReprocess = async () => {
+    if (!isGraphConnected) {
+      toast.error('Primero debes conectar tu cuenta de Outlook')
+      return
+    }
+
+    const confirmed = window.confirm('Esto eliminará todas las transacciones importadas por correo y reprocesará tu historial. ¿Deseas continuar?')
+    if (!confirmed) return
+
+    setResetLoading(true)
+
+    try {
+      const data = await withTimeout(resetAndReprocessEmails(), 20000)
+      toast.success(`Se eliminaron ${data.deletedCount} transacciones. Reprocesamiento iniciado.`)
+      setReprocessLoading(true)
+    } catch (error) {
+      if (error?.code === 'TIMEOUT') {
+        toast('El servidor está procesando. Te avisaremos cuando termine.', { icon: '⏳' })
+        setReprocessLoading(true)
+        return
+      }
+
+      toast.error(error.message || 'Error al reiniciar y reprocesar')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -304,6 +336,19 @@ const OutlookConnect = () => {
                   <AlertTriangle className="w-4 h-4" />
                 )}
                 <span>Reprocesar Correos</span>
+              </button>
+
+              <button
+                onClick={handleResetAndReprocess}
+                disabled={resetLoading}
+                className="btn-secondary flex items-center justify-center space-x-2 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                {resetLoading ? (
+                  <div className="loading-spinner w-4 h-4" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                <span>Eliminar y Reprocesar</span>
               </button>
 
               <button

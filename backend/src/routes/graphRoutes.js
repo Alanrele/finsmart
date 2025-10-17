@@ -966,4 +966,50 @@ router.post('/reprocess-emails', async (req, res) => {
   }
 });
 
+router.post('/reset-and-reprocess', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    console.log('�Y�� Reset and reprocess requested for user:', userId);
+
+    if (userId === 'demo-user-id' && !ALLOW_DEMO_MODE) {
+      return res.status(403).json({
+        error: 'Demo accounts cannot reset transactions',
+        details: 'Please connect with a real Microsoft account to reprocess emails',
+      });
+    }
+
+    const emailSyncService = req.app.get('emailSyncService');
+    if (!emailSyncService) {
+      console.error('�?O EmailSyncService not available');
+      return res.status(500).json({
+        error: 'Email sync service not available',
+        details: 'Please try again later',
+      });
+    }
+
+    const deletion = await Transaction.deleteMany({
+      userId,
+      messageId: { $exists: true, $ne: null },
+    });
+
+    emailSyncService
+      .reprocessAllEmails(userId, { batchSize: req.body.batchSize || 25 })
+      .then((result) => console.log('�o. Reset reprocessing completed:', result))
+      .catch((error) => console.error('�?O Reset reprocessing failed:', error));
+
+    res.json({
+      message: 'Reset y reprocesamiento iniciados',
+      deletedCount: deletion.deletedCount,
+      status: 'processing',
+    });
+  } catch (error) {
+    console.error('�?O Error in reset-and-reprocess:', error);
+    res.status(500).json({
+      error: 'Failed to reset and reprocess emails',
+      details: error.message,
+    });
+  }
+});
+
 module.exports = router;

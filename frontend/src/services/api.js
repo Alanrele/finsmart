@@ -347,6 +347,17 @@ export const reprocessEmails = async () => {
     }
 };
 
+export const resetAndReprocessEmails = async () => {
+    try {
+        const response = await api.post('/graph/reset-and-reprocess');
+        if (response.status !== 200) throw new Error(response.data.error || 'Failed to reset and reprocess emails');
+        return response.data;
+    } catch (error) {
+        console.error('Error resetting and reprocessing emails:', error);
+        throw error;
+    }
+};
+
 export const testEmailParser = async (emailContent) => {
     try {
         const response = await api.post('/graph/test-email-parser', { emailContent });
