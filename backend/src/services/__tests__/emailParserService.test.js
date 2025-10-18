@@ -202,4 +202,86 @@ describe('emailParserService (V2)', () => {
     expect(parseResult.transaction.cardLast4).toBe('9246');
     expect(parseResult.transaction.operationId).toBe('325121');
   });
+
+  test('parses BCP credit card consumption summary with merchant and card digits', () => {
+    const text = [
+      'Hola Alan Raul,',
+      '',
+      'Realizaste un consumo de S/ 140.00 con tu Tarjeta de Credito BCP en DLC*STARLINK INTERNET.',
+      '',
+      'Por tu seguridad, te enviamos los datos de tu operacion.',
+      '',
+      'Monto',
+      '',
+      'Total del consumo\tS/ 140.00',
+      '',
+      'Datos de la operacion',
+      '',
+      'Operacion realizada\tConsumo Tarjeta de Credito',
+      'Fecha y hora\t05 de octubre de 2025 - 01:25 AM',
+      'Numero de Tarjeta de Credito\t************1311',
+      'Empresa\tDLC*STARLINK INTERNET',
+      'Numero de operacion\t0000610710',
+    ].join('\n');
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Consumo Tarjeta BCP',
+      text,
+      receivedAt: '2025-10-05T01:25:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('card_purchase');
+    expect(parseResult.transaction.amount.value).toBe('140.00');
+    expect(parseResult.transaction.amount.currency).toBe('PEN');
+    expect(parseResult.transaction.merchant).toBe('DLC*STARLINK INTERNET');
+    expect(parseResult.transaction.cardLast4).toBe('1311');
+    expect(parseResult.transaction.operationId).toBe('0000610710');
+  });
+
+  test('parses BCP service payment receipt with service metadata', () => {
+    const text = [
+      'Hola ALAN RAUL,',
+      '',
+      'Tu operacion se realizo con exito!',
+      '',
+      'Operacion realizada:',
+      '',
+      'Pago de servicios',
+      '',
+      'Numero de operacion:',
+      '',
+      '05130564',
+      '',
+      'Fecha y hora: Sabado, 04 Octubre 2025 - 08:17 PM',
+      'Empresa: PLUZ ANTES ENEL DISTRIBUCION LUZ',
+      'Servicio: PLUZ ANTES ENELDISTRIBUCIONLUZ',
+      'Titular del servicio: REY** EGUSQUI** RA** EUGEN**',
+      'Codigo de usuario: 1874364',
+      'Cuenta de origen: Cuenta de ahorros',
+      '**** 9039',
+      'ALAN RAUL',
+      'Monto total: S/ 175.00',
+      '',
+      'Doc. pago: 000000000000000000000001874364',
+      'Vencimiento: 23/09/2025',
+      'Importe: S/ 175.00',
+      'Cargo fijo: S/ 0.00',
+      'Mora: S/ 0.00',
+    ].join('\n');
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Pago de servicios BCP',
+      text,
+      receivedAt: '2025-10-04T20:17:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('service_payment');
+    expect(parseResult.transaction.amount.value).toBe('175.00');
+    expect(parseResult.transaction.merchant).toBe('PLUZ ANTES ENEL DISTRIBUCION LUZ');
+    expect(parseResult.transaction.accountRef).toBe('9039');
+    expect(parseResult.transaction.operationId).toBe('05130564');
+    expect(parseResult.transaction.notes).toContain('Servicio: PLUZ ANTES ENELDISTRIBUCIONLUZ');
+  });
 });

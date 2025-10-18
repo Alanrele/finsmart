@@ -345,11 +345,64 @@ function enrichFieldsFromText(fields, html, text) {
     }
   }
 
+  const rawContent = text || html || '';
+  const asciiContent = rawContent
+    ? rawContent
+      .replace(/\r/g, '')
+      .replace(/\u00a0/g, ' ')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+    : '';
+
+  const asciiMap = {};
+  if (asciiContent) {
+    asciiContent.split('\n').forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        return;
+      }
+
+      const parts = trimmed.split(/\s*[:\t]\s*/);
+      if (parts.length >= 2) {
+        const key = parts[0].toLowerCase();
+        const value = parts.slice(1).join(' ').trim();
+        if (value && !asciiMap[key]) {
+          asciiMap[key] = value;
+        }
+      }
+    });
+  }
+
+  if (!fields.serviceName && asciiMap['servicio']) {
+    fields.serviceName = asciiMap['servicio'];
+  }
+
+  if (!fields.serviceHolder && asciiMap['titular del servicio']) {
+    fields.serviceHolder = asciiMap['titular del servicio'];
+  }
+
+  if (!fields.serviceCode) {
+    if (asciiMap['codigo de usuario']) {
+      fields.serviceCode = asciiMap['codigo de usuario'];
+    } else if (asciiMap['codigo de cliente']) {
+      fields.serviceCode = asciiMap['codigo de cliente'];
+    } else {
+      const codeMatch = asciiContent.match(/codigo de (?:usuario|cliente)[\s:\t]+([^\n]+)/i);
+      if (codeMatch) {
+        fields.serviceCode = codeMatch[1].trim();
+      }
+    }
+  }
+
   if (!fields.merchant) {
     const merchantLabelMatch = normalizedText.match(/nombre del comercio[:\s]+([^\n]+)/i);
     if (merchantLabelMatch) {
       fields.merchant = sanitizeMerchantName(merchantLabelMatch[1].trim()) || fields.merchant;
     }
+  }
+
+  if (!fields.merchant && asciiMap['empresa']) {
+    fields.merchant = sanitizeMerchantName(asciiMap['empresa']) || fields.merchant;
   }
 
   if (!fields.merchant) {
@@ -360,9 +413,48 @@ function enrichFieldsFromText(fields, html, text) {
   }
 
   if (!fields.cardLast4) {
-    const cardMatch = normalizedText.match(/numero de tarjeta[:\s]+[*\s]*(\d{4})/i);
+    const cardMatch = normalizedText.match(/numero de tarjeta(?: de credito| de debito)?[^\d]*(\d{4})/i);
     if (cardMatch) {
       fields.cardLast4 = cardMatch[1];
+    }
+  }
+
+  if (!fields.cardLast4 && asciiMap['numero de tarjeta de debito']) {
+    const digits = asciiMap['numero de tarjeta de debito'].match(/(\d{4})$/);
+    if (digits) {
+      fields.cardLast4 = digits[1];
+    }
+  }
+
+  if (!fields.beneficiary && asciiMap['enviado a']) {
+    fields.beneficiary = asciiMap['enviado a'].replace(/\s*\*+\s*\d{4}$/i, '').trim();
+  }
+
+  if (!fields.beneficiaryAccount) {
+    const beneficiaryDigitsMatch = asciiContent.match(/enviado a[^\n]*\n\*+\s*(\d{4})/i);
+    if (beneficiaryDigitsMatch) {
+      fields.beneficiaryAccount = beneficiaryDigitsMatch[1];
+    }
+  }
+
+  if (!fields.originAccount && asciiMap['cuenta de origen']) {
+    const originDigits = asciiMap['cuenta de origen'].match(/(\d{4})$/);
+    if (originDigits) {
+      fields.originAccount = originDigits[1];
+    }
+  }
+
+  if (!fields.originAccount) {
+    const originInlineMatch = asciiContent.match(/cuenta (?:digital|de ahorros|origen)[^\n]*\*+\s*(\d{4})/i);
+    if (originInlineMatch) {
+      fields.originAccount = originInlineMatch[1];
+    }
+  }
+
+  if (!fields.originAccount) {
+    const originNextLineMatch = asciiContent.match(/cuenta (?:digital|de ahorros|origen)[^\n]*\n\*+\s*(\d{4})/i);
+    if (originNextLineMatch) {
+      fields.originAccount = originNextLineMatch[1];
     }
   }
 
@@ -395,6 +487,18 @@ function buildNormalizedTransaction(fields, context) {
   }
   if (fields.bankDest) {
     notes.push(`Banco destino: ${fields.bankDest}`);
+  }
+  if (fields.serviceName) {
+    notes.push(`Servicio: ${fields.serviceName}`);
+  }
+  if (fields.serviceHolder) {
+    notes.push(`Titular: ${fields.serviceHolder}`);
+  }
+  if (fields.serviceCode) {
+    notes.push(`Codigo: ${fields.serviceCode}`);
+  }
+  if (fields.beneficiaryAccount) {
+    notes.push(`Cuenta destino: ****${fields.beneficiaryAccount}`);
   }
 
   let confidence = 0.6;
