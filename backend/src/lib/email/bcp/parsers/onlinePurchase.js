@@ -4,6 +4,7 @@ const {
   parseDate,
   computeConfidence,
   sanitize,
+  compactObject,
 } = require('./utils');
 
 const CARD_PATTERNS = [
@@ -80,6 +81,20 @@ function parseOnlinePurchase(text, options = {}) {
 
   const confidence = computeConfidence(confidenceSignals, confidenceTarget);
 
+  const sanitizedChannel = sanitize(channel);
+  const sanitizedMerchant = sanitize(merchant);
+  const sanitizedLocation = sanitize(location);
+  const sanitizedCardLast4 = sanitize(cardLast4);
+  const sanitizedOperationId = sanitize(operationId);
+  const maskedCard = sanitizedCardLast4 ? `****${sanitizedCardLast4}` : undefined;
+  const cardPaymentDetails = compactObject({
+    amount: amount || undefined,
+    date: occurredAt || undefined,
+    cardNumber: maskedCard,
+    merchant: sanitizedMerchant,
+    operationId: sanitizedOperationId,
+  });
+
   return {
     source: 'BCP',
     template: 'online_purchase',
@@ -87,13 +102,16 @@ function parseOnlinePurchase(text, options = {}) {
     amount,
     exchangeRate: { used: false },
     balanceAfter: undefined,
-    channel: sanitize(channel),
-    merchant: sanitize(merchant),
-    location: sanitize(location),
-    cardLast4: sanitize(cardLast4),
+    channel: sanitizedChannel,
+    merchant: sanitizedMerchant,
+    location: sanitizedLocation,
+    cardLast4: sanitizedCardLast4,
     accountRef: undefined,
-    operationId: sanitize(operationId),
+    operationId: sanitizedOperationId,
     notes: notes.length > 0 ? notes.join('; ') : undefined,
+    details: Object.keys(cardPaymentDetails).length > 0
+      ? { cardPayment: cardPaymentDetails }
+      : undefined,
     confidence,
   };
 }

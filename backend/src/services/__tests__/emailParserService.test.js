@@ -36,6 +36,13 @@ describe('emailParserService (V2)', () => {
 
     expect(parseResult.success).toBe(true);
     expect(parseResult.transaction.template).toBe('card_purchase');
+    expect(parseResult.transaction.details?.cardPayment).toMatchObject({
+      amount: { value: '125.90', currency: 'PEN' },
+      date: parseResult.transaction.occurredAt,
+      cardNumber: '****4321',
+      merchant: 'SUPERMERCADO LIMA',
+      operationId: 'OP123456',
+    });
 
     const transactionData = emailParserService.createTransactionFromEmail(
       parseResult,
@@ -170,6 +177,52 @@ describe('emailParserService (V2)', () => {
     expect(parseResult.transaction.amount.currency).toBe('PEN');
   });
 
+  test('parses digital account transfer and surfaces transfer breakdown', () => {
+    const text = [
+      'Hola Alan,',
+      '',
+      'Confirmamos tu transferencia desde Cuenta digital.',
+      '',
+      'Monto enviado: S/ 250.00',
+      'Comision: S/ 5.00',
+      'Total cobrado: S/ 255.00',
+      'Operacion realizada: Transferencia a cuenta digital',
+      'Fecha y hora: 18/10/2025 19:45',
+      'Beneficiario: Juan Perez',
+      'Banco destino: Banco de Credito del Peru',
+      'Moneda: PEN',
+      'Tipo de envio: Inmediato',
+      'Origen: Cuenta digital',
+      'Cuenta de origen: Cuenta digital',
+      '**** 1234',
+      'Cuenta destino: ****5678',
+      'Numero de operacion: TRF567890',
+    ].join('\n');
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Constancia Transferencia Cuenta Digital',
+      text,
+      receivedAt: '2025-10-18T19:45:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('account_transfer');
+    expect(parseResult.transaction.amount.value).toBe('250.00');
+    expect(parseResult.transaction.operationId).toBe('TRF567890');
+    expect(parseResult.transaction.details?.digitalTransfer).toMatchObject({
+      amountSent: { value: '250.00', currency: 'PEN' },
+      commission: { value: '5.00', currency: 'PEN' },
+      totalCharged: { value: '255.00', currency: 'PEN' },
+      operation: 'Transferencia a cuenta digital',
+      date: parseResult.transaction.occurredAt,
+      recipient: 'Juan Perez',
+      destinationBank: 'Banco de Credito del Peru',
+      currency: 'PEN',
+      sendingType: 'Inmediato',
+      origin: '**** 1234',
+    });
+  });
+
   test('parses BCP refund notification and captures merchant and card details', () => {
     const text = [
       'Hola Alan Raul,',
@@ -237,6 +290,13 @@ describe('emailParserService (V2)', () => {
     expect(parseResult.transaction.merchant).toBe('DLC*STARLINK INTERNET');
     expect(parseResult.transaction.cardLast4).toBe('1311');
     expect(parseResult.transaction.operationId).toBe('0000610710');
+    expect(parseResult.transaction.details?.cardPayment).toMatchObject({
+      amount: { value: '140.00', currency: 'PEN' },
+      date: parseResult.transaction.occurredAt,
+      cardNumber: '****1311',
+      merchant: 'DLC*STARLINK INTERNET',
+      operationId: '0000610710',
+    });
   });
 
   test('parses BCP service payment receipt with service metadata', () => {
@@ -283,5 +343,13 @@ describe('emailParserService (V2)', () => {
     expect(parseResult.transaction.accountRef).toBe('9039');
     expect(parseResult.transaction.operationId).toBe('05130564');
     expect(parseResult.transaction.notes).toContain('Servicio: PLUZ ANTES ENELDISTRIBUCIONLUZ');
+    expect(parseResult.transaction.details?.servicePayment).toMatchObject({
+      company: 'PLUZ ANTES ENEL DISTRIBUCION LUZ',
+      service: 'PLUZ ANTES ENELDISTRIBUCIONLUZ',
+      serviceHolder: 'REY** EGUSQUI** RA** EUGEN**',
+      userCode: '1874364',
+      originAccount: '**** 9039',
+      operation: 'Pago de servicios',
+    });
   });
 });
