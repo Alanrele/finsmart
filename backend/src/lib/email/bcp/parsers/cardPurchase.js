@@ -1,5 +1,5 @@
 const { parseMoneyToCanonical, parseDateTimeLima } = require('../../normalize');
-const { extractFirstMatch } = require('./utils');
+const { extractFirstMatch, sanitize, compactObject } = require('./utils');
 
 const MONTH_MAP = {
   enero: '01',
@@ -43,7 +43,7 @@ function parseAmount(text, notes, confidenceCounter) {
 }
 
 function parseTextualDate(text) {
-  const match = text.match(/Fecha\s+y\s+hora:?\s*(\d{1,2})\s+de\s+([a-z\u00f1]+)\s+de\s+(\d{4})(?:\s*[-–]?\s*(\d{1,2}:\d{2}(?:\s*(?:a\.m\.|p\.m\.|am|pm|AM|PM))?))?/i);
+  const match = text.match(/Fecha\s+y\s+hora:?\s*(\d{1,2})\s+de\s+([a-z\u00f1]+)\s+de\s+(\d{4})(?:\s*[-�?"]?\s*(\d{1,2}:\d{2}(?:\s*(?:a\.m\.|p\.m\.|am|pm|AM|PM))?))?/i);
   if (!match) {
     return null;
   }
@@ -106,7 +106,7 @@ function parseCardPurchase(text, options = {}) {
   const cardLast4 =
     extractFirstMatch(
       text,
-      /Tarjeta(?:\s+terminada)?(?:\s+n[o��]?\.?|\s+No\.?|\s+#)?\s*(\d{4})/i,
+      /Tarjeta(?:\s+terminada)?(?:\s+n[o������]?\.?|\s+No\.?|\s+#)?\s*(\d{4})/i,
     ) ||
     extractFirstMatch(
       text,
@@ -134,6 +134,22 @@ function parseCardPurchase(text, options = {}) {
 
   const confidence = Math.max(0, Math.min(1, confidenceCounter.value / signalsTarget));
 
+  const sanitizedMerchant = sanitize(merchant);
+  const sanitizedLocation = sanitize(location);
+  const sanitizedChannel = sanitize(channel);
+  const primaryOperationId =
+    extractFirstMatch(text, /Numero\s+de\s+operaci[o������]n:?\s*([A-Z0-9-]+)/i) ||
+    extractFirstMatch(text, /Operaci[o������]n:?\s*([A-Z0-9-]+)/i);
+  const sanitizedOperationId = sanitize(primaryOperationId);
+  const maskedCard = cardLast4 ? `****${cardLast4}` : undefined;
+  const cardPaymentDetails = compactObject({
+    amount: amount || undefined,
+    date: occurredAt || undefined,
+    cardNumber: maskedCard,
+    merchant: sanitizedMerchant,
+    operationId: sanitizedOperationId,
+  });
+
   const transaction = {
     source: 'BCP',
     template: 'card_purchase',
@@ -143,16 +159,16 @@ function parseCardPurchase(text, options = {}) {
       used: false,
     },
     balanceAfter: undefined,
-    channel: channel || undefined,
-    merchant: merchant || undefined,
-    location: location || undefined,
+    channel: sanitizedChannel || undefined,
+    merchant: sanitizedMerchant || undefined,
+    location: sanitizedLocation || undefined,
     cardLast4: cardLast4 || undefined,
     accountRef: undefined,
-    operationId:
-      extractFirstMatch(text, /Numero\s+de\s+operaci[o��]n:?\s*([A-Z0-9-]+)/i) ||
-      extractFirstMatch(text, /Operaci[o��]n:?\s*([A-Z0-9-]+)/i) ||
-      undefined,
+    operationId: sanitizedOperationId || undefined,
     notes: notes.length > 0 ? notes.join('; ') : undefined,
+    details: Object.keys(cardPaymentDetails).length > 0
+      ? { cardPayment: cardPaymentDetails }
+      : undefined,
     confidence,
   };
 

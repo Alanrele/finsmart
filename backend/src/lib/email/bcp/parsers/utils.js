@@ -49,6 +49,7 @@ const LABEL_BOUNDARY_TOKENS = [
   'Tarjeta n',
   'Numero de Tarjeta',
   'Nombre del Comercio',
+  'Cuenta de origen',
   'Cuenta origen',
   'Cuenta destino',
   'Cuenta abono',
@@ -69,6 +70,7 @@ const LABEL_BOUNDARY_TOKENS = [
   'Canal',
   'Servicio',
   'Tipo de envio',
+  'Moneda',
   'Tipo de cambio',
   'Motivo',
   'Motivo del cargo',
@@ -214,6 +216,30 @@ function sanitize(value) {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function compactObject(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => {
+      if (value === undefined || value === null) {
+        return false;
+      }
+      if (typeof value === 'string') {
+        return value.trim().length > 0;
+      }
+      if (typeof value === 'object') {
+        if (Array.isArray(value)) {
+          return value.length > 0;
+        }
+        return Object.keys(value).length > 0;
+      }
+      return true;
+    }),
+  );
+}
+
 module.exports = {
   extractFirstMatch,
   parseAmount,
@@ -221,4 +247,5 @@ module.exports = {
   parseSpanishDateTime,
   computeConfidence,
   sanitize,
+  compactObject,
 };

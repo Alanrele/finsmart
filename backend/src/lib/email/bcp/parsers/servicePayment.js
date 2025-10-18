@@ -5,6 +5,7 @@ const {
   parseSpanishDateTime,
   computeConfidence,
   sanitize,
+  compactObject,
 } = require('./utils');
 
 function parseServicePayment(text, options = {}) {
@@ -52,16 +53,25 @@ function parseServicePayment(text, options = {}) {
     }
   }
 
-  const serviceName = extractFirstMatch(text, [
-    /Servicio:?\s*([^\n]+)/i,
-    /Empresa\s+servicio:?\s*([^\n]+)/i,
+  const companyName = extractFirstMatch(text, [
     /Empresa:?\s*([^\n]+)/i,
   ]);
+
+  const serviceName = extractFirstMatch(text, [
+    /\bServicio\b:?\s*([^\n]+)/i,
+    /Empresa\s+servicio:?\s*([^\n]+)/i,
+  ]) || companyName;
   if (serviceName) {
     confidenceSignals += 1;
   } else {
     notes.push('service_not_found');
   }
+
+  const serviceHolder = extractFirstMatch(text, /Titular\s+del\s+servicio:?\s*([^\n]+)/i);
+  const operationPerformed = extractFirstMatch(
+    text,
+    /Operaci(?:on|n)\s+realizada:?\s*([^\n]+)/i,
+  );
 
   const customerCodePatterns = [
     { regex: /Codigo\s+de\s+cliente:?\s*([^\n]+)/i, reliability: 'strict' },
@@ -83,7 +93,13 @@ function parseServicePayment(text, options = {}) {
     }
   }
 
-  if (customerCode && !usedFallbackDate) {
+  if (customerCode) {
+    customerCode = String(customerCode)
+      .replace(/\s+Cuenta\s+de.*$/i, '')
+      .trim();
+  }
+
+  if (customerCode) {
     const trimmedCode = String(customerCode).trim();
     const hasLetters = /[A-Za-z]/.test(trimmedCode);
     const digitCount = trimmedCode.replace(/\D/g, '').length;
@@ -114,6 +130,7 @@ function parseServicePayment(text, options = {}) {
   } else {
     notes.push('account_origin_not_found');
   }
+  const originAccountMasked = extractFirstMatch(text, /\*{2,}\s*\d{3,4}/i);
 
   const channelRaw = extractFirstMatch(text, [
     /Canal:?\s*([^\n]+)/i,
@@ -125,8 +142,8 @@ function parseServicePayment(text, options = {}) {
   const channel = channelRaw || 'online';
 
   const operationId =
-    extractFirstMatch(text, /Operaci(?:on|n):?\s*([A-Z0-9-]+)/i) ||
-    extractFirstMatch(text, /Numero\s+de\s+Operaci(?:on|n):?\s*([A-Z0-9-]+)/i);
+    extractFirstMatch(text, /Numero\s+de\s+Operaci(?:on|n):?\s*([A-Z0-9-]+)/i) ||
+    extractFirstMatch(text, /Operaci(?:on|n):?\s*([A-Z0-9-]+)/i);
   if (operationId) {
     confidenceSignals += 1;
   } else {
@@ -135,13 +152,35 @@ function parseServicePayment(text, options = {}) {
 
   const confidence = computeConfidence(confidenceSignals, confidenceTarget);
 
+  const sanitizedChannel = sanitize(channel);
+  const sanitizedCompany = sanitize(companyName);
+  const sanitizedService = sanitize(serviceName);
+  const sanitizedServiceHolder = sanitize(serviceHolder);
+  const sanitizedCustomerCode = sanitize(customerCode);
+  const sanitizedAccountOrigin = sanitize(accountOrigin);
+  const sanitizedOperationId = sanitize(operationId);
+  const sanitizedOperationPerformed = sanitize(operationPerformed);
+  const sanitizedOriginMasked = sanitize(originAccountMasked);
+
+  const originAccountForDetails = sanitizedOriginMasked || sanitizedAccountOrigin;
+  const merchantValue = sanitizedCompany || sanitizedService;
+
   const accountRefParts = [];
-  if (customerCode) {
-    accountRefParts.push(`codigo:${customerCode}`);
+  if (sanitizedCustomerCode) {
+    accountRefParts.push(`codigo:${sanitizedCustomerCode}`);
   }
-  if (accountOrigin) {
-    accountRefParts.push(`origen:${accountOrigin}`);
+  if (sanitizedAccountOrigin) {
+    accountRefParts.push(`origen:${sanitizedAccountOrigin}`);
   }
+
+  const serviceDetails = compactObject({
+    company: sanitizedCompany,
+    service: sanitizedService,
+    serviceHolder: sanitizedServiceHolder,
+    userCode: sanitizedCustomerCode,
+    originAccount: originAccountForDetails,
+    operation: sanitizedOperationPerformed,
+  });
 
   return {
     source: 'BCP',
@@ -152,13 +191,16 @@ function parseServicePayment(text, options = {}) {
       used: false,
     },
     balanceAfter: undefined,
-    channel: sanitize(channel),
-    merchant: sanitize(serviceName),
+    channel: sanitizedChannel,
+    merchant: merchantValue,
     location: undefined,
     cardLast4: undefined,
     accountRef: accountRefParts.length > 0 ? accountRefParts.join(' | ') : undefined,
-    operationId: sanitize(operationId),
+    operationId: sanitizedOperationId,
     notes: notes.length > 0 ? notes.join('; ') : undefined,
+    details: Object.keys(serviceDetails).length > 0
+      ? { servicePayment: serviceDetails }
+      : undefined,
     confidence,
   };
 }

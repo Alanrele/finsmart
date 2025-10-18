@@ -30,6 +30,38 @@ function mergeNotes(primaryNotes, fallbackNotes) {
   return Array.from(combined).join(' | ');
 }
 
+function mergeDetails(primaryDetails, fallbackDetails) {
+  if (!fallbackDetails) {
+    return primaryDetails;
+  }
+  if (!primaryDetails) {
+    return fallbackDetails;
+  }
+
+  const merged = { ...primaryDetails };
+
+  for (const [key, value] of Object.entries(fallbackDetails)) {
+    if (!value) {
+      continue;
+    }
+
+    const current = primaryDetails[key];
+    if (!current) {
+      merged[key] = value;
+      continue;
+    }
+
+    if (typeof current === 'object' && typeof value === 'object') {
+      merged[key] = { ...value, ...current };
+      continue;
+    }
+
+    merged[key] = current;
+  }
+
+  return merged;
+}
+
 function mergeTransactions(primaryResult, fallbackResult) {
   if (!primaryResult || !primaryResult.transaction) {
     return fallbackResult || primaryResult;
@@ -47,9 +79,15 @@ function mergeTransactions(primaryResult, fallbackResult) {
   }
 
   if (fallbackTx.confidence > primaryTx.confidence) {
+    const winningTx = { ...fallbackTx };
+    const mergedDetails = mergeDetails(primaryTx.details, fallbackTx.details);
+    if (mergedDetails) {
+      winningTx.details = mergedDetails;
+    }
+
     return {
       ...primaryResult,
-      transaction: { ...fallbackTx },
+      transaction: winningTx,
       confidence: fallbackTx.confidence,
       notes: mergeNotes(primaryResult.notes, fallbackResult.notes),
     };
@@ -77,6 +115,7 @@ function mergeTransactions(primaryResult, fallbackResult) {
     }
   }
 
+  mergedTx.details = mergeDetails(primaryTx.details, fallbackTx.details);
   mergedTx.notes = mergeNotes(primaryTx.notes, fallbackTx.notes);
   mergedTx.confidence = Math.max(primaryTx.confidence, fallbackTx.confidence);
 

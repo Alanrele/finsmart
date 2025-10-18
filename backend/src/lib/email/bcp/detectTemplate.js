@@ -8,6 +8,7 @@ const templates = [
       /Realizaste un consumo con tu Tarjeta de Debito BCP/i,
       /Consumo realizado/i,
       /Compra con tu tarjeta/i,
+      /Consumo\s+Tarjeta/i,
     ],
     bodyAnchors: [
       /Monto\s+(?:de\s+)?consumo/i,
@@ -60,6 +61,7 @@ const templates = [
       /Transferencia\s+realizada/i,
       /Transferencia\s+a\s+Otros\s+Bancos/i,
       /Transferencia\s+Entre\s+mis\s+Cuentas/i,
+      /Cuenta\s+digital/i,
     ],
     bodyAnchors: [
       /Monto\s+(?:transferido|de\s+la\s+operacion)/i,
