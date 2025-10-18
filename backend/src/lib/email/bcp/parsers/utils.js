@@ -88,6 +88,11 @@ const LABEL_BOUNDARY_TOKENS = [
   'Suministro',
 ];
 
+const NOISE_PATTERNS = [
+  /¿?\s*no\s*reconoces\s+esta\s+operaci[oó]n\?\s*comunicate\s+inmediatamente\s+con\s+nosotros\s+al\s*\(01\)\s*311-9898\s+anexo\s*\*?225\s+para\s+ayudarte\s+a\s+verificarla\.?\s*¡?\s*seguimos\s+mejorando\s+para\s+ti!?/gi,
+  /no\s*reconoces\s+esta\s+operaci[oó]n\?\s*comunicate\s+inmediatamente\s+con\s+nosotros\s+al\s*\(01\)\s*311-9898\s+anexo\s*\*?225\s+para\s+ayudarte\s+a\s+verificarla\.?\s*seguimos\s+mejorando\s+para\s+ti!?/gi,
+];
+
 function escapeRegex(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -212,7 +217,13 @@ function sanitize(value) {
   if (value === null || value === undefined) {
     return undefined;
   }
-  const trimmed = String(value).trim();
+  let cleaned = String(value);
+
+  for (const pattern of NOISE_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+
+  const trimmed = cleaned.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
