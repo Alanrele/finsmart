@@ -167,7 +167,8 @@ function sanitizeMerchantName(raw) {
   cleaned = cleaned.replace(/(comunicate.*)$/i, '').trim();
   cleaned = cleaned.replace(/\(\d{1,4}\)\s*\d{2,4}[-\s]?\d{3,4}(?:\s*anexo\s*\*?\d+)?/gi, '').trim();
   cleaned = cleaned.replace(/\banexo\s+\*?\d+\b/gi, '').trim();
-  cleaned = cleaned.replace(/[!?.;,:\-]+$/g, '').trim();
+  cleaned = cleaned.replace(/[!?;:\-]+$/g, '').trim();
+  cleaned = cleaned.replace(/,\s*$/g, '').trim();
 
   if (!cleaned) {
     return undefined;
@@ -205,7 +206,7 @@ function inferTemplate({ operationType, sendingType, paymentType, merchant, chan
     return 'atm_withdrawal';
   }
 
-  if (/abono|deposito|ingreso|devolucion/.test(haystack)) {
+  if (/abono|deposito|ingreso|devolucion|devuelto|reembolso/.test(haystack)) {
     return 'incoming_credit';
   }
 
@@ -345,9 +346,23 @@ function enrichFieldsFromText(fields, html, text) {
   }
 
   if (!fields.merchant) {
+    const merchantLabelMatch = normalizedText.match(/nombre del comercio[:\s]+([^\n]+)/i);
+    if (merchantLabelMatch) {
+      fields.merchant = sanitizeMerchantName(merchantLabelMatch[1].trim()) || fields.merchant;
+    }
+  }
+
+  if (!fields.merchant) {
     const merchantMatch = normalizedText.match(/pago en\s+([a-z0-9* ]{3,60})/i);
     if (merchantMatch) {
       fields.merchant = sanitizeMerchantName(`Pago en ${merchantMatch[1].trim()}`) || fields.merchant;
+    }
+  }
+
+  if (!fields.cardLast4) {
+    const cardMatch = normalizedText.match(/numero de tarjeta[:\s]+[*\s]*(\d{4})/i);
+    if (cardMatch) {
+      fields.cardLast4 = cardMatch[1];
     }
   }
 
