@@ -153,4 +153,53 @@ describe('emailParserService (V2)', () => {
     expect(parseResult.transaction.operationId).toBe('ABC12345');
     expect(parseResult.transaction.confidence).toBeGreaterThanOrEqual(0.7);
   });
+
+  test('parses plain text merchant guidance snippet with fallback', () => {
+    const text = 'Pago en MP *ALIEXPRESSNumero de operacion348298 ¿No reconoces esta operacion? Comunicate inmediatamente con nosotros al(01) 311-9898 anexo *225 para ayudarte a verificarla. ¡Seguimos mejorando para ti! Monto: S/ 45.90';
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Pago en MP *ALIEXPRESS',
+      text,
+      receivedAt: '2024-10-15T15:45:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('account_transfer');
+    expect(parseResult.transaction.merchant).toBe('Pago en MP *ALIEXPRESS');
+    expect(parseResult.transaction.amount.value).toBe('45.90');
+    expect(parseResult.transaction.amount.currency).toBe('PEN');
+  });
+
+  test('parses BCP refund notification and captures merchant and card details', () => {
+    const text = [
+      'Hola Alan Raul,',
+      '',
+      'Se ha devuelto el monto de $ 10.00 a tu cuenta BCP.',
+      '',
+      'Monto',
+      '',
+      'Total devuelto\t$ 10.00',
+      '',
+      'Datos de la operacion',
+      '',
+      'Fecha y hora\t04 de octubre de 2025 - 06:01 PM',
+      'Numero de Tarjeta\t************9246',
+      'Nombre del Comercio\tGITHUB, INC.',
+      'Numero de operacion\t325121',
+    ].join('\n');
+
+    const parseResult = emailParserService.parseEmailContent({
+      subject: 'Devolucion BCP',
+      text,
+      receivedAt: '2025-10-04T18:01:00-05:00',
+    });
+
+    expect(parseResult.success).toBe(true);
+    expect(parseResult.transaction.template).toBe('incoming_credit');
+    expect(parseResult.transaction.amount.value).toBe('10.00');
+    expect(parseResult.transaction.amount.currency).toBe('USD');
+    expect(parseResult.transaction.merchant).toBe('GITHUB, INC.');
+    expect(parseResult.transaction.cardLast4).toBe('9246');
+    expect(parseResult.transaction.operationId).toBe('325121');
+  });
 });
