@@ -2,12 +2,13 @@
   "name": "finsmart-backend",
   "version": "1.0.0",
   "description": "Backend for FinSmart PWA - Financial Analysis Application",
-  "main": "src/server.js",
+  "main": "src/adapters/http/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "debug": "PORT=5001 NODE_ENV=development node src/server.js",
-    "test": "jest"
+    "start": "node src/adapters/http/server.js",
+    "dev": "nodemon src/adapters/http/server.js",
+    "debug": "PORT=5001 NODE_ENV=development node src/adapters/http/server.js",
+    "test": "jest",
+    "lint": "node ../scripts/check-refs.js"
   },
   "keywords": [
     "fintech",

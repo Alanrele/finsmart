@@ -66,6 +66,17 @@ export default defineConfig({
     host: true,
     // https: true  // Temporalmente deshabilitado para debug
   },
+  resolve: {
+    alias: {
+      '@app': '/src/app',
+      '@pages': '/src/pages',
+      '@widgets': '/src/widgets',
+      '@features': '/src/features',
+      '@entities': '/src/entities',
+      '@shared': '/src/shared',
+      '@processes': '/src/processes'
+    }
+  },
   build: {
     outDir: 'dist',
     assetsDir: 'assets',

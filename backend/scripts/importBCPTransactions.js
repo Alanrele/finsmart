@@ -1,7 +1,7 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Transaction = require('../src/models/Transaction');
-const User = require('../src/models/User');
+const Transaction = require('../src/adapters/db/mongoose/models/transactionModel');
+const User = require('../src/adapters/db/mongoose/models/userModel');
 const fs = require('fs');
 const path = require('path');
 

@@ -1,0 +1,1015 @@
+const express = require('express');
+const { Client } = require('@microsoft/microsoft-graph-client');
+const { body, validationResult } = require('express-validator');
+const User = require('../../db/mongoose/models/userModel');
+const Transaction = require('../../db/mongoose/models/transactionModel');
+const aiAnalyzer = require('../../ai/openaiClient');
+const createAIAnalysisUseCases = require('../../../app/use-cases/analyzeTransaction');
+const emailParserService = require('../../msgraph/email/parserService');
+const tokenCleanup = require('../../../infrastructure/security/tokenCleanup');
+const authMiddleware = require('../middleware/auth');
+const { dedupeAndSortTransactions } = require('../../../app/services/transactionDeduper');
+
+const router = express.Router();
+const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
+const aiUseCases = createAIAnalysisUseCases({ aiAnalyzer });
+
+// Custom authentication provider for Microsoft Graph
+class CustomAuthProvider {
+  constructor(accessToken) {
+    this.accessToken = accessToken;
+  }
+
+  async getAccessToken() {
+    return this.accessToken;
+  }
+}
+
+// Get Graph client for user with token validation
+const getGraphClient = (accessToken) => {
+  // Basic validation - detailed validation is handled in authMiddleware
+  if (!accessToken || typeof accessToken !== 'string' || accessToken.length < 20) {
+    throw new Error('Invalid access token');
+  }
+
+  const authProvider = new CustomAuthProvider(accessToken);
+  return Client.initWithMiddleware({ authProvider });
+};
+
+// Connect to Microsoft Account
+router.post('/connect', [
+    body('accessToken').isString().notEmpty().withMessage('Access token must be a non-empty string.'),
+    body('refreshToken').optional().isString().withMessage('Refresh token must be a string.')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        console.error('Validation errors in /connect:', errors.array());
+        return res.status(400).json({
+            message: 'Invalid request parameters',
+            errors: errors.array()
+        });
+    }
+
+    try {
+        const { accessToken, refreshToken } = req.body;
+
+        // Update user with tokens
+        const user = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                accessToken,
+                refreshToken,
+                tokenExpiry: new Date(Date.now() + 3600 * 1000), // Assume 1 hour expiry, can be refined
+                lastSync: new Date()
+            },
+            { new: true, upsert: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        // Test the connection by getting user profile
+        const graphClient = getGraphClient(accessToken);
+        const profile = await graphClient.api('/me').select('displayName,mail,userPrincipalName').get();
+
+        res.json({
+            message: 'Microsoft Graph connected successfully.',
+            profile: {
+                displayName: profile.displayName,
+                email: profile.mail || profile.userPrincipalName
+            }
+        });
+
+    } catch (graphError) {
+        console.error('Graph API connection error:', graphError.message);
+        // Check for typical auth errors
+        if (graphError.statusCode === 401 || graphError.code?.includes('InvalidAuthenticationToken')) {
+            return res.status(401).json({
+                message: 'Authentication failed. The access token may be invalid or expired.'
+            });
+        }
+        res.status(500).json({ message: 'Failed to connect to Microsoft Graph.', error: graphError.message });
+    }
+});
+
+// Verify token status
+router.get('/verify-token', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user || !user.accessToken) {
+      return res.status(401).json({
+        error: 'No Microsoft token found',
+        details: 'Please connect your Microsoft account first',
+        tokenStatus: 'missing'
+      });
+    }
+
+    // Check token format
+    if (user.accessToken.includes('undefined') || user.accessToken.includes('null')) {
+      return res.status(401).json({
+        error: 'Token is corrupted',
+        details: 'Authentication token contains invalid data. Please re-authenticate.',
+        tokenStatus: 'corrupted'
+      });
+    }
+
+    // Test the token by calling Microsoft Graph
+    try {
+      const graphClient = getGraphClient(user.accessToken);
+      const profile = await graphClient.api('/me').get();
+
+      res.json({
+        tokenStatus: 'valid',
+        profile: {
+          displayName: profile.displayName,
+          email: profile.mail || profile.userPrincipalName
+        },
+        tokenExpiry: user.tokenExpiry
+      });
+    } catch (graphError) {
+      console.error('Token verification failed:', graphError);
+
+      if (graphError.message && graphError.message.includes('JWT is not well formed')) {
+        return res.status(401).json({
+          error: 'Token format error',
+          details: 'JWT token is malformed. Please re-authenticate.',
+          tokenStatus: 'malformed',
+          action: 'REAUTHENTICATE'
+        });
+      }
+
+      return res.status(401).json({
+        error: 'Token validation failed',
+        details: 'Microsoft token is invalid or expired',
+        tokenStatus: 'invalid',
+        action: 'REAUTHENTICATE'
+      });
+    }
+
+  } catch (error) {
+    console.error('Token verification error:', error);
+    res.status(500).json({
+      error: 'Token verification failed',
+      details: error.message
+    });
+  }
+});
+
+// Sync emails from BCP
+router.post('/sync-emails', async (req, res) => {
+  try {
+    console.log('🔄 Starting email sync process...');
+    console.log('👤 Request user:', req.user);
+
+    const userId = req.user._id;
+
+    // Only block demo users, allow real Microsoft users
+    if (!ALLOW_DEMO_MODE && userId === 'demo-user-id') {
+      console.log('❌ Demo user blocked from sync');
+      return res.status(400).json({
+        error: 'Real Microsoft Graph connection required',
+        details: 'Please connect with a real Microsoft account to sync emails'
+      });
+    }
+
+    console.log('🔍 Looking up user in database with ID:', userId);
+    const user = await User.findById(userId);
+
+    if (!user) {
+      console.log('❌ User not found in database:', userId);
+      return res.status(404).json({
+        error: 'User not found',
+        details: 'Please ensure you are properly authenticated'
+      });
+    }
+
+    console.log('✅ User found:', { email: user.email, hasToken: !!user.accessToken });
+
+    if (!user.accessToken) {
+      console.log('❌ User has no access token');
+      return res.status(400).json({
+        error: 'Microsoft account not connected',
+        details: 'Please connect your Microsoft account first'
+      });
+    }
+
+    console.log('🔗 Creating Graph client...');
+    const graphClient = getGraphClient(user.accessToken);
+
+    // Define allowed transactional sender addresses (whitelist)
+    const allowedSenders = [
+      'notificaciones@bcp.com.pe',
+      'alertas@bcp.com.pe',
+      'movimientos@bcp.com.pe',
+      'bcp@bcp.com.pe'
+    ];
+
+    console.log('📧 Fetching emails with ultra-minimal query to avoid complexity issues');
+
+    let messages;
+    try {
+      // Ultra-minimal attempt: Absolute simplest possible query
+      console.log('� Attempting ultra-minimal Graph API query...');
+      messages = await graphClient
+        .api('/me/messages')
+        .top(25) // Very small number
+        .get();
+
+      console.log('✅ Ultra-minimal query successful');
+    } catch (graphError) {
+      if (graphError.code === 'InefficientFilter') {
+        console.log('⚠️ Ultra-minimal query failed, trying absolute minimum...');
+        // Last resort: Just get messages without any parameters
+        try {
+          console.log('🔍 Attempting absolute minimum query (no parameters)...');
+          messages = await graphClient
+            .api('/me/messages')
+            .get();
+
+          console.log('✅ Absolute minimum query successful');
+          // Limit results manually if we get too many
+          if (messages.value && messages.value.length > 20) {
+            messages.value = messages.value.slice(0, 20);
+            console.log(`📝 Manually limited to 20 messages to avoid processing overhead`);
+          }
+        } catch (finalError) {
+          console.error('❌ All Graph API query attempts failed:', finalError);
+          throw finalError;
+        }
+      } else {
+        throw graphError;
+      }
+    }    console.log(`📨 Retrieved ${messages.value.length} total emails, filtering for BCP emails`);
+
+    // Filter transactional emails in memory by strict sender match
+    const parserService = emailParserService;
+    const bcpEmails = messages.value.filter(message => {
+      const fromEmail = message.from?.emailAddress?.address?.toLowerCase() || '';
+      const subj = message.subject || '';
+      const preview = message.body?.content || message.bodyPreview || '';
+      return allowedSenders.includes(fromEmail) && parserService.isTransactionalEmail(subj, preview);
+    });
+
+    console.log(`🏦 Found ${bcpEmails.length} emails from BCP domains`);
+
+    const messages_filtered = { value: bcpEmails };
+
+    console.log(`📨 Found ${messages.value.length} emails from BCP`);
+
+    const processedTransactions = [];
+    const skippedEmails = [];
+    const io = req.app.get('io');
+    let newTransactionsCount = 0;
+
+    for (const message of messages_filtered.value) {
+      try {
+        // Check if message already processed
+        const existingTransaction = await Transaction.findOne({
+          messageId: message.id,
+          userId: user._id
+        });
+
+        if (existingTransaction) {
+          console.log(`⏭️ Skipping already processed email: ${message.subject || 'No subject'}`);
+          continue;
+        }
+
+        // Quick check if email is likely transactional before processing
+        // Handle case where body might be missing from fallback query
+        const emailSubject = message.subject || '';
+        const senderAddress = message.from?.emailAddress?.address;
+
+        let htmlBody;
+        let textBody = '';
+
+        if (message.body && message.body.content) {
+          const contentType = (message.body.contentType || '').toLowerCase();
+          if (contentType === 'html') {
+            htmlBody = message.body.content;
+          } else {
+            textBody = message.body.content;
+          }
+        } else if (message.bodyPreview) {
+          textBody = message.bodyPreview;
+        } else {
+          textBody = emailSubject;
+        }
+
+        const transactionalCheckBody = textBody || htmlBody || '';
+        const isLikelyTransactional = emailParserService.isTransactionalEmail(
+          emailSubject,
+          transactionalCheckBody,
+          { from: senderAddress }
+        );
+
+        if (!isLikelyTransactional) {
+          console.log(`📧 Skipping promotional email: ${emailSubject}`);
+          skippedEmails.push({
+            subject: emailSubject,
+            reason: 'Promotional email - no transaction data expected'
+          });
+          continue;
+        }
+
+        console.log(`💳 Processing potential transaction email: ${emailSubject}`);
+
+        let emailText = textBody;
+
+        // Extract content from email body (handle various Graph API response formats)
+        if (message.body && message.body.content) {
+          if (message.body.contentType === 'html') {
+            emailText = textBody;
+          } else {
+            emailText = message.body.content;
+          }
+        } else if (message.bodyPreview) {
+          // Fallback to bodyPreview if available (default Graph API response)
+          console.log(`⚠️ Using bodyPreview as fallback for: ${emailSubject}`);
+          emailText = message.bodyPreview;
+        } else {
+          // Last resort: use subject only
+          console.log(`⚠️ No body content available, using subject only: ${emailSubject}`);
+          emailText = emailSubject;
+        }
+
+        // Parse email content
+        console.log('🔍 Parsing email:', emailSubject);
+
+        let parseResult;
+        try {
+          parseResult = emailParserService.parseEmailContent({
+            subject: emailSubject,
+            html: htmlBody,
+            text: emailText,
+            receivedAt: message.receivedDateTime,
+          });
+          console.log('📊 Parsed result:', {
+            success: parseResult?.success,
+            amount: parseResult?.transaction?.amount?.value,
+            template: parseResult?.transaction?.template,
+            confidence: parseResult?.transaction?.confidence
+          });
+        } catch (parseError) {
+          console.error('❌ Email parsing failed:', parseError);
+          skippedEmails.push({
+            subject: emailSubject,
+            reason: 'Email parsing error: ' + parseError.message
+          });
+          continue;
+        }
+
+        if (emailParserService.isValidParsedTransaction(parseResult, { subject: emailSubject, receivedDateTime: message.receivedDateTime })) {
+          console.log('💰 Creating transaction from parsed data...');
+
+          let transactionData;
+          try {
+            transactionData = emailParserService.createTransactionFromEmail(
+              parseResult,
+              user._id,
+              {
+                id: message.id,
+                subject: emailSubject,
+                receivedDateTime: message.receivedDateTime
+              }
+            );
+            console.log('📝 Transaction data created:', {
+              amount: transactionData.amount,
+              type: transactionData.type,
+              description: transactionData.description
+            });
+          } catch (createError) {
+            console.error('❌ Transaction creation failed:', createError);
+            skippedEmails.push({
+              subject: emailSubject,
+              reason: `Transaction creation error: ${createError.message}`
+            });
+            continue;
+          }
+
+        const normalizedTx = parseResult.transaction;
+        const amountValue = parseFloat(normalizedTx.amount.value);
+        const MAX_ALLOWED_AMOUNT = 10_000_000; // S/ 10 millones
+        if (amountValue > MAX_ALLOWED_AMOUNT) {
+          console.warn(`�s���? Skipping email-derived transaction with unrealistic amount: ${amountValue}. Subject: ${emailSubject}`);
+          continue;
+        }
+
+        if (normalizedTx.operationId) {
+          const existingTransaction = await Transaction.findOne({
+            userId: user._id,
+            operationNumber: normalizedTx.operationId
+          });
+
+          if (existingTransaction) {
+            console.log(`�s���? Transaction already exists with operation number: ${normalizedTx.operationId}`);
+            continue;
+          }
+        }
+
+        // Create transaction record
+          try {
+            const transaction = new Transaction({
+              ...transactionData,
+              messageId: message.id,
+              rawText: (emailText || htmlBody || emailSubject).substring(0, 1000), // Store first 1000 chars for debugging
+              isProcessed: true,
+              createdAt: new Date(message.receivedDateTime)
+            });
+
+            await transaction.save();
+            processedTransactions.push(transaction);
+            newTransactionsCount++;
+
+            console.log('✅ Transaction created:', {
+              messageId: message.id,
+              amount: transaction.amount,
+              type: transaction.type,
+              description: transaction.description,
+              date: transaction.date
+            });
+
+            // Emit real-time update to connected client
+            if (io) {
+              io.to(`user-${user._id}`).emit('new-transaction', {
+                ...transaction.toObject(),
+                isNew: true
+              });
+
+              // Also emit general notification
+              io.to(`user-${user._id}`).emit('notification', {
+                type: 'success',
+                title: 'Nueva Transacción Detectada',
+                message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
+                priority: 'high',
+                timestamp: new Date()
+              });
+            }
+          } catch (saveError) {
+            console.error('❌ Transaction save failed:', saveError);
+            skippedEmails.push({
+              subject: emailSubject,
+              reason: `Database save error: ${saveError.message}`
+            });
+          }
+        } else {
+          skippedEmails.push({
+            subject: emailSubject,
+            reason: 'No valid transaction data found'
+          });
+          console.log('⚠️ No transaction data in email:', emailSubject);
+        }
+
+      } catch (messageError) {
+        console.error(`❌ Error processing message ${message.id}:`, messageError);
+        skippedEmails.push({
+          subject: emailSubject || 'Unknown subject',
+          reason: `Message processing error: ${messageError.message}`
+        });
+        skippedEmails.push({
+          subject: message.subject,
+          reason: messageError.message
+        });
+      }
+    }
+
+    // Update user's last sync time
+    user.lastSync = new Date();
+    await user.save();
+
+    // Setup periodic sync if this is the first successful sync
+    if (processedTransactions.length > 0 && !user.syncEnabled) {
+      user.syncEnabled = true;
+      await user.save();
+      console.log('🔄 Enabled periodic sync for user');
+    }
+
+    const orderedTransactions = dedupeAndSortTransactions(processedTransactions);
+
+    const response = {
+      message: 'Email sync completed successfully',
+      processedCount: orderedTransactions.length,
+      totalEmails: messages.value.length,
+      skippedCount: skippedEmails.length,
+      transactions: orderedTransactions.map(t => ({
+        id: t._id,
+        amount: t.amount,
+        type: t.type,
+        description: t.description,
+        date: t.date,
+        account: t.account
+      })),
+      skippedEmails: skippedEmails.slice(0, 5), // Show first 5 skipped for debugging
+      syncEnabled: user.syncEnabled,
+      lastSync: user.lastSync
+    };
+
+    console.log('📊 Sync summary:', {
+      processed: orderedTransactions.length,
+      total: messages.value.length,
+      skipped: skippedEmails.length
+    });
+
+    res.json(response);
+
+  } catch (error) {
+    console.error('❌ Sync emails error:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    });
+
+    // Handle specific Microsoft Graph errors
+    if (error.code === 'InvalidAuthenticationToken' || error.code === 'Forbidden') {
+      // Check for JWT malformed error specifically
+      if (error.message && error.message.includes('JWT is not well formed')) {
+        console.error('🔑 JWT malformed error in Graph API call');
+
+        // Clean up the corrupted token from database
+        try {
+          const user = await User.findById(req.user._id);
+          if (user && user.accessToken) {
+            console.log('🧹 Cleaning up malformed token for user:', user.email);
+            user.accessToken = undefined;
+            user.refreshToken = undefined;
+            user.tokenExpiry = undefined;
+            user.syncEnabled = false;
+            await user.save();
+            console.log('✅ Corrupted token cleaned up successfully');
+          }
+        } catch (cleanupError) {
+          console.error('❌ Error cleaning up corrupted token:', cleanupError);
+        }
+
+        return res.status(401).json({
+          error: 'Authentication token corrupted',
+          details: 'Your Microsoft authentication token is malformed. Please sign out and sign in again to refresh your token.',
+          code: 'JWT_MALFORMED',
+          action: 'REAUTHENTICATE'
+        });
+      }
+
+      return res.status(401).json({
+        error: 'Microsoft authentication expired',
+        details: 'Please reconnect your Microsoft account',
+        code: error.code
+      });
+    }
+
+    // Handle InefficientFilter error with fallback strategy
+    if (error.code === 'InefficientFilter') {
+      console.log('⚠️ Graph query too complex, fallback strategies should handle this automatically...');
+      return res.status(200).json({
+        success: false,
+        error: 'Query optimization in progress',
+        message: 'Microsoft Graph is temporarily using simplified queries to avoid complexity issues. Email sync will continue with reduced filters.',
+        details: 'The system automatically switches to simpler queries when Microsoft Graph reports complexity issues.',
+        code: error.code,
+        suggestion: 'Email synchronization will continue normally with automatic fallback methods. No action required from user.',
+        fallbackActive: true
+      });
+    }
+
+    // Handle database connection errors
+    if (error.name === 'MongooseError' || error.name === 'MongoError') {
+      return res.status(503).json({
+        error: 'Database connection error',
+        details: 'Please try again later',
+        code: error.code
+      });
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        error: 'Validation error',
+        details: error.message,
+        code: error.code
+      });
+    }
+
+    res.status(500).json({
+      error: 'Failed to sync emails',
+      details: error.message,
+      type: error.name || 'Unknown error'
+    });
+  }
+});
+
+// Enable/Disable periodic sync for user
+router.post('/sync-toggle', async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const userId = req.user._id;
+
+    // Only block demo users
+    if (!ALLOW_DEMO_MODE && userId === 'demo-user-id') {
+      return res.status(400).json({
+        error: 'Real Microsoft Graph connection required',
+        details: 'Demo users cannot enable sync'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.accessToken) {
+      return res.status(400).json({
+        error: 'Microsoft account not connected',
+        details: 'Please connect your Microsoft account first'
+      });
+    }
+
+    user.syncEnabled = enabled;
+    await user.save();
+
+    console.log(`🔄 Sync ${enabled ? 'enabled' : 'disabled'} for user: ${user.email}`);
+
+    res.json({
+      message: `Email sync ${enabled ? 'enabled' : 'disabled'} successfully`,
+      syncEnabled: user.syncEnabled,
+      lastSync: user.lastSync
+    });
+
+  } catch (error) {
+    console.error('❌ Sync toggle error:', error);
+    res.status(500).json({
+      error: 'Failed to toggle sync',
+      details: error.message
+    });
+  }
+});
+
+// Get sync status for user
+router.get('/sync-status', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Only treat as demo if it's specifically the demo user ID
+    if (userId === 'demo-user-id' && !ALLOW_DEMO_MODE) {
+      return res.json({
+        syncEnabled: false,
+        lastSync: null,
+        isDemo: true,
+        message: 'Connect a real Microsoft account to enable sync'
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get recent transactions count
+    const recentTransactions = await Transaction.countDocuments({
+      userId: user._id,
+      createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } // Last 7 days
+    });
+
+    res.json({
+      syncEnabled: user.syncEnabled || false,
+      lastSync: user.lastSync,
+      hasConnection: !!user.accessToken,
+      recentTransactions,
+      email: user.email,
+      isDemo: false
+    });
+
+  } catch (error) {
+    console.error('❌ Sync status error:', error);
+    res.status(500).json({
+      error: 'Failed to get sync status',
+      details: error.message
+    });
+  }
+});
+
+// Test email parsing endpoint (for development)
+router.post('/test-email-parser', async (req, res) => {
+  try {
+    const { subject, html, text, emailContent } = req.body;
+    const bodyText = text || emailContent;
+
+    if (!bodyText && !html) {
+      return res.status(400).json({ error: 'Email content is required' });
+    }
+
+    console.log('🧪 Testing email parser with content length:', (bodyText || '').length);
+
+    // Parse the email content
+    const receivedAt = new Date().toISOString();
+    const parseResult = emailParserService.parseEmailContent({
+      subject: subject || 'Test Email',
+      html,
+      text: bodyText,
+      receivedAt,
+    });
+
+    const parseMeta = {
+      subject: subject || 'Test Email',
+      receivedDateTime: receivedAt,
+    };
+
+    const isValid = emailParserService.isValidParsedTransaction(parseResult, parseMeta);
+
+    let transactionData = null;
+    if (isValid) {
+      transactionData = emailParserService.createTransactionFromEmail(
+        parseResult,
+        'test-user-id',
+        {
+          id: 'test-email-id',
+          subject: parseMeta.subject,
+          receivedDateTime: parseMeta.receivedDateTime,
+        }
+      );
+    }
+
+    res.json({
+      success: parseResult.success,
+      parseResult,
+      transactionData,
+      isValid,
+      message: 'Email parsing completed successfully'
+    });
+
+  } catch (error) {
+    console.error('Email parser test error:', error);
+    res.status(500).json({
+      error: 'Failed to parse email content',
+      details: error.message
+    });
+  }
+});
+
+// Get user's email folders
+router.get('/folders', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Check if it's a demo user - return demo folders
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
+      console.log('🎭 Returning demo Microsoft Graph folders');
+      return res.json({
+        folders: [
+          {
+            id: 'demo-inbox',
+            displayName: 'Inbox',
+            totalItemCount: 142,
+            unreadItemCount: 8
+          },
+          {
+            id: 'demo-sent',
+            displayName: 'Sent Items',
+            totalItemCount: 89,
+            unreadItemCount: 0
+          },
+          {
+            id: 'demo-financial',
+            displayName: 'Financial',
+            totalItemCount: 24,
+            unreadItemCount: 2
+          },
+          {
+            id: 'demo-receipts',
+            displayName: 'Receipts',
+            totalItemCount: 67,
+            unreadItemCount: 3
+          }
+        ],
+        demoMode: true
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user.accessToken) {
+      return res.status(400).json({
+        error: 'Microsoft account not connected'
+      });
+    }
+
+    const graphClient = getGraphClient(user.accessToken);
+    const folders = await graphClient.api('/me/mailFolders').get();
+
+    res.json({
+      folders: folders.value.map(folder => ({
+        id: folder.id,
+        displayName: folder.displayName,
+        totalItemCount: folder.totalItemCount,
+        unreadItemCount: folder.unreadItemCount
+      }))
+    });
+
+  } catch (error) {
+    console.error('Get folders error:', error);
+    res.status(500).json({ error: 'Failed to get email folders' });
+  }
+});
+
+// Get connection status
+router.get('/status', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Check if it's a demo user - return demo status
+    if (ALLOW_DEMO_MODE && userId === 'demo-user-id') {
+      console.log('🎭 Returning demo Microsoft Graph status');
+      return res.json({
+        isConnected: true,
+        lastSync: new Date(Date.now() - 86400000).toISOString(), // yesterday
+        tokenExpiry: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
+        demoMode: true
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    const isConnected = !!(user.accessToken && user.tokenExpiry && user.tokenExpiry > new Date());
+
+    res.json({
+      isConnected,
+      lastSync: user.lastSync,
+      tokenExpiry: user.tokenExpiry
+    });
+
+  } catch (error) {
+    console.error('Get status error:', error);
+    res.status(500).json({ error: 'Failed to get connection status' });
+  }
+});
+
+// Disconnect Microsoft account
+router.post('/disconnect', async (req, res) => {
+  try {
+    console.log('📤 Disconnect request from user:', req.user);
+
+    // Handle demo/Microsoft users differently
+    if (req.user._id === 'demo-user-id' && ALLOW_DEMO_MODE) {
+      console.log('🎭 Demo/Microsoft user disconnect - no database operation needed');
+      return res.json({
+        message: 'Microsoft account disconnected successfully',
+        demo: true
+      });
+    }
+
+    // For real users, update the database
+    const updatedUser = await User.findByIdAndUpdate(req.user._id, {
+      $unset: {
+        accessToken: 1,
+        refreshToken: 1,
+        tokenExpiry: 1,
+        microsoftId: 1
+      }
+    }, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log('✅ User disconnected successfully:', updatedUser._id);
+    res.json({ message: 'Microsoft account disconnected successfully' });
+
+  } catch (error) {
+    console.error('❌ Disconnect error:', error);
+    res.status(500).json({
+      error: 'Failed to disconnect Microsoft account',
+      details: error.message
+    });
+  }
+});
+
+// Endpoint to clean up malformed tokens (admin only)
+router.post('/cleanup-malformed-tokens', authMiddleware, async (req, res) => {
+  try {
+    console.log('🧹 Manual token cleanup requested...');
+
+    // Check if current user token is malformed
+    if (req.user && req.user._id) {
+      const user = await User.findById(req.user._id);
+      if (user && user.accessToken && tokenCleanup.isTokenMalformed(user.accessToken)) {
+        console.log(`🧹 Cleaning current user's malformed token: ${user.email}`);
+        await tokenCleanup.cleanupUserToken(user._id);
+      }
+    }
+
+    // Clean up all malformed tokens in database
+    const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+
+    res.json({
+      message: 'Token cleanup completed',
+      cleanedCount,
+      recommendation: cleanedCount > 0 ? 'Users with cleaned tokens should re-authenticate' : 'No malformed tokens found'
+    });
+
+  } catch (error) {
+    console.error('❌ Token cleanup error:', error);
+    res.status(500).json({
+      error: 'Failed to cleanup malformed tokens',
+      details: error.message
+    });
+  }
+});
+
+// Reprocess all past emails for improved transaction data
+router.post('/reprocess-emails', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    console.log('🔄 Starting email reprocessing for user:', userId);
+
+    // Check if it's a demo user and demo mode is disabled
+    if (userId === 'demo-user-id' && !ALLOW_DEMO_MODE) {
+      console.log('❌ Demo user blocked from reprocessing');
+      return res.status(403).json({
+        error: 'Demo accounts cannot reprocess emails',
+        details: 'Please connect with a real Microsoft account to reprocess emails'
+      });
+    }
+
+    // Get email sync service instance from app
+    const emailSyncService = req.app.get('emailSyncService');
+    if (!emailSyncService) {
+      console.error('❌ Email sync service not available');
+      return res.status(500).json({
+        error: 'Email sync service not available',
+        details: 'Please try again later'
+      });
+    }
+
+    // Start reprocessing in background
+    emailSyncService.reprocessAllEmails(userId, {
+      batchSize: req.body.batchSize || 10
+    }).then(result => {
+      console.log('✅ Reprocessing completed:', result);
+    }).catch(error => {
+      console.error('❌ Reprocessing failed:', error);
+    });
+
+    // Return immediate response
+    res.json({
+      message: 'Email reprocessing started successfully',
+      details: 'This process may take several minutes depending on the number of emails. You will receive real-time updates via WebSocket.',
+      status: 'processing'
+    });
+
+  } catch (error) {
+    console.error('❌ Error starting email reprocessing:', error);
+    res.status(500).json({
+      error: 'Failed to start email reprocessing',
+      details: error.message
+    });
+  }
+});
+
+router.post('/reset-and-reprocess', async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    console.log('�Y�� Reset and reprocess requested for user:', userId);
+
+    if (userId === 'demo-user-id' && !ALLOW_DEMO_MODE) {
+      return res.status(403).json({
+        error: 'Demo accounts cannot reset transactions',
+        details: 'Please connect with a real Microsoft account to reprocess emails',
+      });
+    }
+
+    const emailSyncService = req.app.get('emailSyncService');
+    if (!emailSyncService) {
+      console.error('�?O Email sync service not available');
+      return res.status(500).json({
+        error: 'Email sync service not available',
+        details: 'Please try again later',
+      });
+    }
+
+    const deletion = await Transaction.deleteMany({
+      userId,
+      messageId: { $exists: true, $ne: null },
+    });
+
+    emailSyncService
+      .reprocessAllEmails(userId, { batchSize: req.body.batchSize || 25 })
+      .then((result) => console.log('�o. Reset reprocessing completed:', result))
+      .catch((error) => console.error('�?O Reset reprocessing failed:', error));
+
+    res.json({
+      message: 'Reset y reprocesamiento iniciados',
+      deletedCount: deletion.deletedCount,
+      status: 'processing',
+    });
+  } catch (error) {
+    console.error('�?O Error in reset-and-reprocess:', error);
+    res.status(500).json({
+      error: 'Failed to reset and reprocess emails',
+      details: error.message,
+    });
+  }
+});
+
+module.exports = router;

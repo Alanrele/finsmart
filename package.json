@@ -1,19 +1,17 @@
-{
-  "name": "finsmart-monorepo",
+﻿{
+  "name": "finsmart",
+  "private": true,
   "version": "1.0.0",
-  "description": "FinSmart - Análisis Financiero Inteligente",
+  "description": "FinSmart - Analisis Financiero Inteligente",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "scripts": {
-    "install:backend": "cd backend && npm install",
-    "install:frontend": "cd frontend && npm install",
-    "install:all": "npm run install:backend && npm run install:frontend",
-    "build:frontend": "cd frontend && npm run build",
-    "copy:frontend": "node -e \"const fs = require('fs-extra'); fs.copySync('./frontend/dist', './backend/public');\"",
-    "build": "npm run install:all && npm run build:frontend && npm run copy:frontend",
-    "start": "cd backend && npm start",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "deploy:railway": "railway up"
+    "dev": "npm run dev --workspaces",
+    "build": "npm run build --workspaces",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
   },
   "repository": {
     "type": "git",
@@ -27,9 +25,6 @@
     "pwa"
   ],
   "author": "FinSmart Team",
-  "license": "MIT",
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "fs-extra": "^11.3.2"
-  }
+  "license": "MIT"
 }
+
