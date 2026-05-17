@@ -57,9 +57,38 @@ const PORT = env.port;
 logger.info('Server configuration', { port: PORT, envPort: env.port, nodeEnv: env.nodeEnv });
 
 // Connect to MongoDB
+// Seed demo user on startup (only in demo mode)
+const seedDemoUser = async () => {
+  try {
+    const User = require('../db/mongoose/models/userModel');
+    const existing = await User.findOne({ email: 'demo@finsmart.app' });
+    if (!existing) {
+      const user = new User({
+        email: 'demo@finsmart.app',
+        password: 'demo123',
+        firstName: 'Demo',
+        lastName: 'User',
+        isDemo: true,
+        isVerified: true
+      });
+      await user.save();
+      logger.info('✅ Demo user created: demo@finsmart.app / demo123');
+    } else {
+      logger.info('Demo user already exists');
+    }
+  } catch (err) {
+    logger.warn('Could not seed demo user', { error: err.message });
+  }
+};
+
 mongoose.connect(env.mongoUri)
 .then(async () => {
   logger.info('Connected to MongoDB successfully');
+
+  // Seed demo user if ALLOW_DEMO_MODE is set
+  if (env.allowDemoMode) {
+    await seedDemoUser();
+  }
 
   // Only run token cleanup if MongoDB is connected
   if (mongoose.connection.readyState === 1) {

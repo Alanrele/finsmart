@@ -7,10 +7,11 @@ const tokenCleanup = require('../../../infrastructure/security/tokenCleanup');
 
 const router = express.Router();
 
-// Rate limiting
+// Rate limiting — relaxed in demo mode
+const isDemoMode = process.env.ALLOW_DEMO_MODE === 'true';
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
+  max: isDemoMode ? 50 : 5,
   message: 'Too many authentication attempts, please try again later'
 });
 
