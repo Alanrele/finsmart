@@ -33,7 +33,7 @@ import useAppStore from '@entities/app/model/appStore';
 import { getDashboardData } from '@shared/api/base';
 import toast from 'react-hot-toast';
 import LoadingCard from '@shared/ui/LoadingCard';
-import EmailSyncControl from './EmailSyncControl';
+import EmailSyncControl from '@widgets/email-sync-control/EmailSyncControl';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '@shared/lib/formatters';
 
 import {
@@ -42,7 +42,7 @@ import {
   IncomeExpenseAreaChart,
   FinancialHealthRadar,
   MonthOverMonthComparison
-} from './EnhancedCharts';
+} from '@widgets/charts/EnhancedCharts';
 
 const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
 

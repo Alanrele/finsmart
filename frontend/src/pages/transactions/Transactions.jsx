@@ -4,7 +4,7 @@ import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLe
 import { getTransactions } from '@shared/api/base' // Importar directamente la función
 import toast from 'react-hot-toast'
 import LoadingCard from '@shared/ui/LoadingCard'
-import TransactionDetailModal from './TransactionDetailModal'
+import TransactionDetailModal from '@features/transactions/TransactionDetailModal'
 import { formatCurrency, formatCurrencyAuto } from '@shared/lib/formatters'
 
 const Transactions = () => {
