@@ -66,15 +66,15 @@ const Analysis = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">
           Análisis Financiero IA
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-slate-500 dark:text-slate-400 mt-1">
           Insights inteligentes sobre tus hábitos financieros
         </p>
       </div>
 
-      {/* Start CTA - simplified content and clear spacing */}
+      {/* Start CTA */}
       {!hasStarted && !aiAnalysis && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -82,7 +82,7 @@ const Analysis = () => {
           className="card"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-slate-600 dark:text-slate-300">
               Pulsa el botón para comenzar el análisis
             </p>
             <button onClick={handleStart} className="btn-primary sm:self-auto self-start">
@@ -100,44 +100,44 @@ const Analysis = () => {
           className="card"
         >
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-brand-100 dark:bg-brand-900/20 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-brand-600 dark:text-brand-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Resumen del Análisis
             </h2>
           </div>
 
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
+          <p className="text-slate-700 dark:text-slate-300 mb-4">
             {aiAnalysis.summary}
           </p>
 
           {aiAnalysis.score && (
             <div className="flex items-center space-x-3 mb-4">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Puntuación Financiera:
               </span>
-              <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+              <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                 <div
-                  className="bg-gradient-to-r from-dark-primary to-dark-accent h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-brand-600 to-accent-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(aiAnalysis.score / 10) * 100}%` }}
                 />
               </div>
-              <span className="text-lg font-bold text-dark-primary">
+              <span className="text-lg font-bold text-brand-600 dark:text-brand-400">
                 {aiAnalysis.score}/10
               </span>
             </div>
           )}
 
           {aiAnalysis?.warnings && aiAnalysis.warnings.length > 0 && (
-            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
               <div className="flex items-start space-x-2">
-                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                  <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-1">
                     Alertas Importantes
                   </h4>
-                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                  <ul className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
                     {aiAnalysis.warnings.map((warning, index) => (
                       <li key={index}>• {warning}</li>
                     ))}
@@ -158,10 +158,10 @@ const Analysis = () => {
           className="card"
         >
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
-              <Lightbulb className="w-5 h-5 text-purple-600" />
+            <div className="p-2 bg-violet-100 dark:bg-violet-900/20 rounded-lg">
+              <Lightbulb className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Insights Financieros
             </h2>
           </div>
@@ -170,9 +170,9 @@ const Analysis = () => {
             {aiAnalysis.insights.map((insight, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/10 dark:to-blue-900/10 rounded-lg border border-purple-200 dark:border-purple-800"
+                className="p-4 bg-gradient-to-r from-violet-50 to-brand-50 dark:from-violet-900/10 dark:to-brand-900/10 rounded-lg border border-violet-200 dark:border-violet-800"
               >
-                <p className="text-gray-700 dark:text-gray-300">{insight}</p>
+                <p className="text-slate-700 dark:text-slate-300">{insight}</p>
               </div>
             ))}
           </div>
@@ -188,10 +188,10 @@ const Analysis = () => {
           className="card"
         >
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <Target className="w-5 h-5 text-green-600" />
+            <div className="p-2 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
+              <Target className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Recomendaciones Personalizadas
             </h2>
           </div>
@@ -200,10 +200,10 @@ const Analysis = () => {
             {recommendations.map((rec, index) => (
               <div
                 key={index}
-                className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600"
+                className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg border border-slate-200 dark:border-slate-600"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-slate-900 dark:text-white">
                     {rec.title}
                   </h4>
                   <div className="flex items-center space-x-2">
@@ -211,23 +211,23 @@ const Analysis = () => {
                       rec.impact === 'high'
                         ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                         : rec.impact === 'medium'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                        : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400'
+                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400'
                     }`}>
                       {rec.impact} impact
                     </span>
                     {rec.savings && (
-                      <span className="text-sm font-medium text-green-600">
+                      <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
                         S/ {rec.savings.toLocaleString()}
                       </span>
                     )}
                   </div>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300 mb-2">
+                <p className="text-slate-600 dark:text-slate-300 mb-2">
                   {rec.description}
                 </p>
                 {rec.category && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">
                     Categoría: {rec.category}
                   </span>
                 )}
@@ -245,7 +245,7 @@ const Analysis = () => {
           transition={{ delay: 0.6 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
             Tendencias Identificadas
           </h3>
 
@@ -253,9 +253,9 @@ const Analysis = () => {
             {aiAnalysis.trends.map((trend, index) => (
               <div
                 key={index}
-                className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800"
+                className="p-3 bg-brand-50 dark:bg-brand-900/10 rounded-lg border border-brand-200 dark:border-brand-800"
               >
-                <p className="text-sm text-blue-800 dark:text-blue-300">{trend}</p>
+                <p className="text-sm text-brand-800 dark:text-brand-300">{trend}</p>
               </div>
             ))}
           </div>

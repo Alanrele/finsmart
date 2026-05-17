@@ -205,10 +205,10 @@ const ChatIA = () => {
                     {/* Avatar */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                       msg.type === 'user'
-                        ? 'bg-dark-primary'
+                        ? 'bg-brand-600'
                         : msg.isError
                         ? 'bg-red-500'
-                        : 'bg-blue-500'
+                        : 'bg-brand-500'
                     }`}>
                       {msg.type === 'user' ? (
                         <User className="w-4 h-4 text-white" />
@@ -220,7 +220,7 @@ const ChatIA = () => {
                     {/* Message */}
                     <div className={`px-4 py-3 rounded-2xl ${
                       msg.type === 'user'
-                        ? 'bg-dark-primary text-white'
+                        ? 'bg-brand-600 text-white'
                         : msg.isError
                         ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
@@ -279,7 +279,7 @@ const ChatIA = () => {
             <button
               type="submit"
               disabled={!message.trim() || isLoading}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-dark-primary hover:bg-dark-primary hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-brand-600 dark:text-brand-400 hover:bg-brand-600 hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <Loader className="w-4 h-4 animate-spin" />

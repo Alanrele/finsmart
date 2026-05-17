@@ -1,51 +1,53 @@
-# Multi-stage build for FinSmart
-FROM node:20-bullseye-slim as frontend-build
+# Multi-stage build for FinSmart — Railway-optimized
+FROM node:20-bullseye-slim AS frontend-build
 
-# Install minimal build deps (Debian-based) and clean apt cache
+# Minimal build deps, cleaned after install
 RUN apt-get update && apt-get install -y python3 make g++ \
-	&& rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/*
 
-# Workaround Rollup native optional dependency issues in CI
+# Skip Rollup native builds in CI
 ENV ROLLUP_SKIP_NODEJS_NATIVE=1
 ENV npm_config_optional=true
 
-# Build frontend
 WORKDIR /app/frontend
-# Copy only package.json to allow Linux-specific resolution of optional deps
-COPY frontend/package.json ./
 
-# Use npm install (not ci) to resolve platform-specific optional deps (rollup native)
+# Cache layer: install dependencies first
+COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 
 COPY frontend/ ./
 RUN npm run build
 
-# Backend stage
-FROM node:20-alpine as backend
+# ---- Backend stage ----
+FROM node:20-alpine AS backend
 
-# Install runtime dependencies for native modules
+# Runtime deps for native modules
 RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
-COPY backend/package*.json ./
 
-# Install only production dependencies for backend (fast and cacheable)
+# Cache layer: install production deps
+COPY backend/package.json backend/package-lock.json* ./
 RUN npm ci --omit=dev --omit=optional
 
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist ./public
 
-# Verify frontend was copied successfully
-RUN test -f ./public/index.html || (echo "ERROR: Frontend build failed - index.html not found" && exit 1)
+# Verify frontend build
+RUN test -f ./public/index.html || (echo "ERROR: Frontend build failed - index.html missing" && exit 1)
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodejs -u 1001
+# Security: non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app
 
-# Change ownership of the app directory
-RUN chown -R nodejs:nodejs /app
 USER nodejs
 
+# Expose Railway's expected port (falls back to 5000)
 EXPOSE 5000
 
-CMD ["npm", "start"]
+# Health check ensures Railway detects a healthy container
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:'+(process.env.PORT||5000)+'/health', r => {process.exit(r.statusCode===200?0:1)})"
+
+CMD ["node", "src/adapters/http/server.js"]

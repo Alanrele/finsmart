@@ -79,7 +79,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
             className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-dark-primary to-dark-accent px-6 py-4 text-white">
+            <div className="bg-gradient-to-r from-brand-600 to-brand-500 px-6 py-4 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className={`p-2 rounded-lg bg-white/20`}>
@@ -134,7 +134,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
                         Saldo después
                       </span>
                     </div>
-                    <p className="text-2xl font-bold text-dark-primary">
+                    <p className="text-2xl font-bold text-brand-600 dark:text-brand-400">
                       {formatCurrency(transaction.balance)}
                     </p>
                   </div>

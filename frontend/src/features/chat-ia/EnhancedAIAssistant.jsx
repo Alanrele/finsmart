@@ -40,12 +40,10 @@ const EnhancedAIAssistant = () => {
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  // Scroll to bottom cuando hay nuevos mensajes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Web Speech API para voz
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -107,7 +105,6 @@ const EnhancedAIAssistant = () => {
 
       setMessages((prev) => [...prev, aiMessage]);
 
-      // Si hay sugerencias de seguimiento
       if (response.suggestions && response.suggestions.length > 0) {
         const suggestionsMessage = {
           type: 'ai',
@@ -187,35 +184,35 @@ const EnhancedAIAssistant = () => {
       icon: Brain,
       title: 'Analizar Finanzas',
       description: 'Análisis completo de tu situación financiera',
-      color: 'from-[#C6A664] to-[#8B7355]'
+      gradient: 'from-brand-600 to-accent-500'
     },
     {
       id: 'recommendations',
       icon: Lightbulb,
       title: 'Recomendaciones',
       description: 'Consejos personalizados para mejorar',
-      color: 'from-[#8B7355] to-[#C6A664]'
+      gradient: 'from-accent-500 to-brand-600'
     },
     {
       id: 'insights',
       icon: TrendingUp,
       title: 'Insights',
       description: 'Patrones y tendencias en tus gastos',
-      color: 'from-[#C6A664] to-[#8B7355]'
+      gradient: 'from-brand-500 to-violet-600'
     },
     {
       id: 'predict',
       icon: Calculator,
       title: 'Predicción',
       description: 'Estima tus gastos futuros',
-      color: 'from-[#8B7355] to-[#C6A664]'
+      gradient: 'from-violet-500 to-brand-600'
     }
   ];
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white p-6 rounded-t-xl">
+      <div className="bg-gradient-to-r from-brand-600 via-brand-500 to-accent-500 text-white p-6 rounded-t-xl">
         <div className="flex items-center space-x-3">
           <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
             <Brain className="w-6 h-6" />
@@ -234,23 +231,23 @@ const EnhancedAIAssistant = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="p-4 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700"
+            className="p-4 bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700"
           >
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">Acciones rápidas:</p>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">Acciones rápidas:</p>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {quickActions.map((action) => (
                 <button
                   key={action.id}
                   onClick={() => handleQuickAction(action.id)}
                   disabled={loading}
-                  className="group relative p-4 bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all overflow-hidden"
+                  className="group relative p-4 bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 hover:shadow-lg transition-all overflow-hidden"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                  <action.icon className={`w-6 h-6 mb-2 text-gray-700 dark:text-gray-300 group-hover:text-blue-600 transition-colors`} />
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
+                  <action.icon className="w-6 h-6 mb-2 text-slate-700 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" />
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
                     {action.title}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {action.description}
                   </p>
                 </button>
@@ -261,7 +258,7 @@ const EnhancedAIAssistant = () => {
       </AnimatePresence>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50 dark:bg-slate-900">
         {messages.map((message, index) => (
           <motion.div
             key={index}
@@ -271,18 +268,18 @@ const EnhancedAIAssistant = () => {
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {message.type === 'user' ? (
-              <div className="max-w-[70%] bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white px-4 py-3 rounded-2xl rounded-tr-none">
+              <div className="max-w-[70%] bg-gradient-to-r from-brand-600 to-brand-500 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md">
                 <p>{message.content}</p>
               </div>
             ) : (
               <div className="max-w-[85%] space-y-3">
                 <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-gradient-to-br from-[#C6A664] to-[#8B7355] rounded-full flex-shrink-0">
+                  <div className="p-2 bg-gradient-to-br from-brand-500 to-accent-500 rounded-full flex-shrink-0">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <div className="flex-1 bg-white dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-md">
+                  <div className="flex-1 bg-white dark:bg-slate-800 px-4 py-3 rounded-2xl rounded-tl-none shadow-md">
                     {message.content && (
-                      <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                      <p className="text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
                         {message.content}
                       </p>
                     )}
@@ -290,12 +287,12 @@ const EnhancedAIAssistant = () => {
                     {/* Insights */}
                     {message.insights && message.insights.length > 0 && (
                       <div className="mt-3 space-y-2">
-                        <p className="text-sm font-semibold text-[#C6A664] dark:text-[#C6A664] flex items-center">
+                        <p className="text-sm font-semibold text-brand-600 dark:text-brand-400 flex items-center">
                           <Lightbulb className="w-4 h-4 mr-2" />
                           Insights:
                         </p>
                         {message.insights.map((insight, i) => (
-                          <div key={i} className="pl-4 border-l-2 border-[#C6A664] text-sm text-gray-700 dark:text-gray-300">
+                          <div key={i} className="pl-4 border-l-2 border-brand-500 text-sm text-slate-700 dark:text-slate-300">
                             {insight}
                           </div>
                         ))}
@@ -305,20 +302,20 @@ const EnhancedAIAssistant = () => {
                     {/* Recommendations */}
                     {message.recommendations && message.recommendations.length > 0 && (
                       <div className="mt-3 space-y-2">
-                        <p className="text-sm font-semibold text-[#8B7355] dark:text-[#C6A664] flex items-center">
+                        <p className="text-sm font-semibold text-accent-600 dark:text-accent-400 flex items-center">
                           <Target className="w-4 h-4 mr-2" />
                           Recomendaciones:
                         </p>
                         {message.recommendations.map((rec, i) => (
                           <div
                             key={i}
-                            className="p-3 bg-[#C6A664]/10 dark:bg-[#C6A664]/20 rounded-lg border border-[#C6A664]/30 dark:border-[#C6A664]/40"
+                            className="p-3 bg-brand-50 dark:bg-brand-900/10 rounded-lg border border-brand-200 dark:border-brand-800"
                           >
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                               {rec.title || rec}
                             </p>
                             {rec.description && (
-                              <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
+                              <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
                                 {rec.description}
                               </p>
                             )}
@@ -334,7 +331,7 @@ const EnhancedAIAssistant = () => {
                           <button
                             key={i}
                             onClick={() => sendMessage(suggestion)}
-                            className="text-xs px-3 py-1.5 bg-[#C6A664]/20 dark:bg-[#C6A664]/30 text-[#8B7355] dark:text-[#C6A664] rounded-full hover:bg-[#C6A664]/30 dark:hover:bg-[#C6A664]/50 transition-colors"
+                            className="text-xs px-3 py-1.5 bg-brand-100 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 rounded-full hover:bg-brand-200 dark:hover:bg-brand-900/40 transition-colors"
                           >
                             {suggestion}
                           </button>
@@ -343,7 +340,7 @@ const EnhancedAIAssistant = () => {
                     )}
 
                     {message.timestamp && (
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
                         {new Date(message.timestamp).toLocaleTimeString()}
                       </p>
                     )}
@@ -361,14 +358,14 @@ const EnhancedAIAssistant = () => {
             className="flex justify-start"
           >
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full">
+              <div className="p-2 bg-gradient-to-br from-brand-500 to-accent-500 rounded-full">
                 <Sparkles className="w-4 h-4 text-white animate-pulse" />
               </div>
-              <div className="bg-white dark:bg-gray-800 px-4 py-3 rounded-2xl shadow-md">
+              <div className="bg-white dark:bg-slate-800 px-4 py-3 rounded-2xl shadow-md">
                 <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             </div>
@@ -379,7 +376,7 @@ const EnhancedAIAssistant = () => {
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 rounded-b-xl">
+      <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 rounded-b-xl">
         {isListening && (
           <div className="mb-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center space-x-2">
             <div className="flex space-x-1">
@@ -399,7 +396,7 @@ const EnhancedAIAssistant = () => {
             className={`p-3 rounded-lg transition-all ${
               isListening
                 ? 'bg-red-500 text-white shadow-lg shadow-red-500/50'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-[#C6A664]/20 dark:hover:bg-[#C6A664]/30'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-brand-100 dark:hover:bg-brand-900/30'
             }`}
             title={isListening ? 'Detener grabación' : 'Usar voz (Chrome/Edge)'}
           >
@@ -413,20 +410,20 @@ const EnhancedAIAssistant = () => {
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             disabled={loading}
             placeholder="Pregúntame sobre tus finanzas..."
-            className="flex-1 px-4 py-3 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C6A664] disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
           />
 
           <button
             onClick={() => sendMessage()}
             disabled={loading || !input.trim()}
-            className="p-3 bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white rounded-lg hover:from-[#8B7355] hover:to-[#C6A664] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+            className="p-3 bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-lg hover:from-brand-700 hover:to-brand-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-brand-500/25"
             title="Enviar mensaje"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
           Powered by OpenAI • Tus datos están seguros
         </p>
       </div>

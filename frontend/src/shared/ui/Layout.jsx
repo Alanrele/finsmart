@@ -9,7 +9,7 @@ const Layout = () => {
   const appReady = useAppStore(state => state.appReady)
 
   return (
-    <div className="min-h-screen bg-light-bg dark:bg-dark-bg">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Mobile Navigation */}
       <div className="lg:hidden">
         <Navbar />

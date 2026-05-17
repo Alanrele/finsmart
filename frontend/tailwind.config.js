@@ -8,25 +8,36 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Modo oscuro
-        dark: {
-          bg: '#0D0D0D',
-          primary: '#C6A664',
-          secondary: '#F5F5F5',
-          accent: '#D4AF37',
-          text: '#FFFFFF',
+        // Palette: Slate/Zinc base + Indigo/Cyan accents
+        brand: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
         },
-        // Modo claro
-        light: {
-          bg: '#F0EFED',
-          primary: '#D1C9B8',
-          secondary: '#5C5C5C',
-          accent: '#C8A55A',
-          text: '#2E2E2E',
-        }
+        accent: {
+          50: '#ecfeff',
+          100: '#cffafe',
+          200: '#a5f3fc',
+          300: '#67e8f9',
+          400: '#22d3ee',
+          500: '#06b6d4',
+          600: '#0891b2',
+          700: '#0e7490',
+          800: '#155e75',
+          900: '#164e63',
+          950: '#083344',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'Poppins', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

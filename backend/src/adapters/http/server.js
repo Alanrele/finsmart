@@ -32,6 +32,7 @@ const authRoutes = require('./routes/authRoutes');
 const graphRoutes = require('./routes/graphRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const financeRoutes = require('./routes/financeRoutes');
+const sheetsRoutes = require('./routes/sheets/sheetsRoutes');
 
 // Import middleware
 const authMiddleware = require('./middleware/auth');
@@ -140,6 +141,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/graph', authMiddleware, graphRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/finance', authMiddleware, financeRoutes);
+app.use('/api/sheets', authMiddleware, sheetsRoutes);
 
 // Health check endpoint with metrics (before static files)
 app.get('/health', async (req, res) => {
@@ -168,6 +170,7 @@ app.get('/health', async (req, res) => {
     },
     openai: env.openAiKeyConfigured ? 'configured' : 'missing',
     azure_ocr: env.azureOcrConfigured ? 'configured' : 'missing',
+    google_sheets: env.googleSheetsConfigured ? 'configured' : 'missing',
     socketio: {
       connected_clients: connectedSockets,
     }

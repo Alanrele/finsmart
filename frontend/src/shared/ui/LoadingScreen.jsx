@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 
 const LoadingScreen = () => {
   return (
-    <div className="fixed inset-0 bg-dark-bg flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-slate-950 flex items-center justify-center z-50">
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -12,9 +12,9 @@ const LoadingScreen = () => {
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 bg-gradient-to-r from-dark-primary to-dark-accent rounded-xl flex items-center justify-center mx-auto mb-4"
+          className="w-16 h-16 bg-gradient-to-r from-brand-600 to-accent-500 rounded-xl flex items-center justify-center mx-auto mb-4"
         >
-          <span className="text-dark-bg font-bold text-2xl">F</span>
+          <span className="text-white font-bold text-2xl">F</span>
         </motion.div>
 
         <motion.h1
@@ -39,7 +39,7 @@ const LoadingScreen = () => {
           initial={{ width: 0 }}
           animate={{ width: "100%" }}
           transition={{ duration: 2, ease: "easeInOut" }}
-          className="h-1 bg-gradient-to-r from-dark-primary to-dark-accent rounded-full mt-6 mx-auto max-w-xs"
+          className="h-1 bg-gradient-to-r from-brand-600 to-accent-500 rounded-full mt-6 mx-auto max-w-xs"
         />
       </motion.div>
     </div>

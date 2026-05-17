@@ -187,7 +187,7 @@ function App() {
   }, [isAuthenticated, user, token, initializeTheme, addNotification])
 
   return (
-    <div className="App min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+    <div className="App min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
 
       {/* Debug panels - only render when debug mode enabled */}
       {debugEnabled && <DebugAuth />}
@@ -268,20 +268,20 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: 'var(--color-fondo)',
-            color: 'var(--color-texto)',
-            border: '1px solid var(--color-principal)',
+            background: '#ffffff',
+            color: '#0f172a',
+            border: '1px solid #6366f1',
           },
           success: {
             iconTheme: {
-              primary: 'var(--color-detalle)',
-              secondary: 'var(--color-fondo)',
+              primary: '#06b6d4',
+              secondary: '#ffffff',
             },
           },
           error: {
             iconTheme: {
               primary: '#ef4444',
-              secondary: 'var(--color-fondo)',
+              secondary: '#ffffff',
             },
           },
         }}

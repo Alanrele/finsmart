@@ -41,6 +41,8 @@ const env = {
   frontendGraphClientId: process.env.VITE_GRAPH_CLIENT_ID,
   frontendGraphTenantId: process.env.VITE_GRAPH_TENANT_ID,
   frontendApiUrl: process.env.VITE_API_URL,
+  googleSheetsConfigured: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_SERVICE_ACCOUNT_B64),
+  googleSheetsId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
 };
 
 module.exports = {

@@ -233,7 +233,7 @@ const Settings = () => {
                       email: e.target.checked
                     }
                   })}
-                  className="rounded text-dark-primary focus:ring-dark-primary"
+                  className="rounded text-brand-600 dark:text-brand-400 focus:ring-brand-500"
                 />
               </div>
 
@@ -254,7 +254,7 @@ const Settings = () => {
                       push: e.target.checked
                     }
                   })}
-                  className="rounded text-dark-primary focus:ring-dark-primary"
+                  className="rounded text-brand-600 dark:text-brand-400 focus:ring-brand-500"
                 />
               </div>
             </div>

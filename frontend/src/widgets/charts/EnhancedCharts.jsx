@@ -26,7 +26,7 @@ import {
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '@shared/lib/formatters';
 
-const COLORS = ['#C6A664', '#8B7355', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444', '#ec4899', '#14b8a6'];
 
 // Error Boundary para charts
 class ChartErrorBoundary extends React.Component {
@@ -180,8 +180,8 @@ export const EnhancedBarChart = ({ data, title, dataKey = 'value' }) => {
           <BarChart data={data}>
             <defs>
               <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C6A664" stopOpacity={1} />
-                <stop offset="100%" stopColor="#8B7355" stopOpacity={0.8} />
+                <stop offset="0%" stopColor="#6366f1" stopOpacity={1} />
+                <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.8} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
@@ -260,11 +260,11 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
             <Line
               type="monotone"
               dataKey="balance"
-              stroke="#C6A664"
+              stroke="#6366f1"
               strokeWidth={3}
               name="Balance"
               isAnimationActive={false}
-              dot={{ fill: '#C6A664', r: 5 }}
+              dot={{ fill: '#6366f1', r: 5 }}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -285,8 +285,8 @@ export const FinancialHealthRadar = ({ data, title }) => {
           <RadarChart data={data}>
             <defs>
               <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C6A664" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#8B7355" stopOpacity={0.3} />
+                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.8} />
+                <stop offset="100%" stopColor="#4f46e5" stopOpacity={0.3} />
               </linearGradient>
             </defs>
             <PolarGrid stroke="#e0e0e0" />
@@ -295,7 +295,7 @@ export const FinancialHealthRadar = ({ data, title }) => {
             <Radar
               name="Salud Financiera"
               dataKey="score"
-              stroke="#C6A664"
+              stroke="#6366f1"
               fill="url(#radarGradient)"
               fillOpacity={0.6}
               isAnimationActive={false}

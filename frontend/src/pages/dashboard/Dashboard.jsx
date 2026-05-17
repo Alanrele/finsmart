@@ -9,13 +9,13 @@ import {
   ArrowDownRight,
   Calendar,
   Target,
-  PieChart as PieChartIcon, // Renombrar para evitar conflicto
+  PieChart as PieChartIcon,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import {
   ResponsiveContainer,
-  PieChart, // Este es el componente de Recharts
+  PieChart,
   Pie,
   Cell,
   BarChart,
@@ -30,13 +30,12 @@ import {
   Sector
 } from 'recharts';
 import useAppStore from '@entities/app/model/appStore';
-import { getDashboardData } from '@shared/api/base'; // Importar directamente
+import { getDashboardData } from '@shared/api/base';
 import toast from 'react-hot-toast';
 import LoadingCard from '@shared/ui/LoadingCard';
 import EmailSyncControl from './EmailSyncControl';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '@shared/lib/formatters';
 
-// Import Enhanced Charts
 import {
   Enhanced3DDonutChart,
   EnhancedBarChart,
@@ -45,14 +44,14 @@ import {
   MonthOverMonthComparison
 } from './EnhancedCharts';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+const COLORS = ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-2 rounded shadow-lg">
-        <p className="text-sm font-medium text-gray-900">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
-        <p className="text-xs text-gray-500">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
+      <div className="bg-white dark:bg-slate-800 p-2 rounded shadow-lg border border-slate-200 dark:border-slate-700">
+        <p className="text-sm font-medium text-slate-900 dark:text-white">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
+        <p className="text-xs text-slate-500">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
       </div>
     );
   }
@@ -73,7 +72,7 @@ class ChartErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
-      return <div className="text-sm text-gray-500 dark:text-gray-400">No se pudo renderizar el gráfico.</div>
+      return <div className="text-sm text-slate-500 dark:text-slate-400">No se pudo renderizar el gráfico.</div>
     }
     return this.props.children
   }
@@ -105,7 +104,7 @@ const Dashboard = () => {
         }
       }
     } catch (error) {
-      console.error('❌ Dashboard loading error:', error);
+      console.error('Dashboard loading error:', error);
       toast.error(error.message || 'Error al cargar los datos del panel.');
       setDashboardData({
         summary: {},
@@ -206,12 +205,10 @@ const Dashboard = () => {
         .filter((d) => d.value > 0)
     : [];
 
-  // Reset active slice if data size changes or index is out of range
   useEffect(() => {
     if (activeSlice >= categoryData.length) {
       setActiveSlice(-1)
     }
-    // Force remount when slice count changes to avoid internal state inconsistencies
     setPieKey((k) => k + 1)
   }, [categoryData.length])
 
@@ -248,10 +245,10 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl lg:text-3xl font-bold text-slate-900 dark:text-white">
             Panel Financiero
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-slate-500 dark:text-slate-400 mt-1">
             Resumen completo de tus finanzas personales
           </p>
         </div>
@@ -264,7 +261,7 @@ const Dashboard = () => {
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-sm font-medium text-blue-700 dark:text-blue-200">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-brand-50 dark:bg-brand-900/30 text-sm font-medium text-brand-700 dark:text-brand-300">
               <Calendar className="w-4 h-4" />
               <span className="capitalize">{formattedSelectedPeriod}</span>
             </div>
@@ -296,27 +293,27 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Gasto Total
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
                 {formatCurrency(summary?.totalSpending || 0)}
               </p>
               <div className="flex items-center mt-2">
                 {summary?.spendingChangePercentage >= 0 ? (
                   <ArrowUpRight className="w-4 h-4 text-red-500" />
                 ) : (
-                  <ArrowDownRight className="w-4 h-4 text-green-500" />
+                  <ArrowDownRight className="w-4 h-4 text-emerald-500" />
                 )}
                 <span className={`text-sm ml-1 ${
-                  summary?.spendingChangePercentage >= 0 ? 'text-red-500' : 'text-green-500'
+                  summary?.spendingChangePercentage >= 0 ? 'text-red-500' : 'text-emerald-500'
                 }`}>
                   {formatPercentage(summary?.spendingChangePercentage || 0)}
                 </span>
               </div>
             </div>
             <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-red-600" />
+              <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
           </div>
         </motion.div>
@@ -330,21 +327,21 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Ingresos Totales
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
                 {formatCurrency(summary?.totalIncome || 0)}
               </p>
               <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-green-500 ml-1">
+                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="text-sm text-emerald-500 ml-1">
                   Este mes
                 </span>
               </div>
             </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-emerald-100 dark:bg-emerald-900/20 rounded-lg">
+              <DollarSign className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
           </div>
         </motion.div>
@@ -358,28 +355,28 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Balance Actual
               </p>
               <p className={`text-2xl font-bold ${
-                (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                (summary?.balance || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
               }`}>
                 {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrency(Math.abs(summary?.balance || 0))}
               </p>
               <div className="flex items-center mt-2">
-                <Target className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-500 ml-1">
+                <Target className="w-4 h-4 text-slate-500" />
+                <span className="text-sm text-slate-500 ml-1">
                   Este mes
                 </span>
               </div>
             </div>
             <div className={`p-3 rounded-lg ${
               (summary?.balance || 0) >= 0
-                ? 'bg-green-100 dark:bg-green-900/20'
+                ? 'bg-emerald-100 dark:bg-emerald-900/20'
                 : 'bg-red-100 dark:bg-red-900/20'
             }`}>
               <CreditCard className={`w-6 h-6 ${
-                (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                (summary?.balance || 0) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
               }`} />
             </div>
           </div>
@@ -394,21 +391,21 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
                 Total de Transacciones
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
                 {summary?.transactionCount || 0}
               </p>
               <div className="flex items-center mt-2">
-                <Calendar className="w-4 h-4 text-blue-500" />
-                <span className="text-sm text-blue-500 ml-1">
+                <Calendar className="w-4 h-4 text-brand-500" />
+                <span className="text-sm text-brand-500 ml-1">
                   Este mes
                 </span>
               </div>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <PieChartIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-brand-100 dark:bg-brand-900/20 rounded-lg">
+              <PieChartIcon className="w-6 h-6 text-brand-600 dark:text-brand-400" />
             </div>
           </div>
         </motion.div>
@@ -430,10 +427,10 @@ const Dashboard = () => {
             />
           ) : (
             <>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
                 Gastos por Categoría
               </h3>
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-64 text-slate-500">
                 No hay datos de categorías disponibles
               </div>
             </>
@@ -447,7 +444,7 @@ const Dashboard = () => {
           transition={{ delay: 0.5 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
             Transacciones Recientes
           </h3>
           <div className="space-y-3">
@@ -458,13 +455,13 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index }}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                    <p className="font-medium text-slate-900 dark:text-white truncate">
                       {transaction.description || transaction.merchant || 'Transacción'}
                     </p>
-                    <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
+                    <div className="flex items-center space-x-3 text-sm text-slate-500 dark:text-slate-400 flex-wrap">
                       <span>{new Date(transaction.date).toLocaleDateString()}</span>
                       {transaction.category && (
                         <span className="capitalize">{translateCategory(transaction.category)}</span>
@@ -474,8 +471,8 @@ const Dashboard = () => {
                   <div className="sm:text-right whitespace-nowrap sm:self-center self-end">
                     <p className={`font-semibold ${
                       transaction.type === 'credit' || transaction.type === 'deposit'
-                        ? 'text-green-600'
-                        : 'text-red-600'
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-red-600 dark:text-red-400'
                     }`}>
                       {
                         formatCurrency(
@@ -487,7 +484,7 @@ const Dashboard = () => {
                       }
                     </p>
                     {transaction.category && (
-                      <p className="text-xs text-gray-500 capitalize">
+                      <p className="text-xs text-slate-500 capitalize">
                         {translateCategory(transaction.category)}
                       </p>
                     )}
@@ -495,7 +492,7 @@ const Dashboard = () => {
                 </motion.div>
               ))
             ) : (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-slate-500 py-8">
                 No hay transacciones recientes
               </div>
             )}
@@ -511,13 +508,13 @@ const Dashboard = () => {
           transition={{ delay: 0.6 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
             Tendencia de Gastos (Últimos 7 días)
           </h3>
           <ChartErrorBoundary>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={spendingTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} />
                 <XAxis dataKey="day" />
                 <YAxis formatter={(value) => formatCurrency(value)} />
                 <Tooltip formatter={(value) => [formatCurrency(value), 'Gasto']} />
@@ -525,9 +522,9 @@ const Dashboard = () => {
                   isAnimationActive={false}
                   type="monotone"
                   dataKey="amount"
-                  stroke="#C6A664"
+                  stroke="#6366f1"
                   strokeWidth={3}
-                  dot={{ fill: '#C6A664', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: '#6366f1', strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>

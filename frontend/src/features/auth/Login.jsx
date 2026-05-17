@@ -87,7 +87,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-gray-900 to-dark-bg flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -98,9 +98,9 @@ const Login = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-16 h-16 bg-gradient-to-r from-dark-primary to-dark-accent rounded-xl flex items-center justify-center mx-auto mb-4"
+            className="w-16 h-16 bg-gradient-to-r from-brand-600 to-accent-500 rounded-xl flex items-center justify-center mx-auto mb-4"
           >
-            <span className="text-dark-bg font-bold text-2xl">F</span>
+            <span className="text-white font-bold text-2xl">F</span>
           </motion.div>
           <h1 className="text-3xl font-bold text-gradient">FinSmart</h1>
           <p className="text-gray-400 mt-2">
@@ -272,7 +272,7 @@ const Login = () => {
               {isRegister ? '¿Ya tienes una cuenta?' : '¿No tienes una cuenta?'}
               <button
                 onClick={() => setIsRegister(!isRegister)}
-                className="font-medium text-dark-primary hover:text-dark-accent ml-1"
+                className="font-medium text-brand-600 dark:text-brand-400 hover:text-accent-500 ml-1"
               >
                 {isRegister ? 'Inicia sesión' : 'Regístrate'}
               </button>
