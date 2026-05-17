@@ -1,5 +1,4 @@
 const pool = require('./pool');
-const logger = require('../../../infrastructure/logging/logger');
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
@@ -55,9 +54,9 @@ async function migrate() {
   const client = await pool.connect();
   try {
     await client.query(SCHEMA);
-    logger.info('PostgreSQL migration completed successfully');
+    console.log('PostgreSQL migration completed successfully');
   } catch (err) {
-    logger.error('PostgreSQL migration failed', { error: err.message });
+    console.error('PostgreSQL migration failed:', err.message);
     throw err;
   } finally {
     client.release();
