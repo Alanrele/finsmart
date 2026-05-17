@@ -352,38 +352,34 @@ function mapTransaction(row) {
   return t;
 }
 
-// Find one transaction
-  async findOne(filter) {
-    const results = await this.findByFilter(filter, { limit: 1 });
-    return results[0] || null;
-  },
-
-  // Check if any document matches filter
-  async exists(filter) {
-    const count = await this.countDocuments(filter);
-    return count > 0;
-  },
-
-  // Save an existing transaction (update by id)
-  async save(transaction) {
-    const client = await pool.connect();
-    try {
-      const { rows } = await client.query(
-        `UPDATE transactions SET amount=$1, type=$2, category=$3, subcategory=$4, description=$5, merchant=$6, location=$7, raw_text=$8, updated_at=NOW() WHERE id=$9 RETURNING *`,
-        [transaction.amount, transaction.type, transaction.category, transaction.subcategory, transaction.description, transaction.merchant, transaction.location, transaction.rawText, transaction._id]
-      );
-      return rows[0] ? mapTransaction(rows[0]) : null;
-    } finally {
-      client.release();
-    }
-  },
-};
-
 // Static methods (Mongoose-style)
 transactionRepo.getMonthlySummary = transactionRepo.getMonthlySummary;
 transactionRepo.getSpendingTrends = transactionRepo.getSpendingTrends;
-transactionRepo.findOne = transactionRepo.findOne;
-transactionRepo.exists = transactionRepo.exists;
-transactionRepo.save = transactionRepo.save;
+
+// Find one transaction
+transactionRepo.findOne = async function(filter) {
+  const results = await this.findByFilter(filter, { limit: 1 });
+  return results[0] || null;
+};
+
+// Check if any document matches filter
+transactionRepo.exists = async function(filter) {
+  const count = await this.countDocuments(filter);
+  return count > 0;
+};
+
+// Save an existing transaction (update by id)
+transactionRepo.save = async function(transaction) {
+  const client = await pool.connect();
+  try {
+    const { rows } = await client.query(
+      `UPDATE transactions SET amount=$1, type=$2, category=$3, subcategory=$4, description=$5, merchant=$6, location=$7, raw_text=$8, updated_at=NOW() WHERE id=$9 RETURNING *`,
+      [transaction.amount, transaction.type, transaction.category, transaction.subcategory, transaction.description, transaction.merchant, transaction.location, transaction.rawText, transaction._id]
+    );
+    return rows[0] ? mapTransaction(rows[0]) : null;
+  } finally {
+    client.release();
+  }
+};
 
 module.exports = transactionRepo;
