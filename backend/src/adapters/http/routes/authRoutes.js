@@ -73,8 +73,8 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    console.error('Register error:', error.message, error.stack);
+    res.status(500).json({ error: 'Registration failed', detail: error.message });
   }
 });
 
@@ -113,8 +113,8 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    console.error('Login error:', error.message, error.stack);
+    res.status(500).json({ error: 'Login failed', detail: error.message });
   }
 });
 
