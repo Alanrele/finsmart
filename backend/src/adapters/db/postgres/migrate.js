@@ -1,5 +1,5 @@
 const pool = require('./pool');
-const logger = require('../../../../infrastructure/logging/logger');
+const logger = require('../../../infrastructure/logging/logger');
 
 const SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
