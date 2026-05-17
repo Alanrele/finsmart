@@ -1,4 +1,4 @@
-const { parseBcpEmailV2 } = require('../../lib/email/bcp/parseBcpEmailV2');
+const { parseBcpEmailV2 } = require('../bcp/parseBcpEmailV2');
 
 function parseEmailContent(payload) {
   if (!payload || typeof payload !== 'object') {

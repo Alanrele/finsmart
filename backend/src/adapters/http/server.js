@@ -291,7 +291,7 @@ io.use(async (socket, next) => {
 
     // Validar token usando el mismo middleware de autenticación
     const jwt = require('jsonwebtoken');
-    const User = require('./models/userModel');
+    const User = require('../db/mongoose/models/userModel');
 
     // Check if it's a demo token (only when explicitly allowed)
     if (token.startsWith('demo-token-')) {

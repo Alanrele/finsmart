@@ -10,7 +10,7 @@
 const { google } = require('googleapis');
 const path = require('path');
 const fs = require('fs');
-const logger = require('../../logging/logger');
+const logger = require('../logging/logger');
 
 let sheetsClient = null;
 let authClient = null;

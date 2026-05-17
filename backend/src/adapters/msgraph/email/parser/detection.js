@@ -1,6 +1,6 @@
 const logger = require('../../../../infrastructure/logging/logger');
-const { normalizeEmailBody } = require('../../lib/email/normalize');
-const { detectTemplate } = require('../../lib/email/bcp/detectTemplate');
+const { normalizeEmailBody } = require('../normalize');
+const { detectTemplate } = require('../bcp/detectTemplate');
 const { FALLBACK_SENDERS, TRANSACTIONAL_HINTS } = require('./constants');
 
 function isKnownBcpSender(sender) {

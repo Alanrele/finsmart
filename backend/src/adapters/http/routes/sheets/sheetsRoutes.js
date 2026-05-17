@@ -6,8 +6,8 @@
 
 const express = require('express');
 const router = express.Router();
-const logger = require('../../../infrastructure/logging/logger');
-const sheetsService = require('../../../infrastructure/google/sheetsService');
+const logger = require('../../../../infrastructure/logging/logger');
+const sheetsService = require('../../../../infrastructure/google/sheetsService');
 
 /**
  * GET /api/sheets — List all sheets in the configured spreadsheet

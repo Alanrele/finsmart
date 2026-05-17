@@ -1,5 +1,5 @@
 const logger = require('../../../../infrastructure/logging/logger');
-const { NormalizedTransactionSchema } = require('../../../domain/NormalizedTransaction');
+const { NormalizedTransactionSchema } = require('../../../../domain/transaction/NormalizedTransaction');
 const { normalizeEmailBody } = require('../normalize');
 const { detectTemplate } = require('./detectTemplate');
 const { parseCardPurchase } = require('./parsers/cardPurchase');
