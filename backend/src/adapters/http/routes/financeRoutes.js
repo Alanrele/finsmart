@@ -1,8 +1,8 @@
 const express = require('express');
 const { query, body, validationResult } = require('express-validator');
-const Transaction = require('../../db/mongoose/models/transactionModel');
-const User = require('../../db/mongoose/models/userModel');
-const mongoose = require('mongoose');
+const Transaction = require('../../db/postgres/transactionRepo');
+const User = require('../../db/postgres/userRepo');
+const pool = require('../../db/postgres/pool');
 
 const router = express.Router();
 const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
@@ -22,10 +22,9 @@ router.get('/dashboard', async (req, res) => {
     const userId = req.user._id;
     console.log('🆔 User ID:', userId);
 
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
-      // If not connected, we can't proceed. Return an error.
-      console.error('❌ MongoDB not connected. Cannot fetch dashboard data.');
+    // Check if database is connected
+    try { await pool.query('SELECT 1'); } catch {
+      console.error('❌ Database not connected. Cannot fetch dashboard data.');
       return res.status(503).json({
         error: 'Servicio no disponible',
         message: 'La conexión con la base de datos no está disponible en este momento.'
@@ -94,15 +93,13 @@ router.get('/dashboard', async (req, res) => {
     });
 
     // Get recent transactions (last 10 within selected period)
-    const recentTransactions = await Transaction.find({
+    const recentTransactions = await Transaction.findByFilter({
       userId,
       date: {
         $gte: startDate,
         $lt: endDate
       }
-    })
-      .sort({ date: -1 })
-      .limit(10);
+    }, { sort: { date: -1 }, limit: 10 });
 
     // Get monthly comparison (current vs previous month)
     const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
@@ -266,9 +263,9 @@ router.get('/transactions', [
         }
         const userId = req.user._id;
 
-        // Check if MongoDB is connected
-        if (mongoose.connection.readyState !== 1) {
-            console.error('❌ MongoDB not connected. Cannot fetch transactions.');
+        // Check if database is connected
+        try { await pool.query('SELECT 1'); } catch {
+            console.error('❌ Database not connected. Cannot fetch transactions.');
             return res.status(503).json({
                 error: 'Servicio no disponible',
                 message: 'La conexión con la base de datos no está disponible en este momento.'
@@ -320,10 +317,7 @@ router.get('/transactions', [
         }
 
     const totalCount = await Transaction.countDocuments(query);
-        const transactions = await Transaction.find(query)
-            .sort({ [sortBy]: sortOrder })
-            .skip(skip)
-            .limit(limit);
+        const transactions = await Transaction.findByFilter(query, { sort: { [sortBy]: sortOrder }, limit, skip });
 
         res.json({
             transactions,

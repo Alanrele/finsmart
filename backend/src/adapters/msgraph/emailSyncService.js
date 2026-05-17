@@ -1,6 +1,5 @@
-const User = require('../db/mongoose/models/userModel');
-const Transaction = require('../db/mongoose/models/transactionModel');
-const mongoose = require('mongoose');
+const User = require('../db/postgres/userRepo');
+const Transaction = require('../db/postgres/transactionRepo');
 const { Client } = require('@microsoft/microsoft-graph-client');
 // const TransactionExtractor = require('./transactionExtractor'); // TODO: Create if needed
 const GraphErrorHandler = require('../../shared/utils/graphErrorHandler');
@@ -312,15 +311,13 @@ class EmailSyncService extends EmailIngestionPort {
             }
           );
 
-          const transaction = new Transaction({
+          const transaction = await Transaction.create({
             ...transactionData,
             messageId: message.id,
             rawText: (textBody || htmlBody || message.subject || "").substring(0, 1000),
             isProcessed: true,
-            createdAt: new Date(message.receivedDateTime)
+            date: new Date(message.receivedDateTime)
           });
-
-          await transaction.save();
           newTransactionsCount++;
 
           console.log(`✅ New transaction created for ${user.email}:`, {
@@ -567,15 +564,13 @@ class EmailSyncService extends EmailIngestionPort {
                 }
               } else {
                 // Create new transaction
-                const transaction = new Transaction({
+                const transaction = await Transaction.create({
                   ...transactionData,
                   messageId: message.id,
                   rawText: (textBody || htmlBody || message.subject || "").substring(0, 1000),
                   isProcessed: true,
-                  createdAt: new Date(message.receivedDateTime)
+                  date: new Date(message.receivedDateTime)
                 });
-
-                await transaction.save();
                 newCount++;
 
                 console.log(`🆕 New transaction created from historical email:`, {

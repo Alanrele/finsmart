@@ -1,31 +1,25 @@
 /**
- * FinSmart - Seed Script
- * Creates a demo user directly in MongoDB.
+ * FinSmart - Seed Script (PostgreSQL)
+ * Creates a demo user directly in PostgreSQL.
  * 
  * Usage: node scripts/seed-user.js
  * 
  * Required env vars:
- *   MONGODB_URI - MongoDB connection string
- *   JWT_SECRET  - JWT signing secret
- * 
- * The script will prompt for email and password,
- * or use defaults if MONGODB_URI is not set.
+ *   DATABASE_URL or MONGODB_URI - PostgreSQL connection string
  */
 
-const mongoose = require('mongoose');
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 const readline = require('readline');
 
-const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart';
+const CONN_STR = process.env.DATABASE_URL || process.env.MONGODB_URI || 'postgresql://localhost:5432/finsmart';
+const pool = new Pool({ connectionString: CONN_STR });
 
-// Default demo user
 const DEMO_USER = {
   email: 'demo@finsmart.app',
   password: 'demo123',
   firstName: 'Demo',
   lastName: 'User',
-  isDemo: true,
-  isVerified: true
 };
 
 function ask(query) {
@@ -37,46 +31,32 @@ async function createUser(userData) {
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(userData.password, salt);
 
-  // Define schema inline to avoid importing the full app
-  const userSchema = new mongoose.Schema({
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true },
-    firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
-    isVerified: { type: Boolean, default: false },
-    isDemo: { type: Boolean, default: false },
-    preferences: {
-      theme: { type: String, default: 'dark' },
-      currency: { type: String, default: 'PEN' },
-      notifications: { email: { type: Boolean, default: true }, push: { type: Boolean, default: true } }
-    },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now }
-  });
+  const client = await pool.connect();
+  try {
+    // Check if exists
+    const { rows: existing } = await client.query('SELECT id FROM users WHERE email = $1', [userData.email.toLowerCase()]);
+    if (existing.length > 0) {
+      console.log(`⚠️  User "${userData.email}" already exists.`);
+      return;
+    }
 
-  const User = mongoose.model('User', userSchema);
+    const { rows } = await client.query(
+      `INSERT INTO users (email, password, first_name, last_name, is_verified, is_demo, preferences)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, email`,
+      [userData.email.toLowerCase(), hashedPassword, userData.firstName, userData.lastName, true, true, JSON.stringify({})]
+    );
 
-  // Check if already exists
-  const existing = await User.findOne({ email: userData.email });
-  if (existing) {
-    console.log(`⚠️  User "${userData.email}" already exists.`);
-    return existing;
+    console.log(`✅ User created: ${rows[0].email}`);
+    console.log(`   Password: ${userData.password}`);
+    console.log(`   ID: ${rows[0].id}`);
+  } finally {
+    client.release();
   }
-
-  const user = await User.create({
-    ...userData,
-    password: hashedPassword
-  });
-
-  console.log(`✅ User created: ${user.email}`);
-  console.log(`   Password: ${userData.password}`);
-  console.log(`   ID: ${user._id}`);
-  return user;
 }
 
 async function main() {
-  console.log(`🔌 Connecting to MongoDB: ${MONGO_URI.replace(/\/\/.*@/, '//***@')}...`);
-  await mongoose.connect(MONGO_URI);
+  console.log(`🔌 Connecting to PostgreSQL: ${CONN_STR.replace(/\/\/.*@/, '//***@')}...`);
+  await pool.query('SELECT 1');
   console.log('✅ Connected.\n');
 
   const useDefaults = await ask('Use default demo user (demo@finsmart.app / demo123)? [Y/n]: ');
@@ -88,16 +68,11 @@ async function main() {
     const password = await ask('Password (min 6 chars): ');
     const firstName = await ask('First name: ');
     const lastName = await ask('Last name: ');
-
-    if (password.length < 6) {
-      console.error('❌ Password must be at least 6 characters.');
-      process.exit(1);
-    }
-
-    await createUser({ email, password, firstName, lastName, isVerified: true, isDemo: true });
+    if (password.length < 6) { console.error('❌ Password must be at least 6 characters.'); process.exit(1); }
+    await createUser({ email, password, firstName, lastName });
   }
 
-  await mongoose.disconnect();
+  await pool.end();
   console.log('\n👋 Done. You can now log in with these credentials.');
 }
 

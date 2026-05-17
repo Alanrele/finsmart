@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
-const User = require('../../db/mongoose/models/userModel');
+const User = require('../../db/postgres/userRepo');
 const tokenCleanup = require('../../../infrastructure/security/tokenCleanup');
 
 const router = express.Router();
@@ -54,14 +54,12 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     }
 
     // Create new user
-    const user = new User({
+    const user = await User.create({
       email,
       password,
       firstName,
       lastName
     });
-
-    await user.save();
 
     // Generate token
     const token = generateToken(user._id);
@@ -136,14 +134,16 @@ router.post('/microsoft/callback', async (req, res) => {
 
     if (user) {
       // Update existing user
-      user.accessToken = accessToken;
-      user.refreshToken = refreshToken;
-      user.tokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-      user.microsoftId = userInfo.id;
-      user.isVerified = true;
+      user = await User.findByIdAndUpdate(user._id, {
+        accessToken,
+        refreshToken,
+        tokenExpiry: new Date(Date.now() + 3600000),
+        microsoftId: userInfo.id,
+        isVerified: true
+      });
     } else {
       // Create new user
-      user = new User({
+      user = await User.create({
         email: userInfo.mail || userInfo.userPrincipalName,
         firstName: userInfo.givenName || 'User',
         lastName: userInfo.surname || 'Microsoft',
@@ -155,8 +155,6 @@ router.post('/microsoft/callback', async (req, res) => {
         password: 'microsoft_oauth_' + Math.random().toString(36).substring(7)
       });
     }
-
-    await user.save();
 
     // Generate JWT token
     const token = generateToken(user._id);
@@ -183,7 +181,7 @@ router.get('/verify', async (req, res) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(decoded.userId);
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid token' });

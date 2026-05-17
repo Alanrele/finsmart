@@ -1,6 +1,6 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const Transaction = require('../../db/mongoose/models/transactionModel');
+const Transaction = require('../../db/postgres/transactionRepo');
 const aiAnalyzer = require('../../ai/openaiClient');
 const createAIAnalysisUseCases = require('../../../app/use-cases/analyzeTransaction');
 
@@ -117,7 +117,7 @@ router.post('/analyze', async (req, res) => {
     console.log('🔍 AI Analyze - User ID:', userId);
     console.log('🔍 AI Analyze - Date filter:', JSON.stringify(dateFilter, null, 2));
 
-    const transactions = await Transaction.find(filter).sort({ date: -1 });
+    const transactions = await Transaction.findByFilter(filter, { sort: { date: -1 } });
 
     console.log('📊 AI Analyze - Found transactions:', transactions.length);
     if (transactions.length > 0) {
@@ -131,7 +131,7 @@ router.post('/analyze', async (req, res) => {
       console.log('⚠️ AI Analyze - No transactions found, trying broader search...');
 
       // Try to find any transactions for this user regardless of date
-      const allUserTransactions = await Transaction.find({ userId }).sort({ date: -1 }).limit(10);
+      const allUserTransactions = await Transaction.findByFilter({ userId }, { sort: { date: -1 }, limit: 10 });
       console.log('📊 AI Analyze - Total user transactions found:', allUserTransactions.length);
 
       if (allUserTransactions.length > 0) {
@@ -273,9 +273,7 @@ router.post('/chat', [
     }
 
     // Get user's recent transactions for context
-    const recentTransactions = await Transaction.find({ userId })
-      .sort({ date: -1 })
-      .limit(50);
+    const recentTransactions = await Transaction.findByFilter({ userId }, { sort: { date: -1 }, limit: 50 });
 
     // Deterministic financial summary (PEN) to avoid AI numeric errors
     const formatPEN = (amount) => new Intl.NumberFormat('es-PE', {
@@ -495,10 +493,10 @@ router.get('/recommendations', async (req, res) => {
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-      transactions = await Transaction.find({
+      transactions = await Transaction.findByFilter({
         userId,
         date: { $gte: threeMonthsAgo }
-      }).sort({ date: -1 });
+      }, { sort: { date: -1 } });
 
       // Try to generate personalized recommendations with AI
       try {
@@ -600,11 +598,11 @@ router.get('/predict', async (req, res) => {
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-    const transactions = await Transaction.find({
+    const transactions = await Transaction.findByFilter({
       userId,
       date: { $gte: sixMonthsAgo },
       type: { $in: ['debit', 'payment', 'withdrawal'] }
-    }).sort({ date: -1 });
+    }, { sort: { date: -1 } });
 
     // Generate spending prediction
     const prediction = await aiUseCases.predictSpending(transactions);
@@ -661,11 +659,11 @@ router.post('/categorize', async (req, res) => {
     }
 
     // Find uncategorized transactions
-    const uncategorizedTransactions = await Transaction.find({
+    const uncategorizedTransactions = await Transaction.findByFilter({
       userId,
       category: 'other',
       isProcessed: false
-    }).limit(20);
+    }, { limit: 20 });
 
     const categorizedCount = 0;
 

@@ -1,8 +1,8 @@
 const express = require('express');
 const { Client } = require('@microsoft/microsoft-graph-client');
 const { body, validationResult } = require('express-validator');
-const User = require('../../db/mongoose/models/userModel');
-const Transaction = require('../../db/mongoose/models/transactionModel');
+const User = require('../../db/postgres/userRepo');
+const Transaction = require('../../db/postgres/transactionRepo');
 const aiAnalyzer = require('../../ai/openaiClient');
 const createAIAnalysisUseCases = require('../../../app/use-cases/analyzeTransaction');
 const emailParserService = require('../../msgraph/email/parserService');
@@ -410,15 +410,13 @@ router.post('/sync-emails', async (req, res) => {
 
         // Create transaction record
           try {
-            const transaction = new Transaction({
+            const transaction = await Transaction.create({
               ...transactionData,
               messageId: message.id,
-              rawText: (emailText || htmlBody || emailSubject).substring(0, 1000), // Store first 1000 chars for debugging
+              rawText: (emailText || htmlBody || emailSubject).substring(0, 1000),
               isProcessed: true,
-              createdAt: new Date(message.receivedDateTime)
+              date: new Date(message.receivedDateTime)
             });
-
-            await transaction.save();
             processedTransactions.push(transaction);
             newTransactionsCount++;
 
@@ -573,7 +571,7 @@ router.post('/sync-emails', async (req, res) => {
     }
 
     // Handle database connection errors
-    if (error.name === 'MongooseError' || error.name === 'MongoError') {
+    if (error.code === 'ECONNREFUSED' || error.message?.includes('database')) {
       return res.status(503).json({
         error: 'Database connection error',
         details: 'Please try again later',

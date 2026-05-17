@@ -9,13 +9,15 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const mongoose = require('mongoose');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const logger = require('../../infrastructure/logging/logger');
 const { env } = require('../../infrastructure/config/env');
+const pool = require('../db/postgres/pool');
+const { migrate } = require('../db/postgres/migrate');
+const userRepo = require('../db/postgres/userRepo');
 
 // Global error handler
 process.on('uncaughtException', (err) => {
@@ -41,7 +43,7 @@ const httpLogger = require('./middleware/logger');
 
 // Import services
 const EmailSyncService = require('../msgraph/emailSyncService');
-const transactionRepo = require('../db/mongoose/TransactionRepo');
+const transactionRepo = require('../db/postgres/transactionRepo');
 const createEmailSyncUseCases = require('../../app/use-cases/syncEmailBatch');
 const tokenCleanup = require('../../infrastructure/security/tokenCleanup');
 
@@ -56,14 +58,15 @@ app.set('repositories', { transactionRepo });
 const PORT = env.port;
 logger.info('Server configuration', { port: PORT, envPort: env.port, nodeEnv: env.nodeEnv });
 
-// Connect to MongoDB
-// Seed demo user on startup (only in demo mode)
+// Trust proxy for Railway (X-Forwarded-For)
+app.set('trust proxy', 1);
+
+// Connect to PostgreSQL and run migrations
 const seedDemoUser = async () => {
   try {
-    const User = require('../db/mongoose/models/userModel');
-    const existing = await User.findOne({ email: 'demo@finsmart.app' });
+    const existing = await userRepo.findOne({ email: 'demo@finsmart.app' });
     if (!existing) {
-      const user = new User({
+      await userRepo.create({
         email: 'demo@finsmart.app',
         password: 'demo123',
         firstName: 'Demo',
@@ -71,7 +74,6 @@ const seedDemoUser = async () => {
         isDemo: true,
         isVerified: true
       });
-      await user.save();
       logger.info('✅ Demo user created: demo@finsmart.app / demo123');
     } else {
       logger.info('Demo user already exists');
@@ -81,30 +83,32 @@ const seedDemoUser = async () => {
   }
 };
 
-mongoose.connect(env.mongoUri)
+pool.query('SELECT 1')
 .then(async () => {
-  logger.info('Connected to MongoDB successfully');
+  logger.info('Connected to PostgreSQL successfully');
+  
+  // Run migrations (create tables if not exist)
+  try {
+    await migrate();
+  } catch (migErr) {
+    logger.error('Migration failed', { error: migErr.message });
+  }
 
   // Seed demo user if ALLOW_DEMO_MODE is set
   if (env.allowDemoMode) {
     await seedDemoUser();
   }
 
-  // Only run token cleanup if MongoDB is connected
-  if (mongoose.connection.readyState === 1) {
-    logger.info('Performing token cleanup...');
-    const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
-    if (cleanedCount > 0) {
-      console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
-    }
-  } else {
-    console.log('🧹 Skipping token cleanup - MongoDB not connected');
+  // Token cleanup
+  logger.info('Performing token cleanup...');
+  const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+  if (cleanedCount > 0) {
+    console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
   }
 })
 .catch(err => {
-  console.error('❌ MongoDB connection error:', err);
-  console.log('⚠️ Continuing without MongoDB connection for debugging purposes');
-  // Don't exit the process, just log the error
+  console.error('❌ PostgreSQL connection error:', err.message);
+  console.log('⚠️ Continuing without database connection for debugging purposes');
 });
 
 // Middleware
@@ -177,14 +181,14 @@ app.get('/health', async (req, res) => {
   const connectedSockets = io.engine.clientsCount || 0;
   const uptime = process.uptime();
 
-  // MongoDB latency check
-  let mongoLatency = null;
+  // PostgreSQL latency check
+  let dbLatency = null;
   try {
     const startTime = Date.now();
-    await mongoose.connection.db.admin().ping();
-    mongoLatency = Date.now() - startTime;
+    await pool.query('SELECT 1');
+    dbLatency = Date.now() - startTime;
   } catch (error) {
-    logger.error('Health check: MongoDB ping failed', { error: error.message });
+    logger.error('Health check: PostgreSQL ping failed', { error: error.message });
   }
 
   const healthData = {
@@ -193,9 +197,10 @@ app.get('/health', async (req, res) => {
     uptime: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
     port: PORT,
     env: env.nodeEnv,
-    mongodb: {
-      configured: env.mongoUri ? 'yes' : 'no',
-      latency_ms: mongoLatency
+    database: {
+      type: 'postgresql',
+      configured: (process.env.DATABASE_URL || process.env.MONGODB_URI) ? 'yes' : 'no',
+      latency_ms: dbLatency
     },
     openai: env.openAiKeyConfigured ? 'configured' : 'missing',
     azure_ocr: env.azureOcrConfigured ? 'configured' : 'missing',
@@ -234,7 +239,7 @@ app.get('/api/debug/env', (req, res) => {
     backend_vars: {
       NODE_ENV: env.nodeEnv,
       PORT: env.port,
-      MONGODB_URI: env.mongoUri ? 'configured' : 'missing',
+      DATABASE_URL: (process.env.DATABASE_URL || process.env.MONGODB_URI) ? 'configured' : 'missing',
       JWT_SECRET: env.jwtSecret ? 'configured' : 'missing',
       OPENAI_API_KEY: env.openAiKeyConfigured ? 'configured' : 'missing'
     }
@@ -320,7 +325,6 @@ io.use(async (socket, next) => {
 
     // Validar token usando el mismo middleware de autenticación
     const jwt = require('jsonwebtoken');
-    const User = require('../db/mongoose/models/userModel');
 
     // Check if it's a demo token (only when explicitly allowed)
     if (token.startsWith('demo-token-')) {
@@ -347,7 +351,7 @@ io.use(async (socket, next) => {
       });
 
       // Find user in database
-      const user = await User.findById(decoded.userId);
+      const user = await userRepo.findById(decoded.userId);
       if (!user) {
         logger.warn('Socket.IO - User not found for JWT token', {
           userId: decoded.userId,
@@ -465,7 +469,7 @@ server.listen(PORT, '0.0.0.0', () => {
   logger.info('Server started', {
     port: PORT,
     env: env.nodeEnv,
-    mongodb: env.mongoUri ? 'configured' : 'not configured',
+    database: (process.env.DATABASE_URL || process.env.MONGODB_URI) ? 'configured' : 'not configured',
     openai: env.openAiKeyConfigured ? 'configured' : 'not configured',
     azure_ocr: env.azureOcrConfigured ? 'configured' : 'not configured'
   });
@@ -481,10 +485,10 @@ const shutdown = async (signal) => {
       logger.info('HTTP server closed');
     });
     try {
-      await mongoose.connection.close(false);
-      logger.info('MongoDB connection closed');
+      await pool.end();
+      logger.info('PostgreSQL pool closed');
     } catch (e) {
-      logger.warn('MongoDB close error', { error: e.message });
+      logger.warn('PostgreSQL pool close error', { error: e.message });
     }
   } catch (e) {
     logger.error('Error during shutdown', { error: e.message, stack: e.stack });

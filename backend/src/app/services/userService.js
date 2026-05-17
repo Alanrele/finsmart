@@ -1,10 +1,10 @@
-const User = require('../../adapters/db/mongoose/models/userModel');
-const Transaction = require('../../adapters/db/mongoose/models/transactionModel');
+const User = require('../../adapters/db/postgres/userRepo');
+const Transaction = require('../../adapters/db/postgres/transactionRepo');
 
 class UserService {
   async getUserProfile(userId) {
     try {
-      const user = await User.findById(userId).select('-password -accessToken -refreshToken');
+      const user = await User.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
@@ -29,7 +29,7 @@ class UserService {
         userId,
         { $set: filteredUpdates },
         { new: true, runValidators: true }
-      ).select('-password -accessToken -refreshToken');
+      );
 
       if (!user) {
         throw new Error('User not found');
@@ -148,12 +148,12 @@ class UserService {
 
   async exportUserData(userId) {
     try {
-      const user = await User.findById(userId).select('-password -accessToken -refreshToken');
+      const user = await User.findById(userId);
       if (!user) {
         throw new Error('User not found');
       }
 
-      const transactions = await Transaction.find({ userId }).sort({ date: -1 });
+      const transactions = await Transaction.findByFilter({ userId }, { sort: { date: -1 } });
 
       return {
         user: user.toJSON(),

@@ -26,7 +26,7 @@ const array = (value, defaultValue = []) => {
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   port: number(process.env.PORT, 5000),
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart',
+  mongoUri: process.env.DATABASE_URL || process.env.MONGODB_URI || 'postgresql://localhost:5432/finsmart',
   jwtSecret: process.env.JWT_SECRET,
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   frontendUrl: process.env.FRONTEND_URL,

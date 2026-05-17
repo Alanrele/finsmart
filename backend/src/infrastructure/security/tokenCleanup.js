@@ -1,4 +1,4 @@
-const User = require('../../adapters/db/mongoose/models/userModel');
+const User = require('../../adapters/db/postgres/userRepo');
 
 /**
  * Cleanup malformed or corrupted tokens from the database
@@ -11,7 +11,7 @@ const cleanupMalformedTokens = async () => {
     // Find all users with access tokens
     const usersWithTokens = await User.find({
       accessToken: { $exists: true, $ne: null }
-    }).select('email accessToken');
+    });
 
     let cleanedCount = 0;
 

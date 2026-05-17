@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { createHash } = require('crypto');
-const User = require('../../db/mongoose/models/userModel');
+const User = require('../../db/postgres/userRepo');
 const { cleanupUserToken } = require('../../../infrastructure/security/tokenCleanup');
 
 // Track recently cleaned up tokens to prevent infinite loops
@@ -36,7 +36,7 @@ const authMiddleware = async (req, res, next) => {
     if (isLikelyJwt) {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.userId).select('-password');
+        const user = await User.findById(decoded.userId);
 
         if (!user) {
           return res.status(401).json({ error: 'Token is not valid.' });
@@ -113,7 +113,7 @@ const authMiddleware = async (req, res, next) => {
 
         if (!user) {
           // Create new user
-          user = new User({
+          user = await User.create({
             email: profile.mail || profile.userPrincipalName,
             firstName: profile.givenName || 'Usuario',
             lastName: profile.surname || 'Microsoft',
@@ -123,15 +123,14 @@ const authMiddleware = async (req, res, next) => {
             password: 'microsoft-auth-' + Date.now(), // Dummy password
             isVerified: true
           });
-
-          await user.save();
           console.log('✅ New Microsoft user created:', user.email);
         } else {
           // Update existing user with new token
-          user.accessToken = token;
-          user.tokenExpiry = new Date(Date.now() + 3600000);
-          user.microsoftId = profile.id;
-          await user.save();
+          user = await User.findByIdAndUpdate(user._id, {
+            accessToken: token,
+            tokenExpiry: new Date(Date.now() + 3600000),
+            microsoftId: profile.id
+          });
           console.log('✅ Existing Microsoft user updated:', user.email);
         }
 
