@@ -17,7 +17,9 @@ window.addEventListener('unhandledrejection', (event) => {
   if (event.reason && typeof event.reason === 'string') {
     if (event.reason.includes('message channel closed') ||
         event.reason.includes('listener indicated an asynchronous response') ||
-        event.reason.includes('Extension context invalidated')) {
+        event.reason.includes('Extension context invalidated') ||
+        event.reason.includes('No Listener') ||
+        event.reason.includes('tabs:outgoing')) {
       console.warn('🚫 Browser extension error caught and prevented:', event.reason)
       event.preventDefault() // Prevent the error from propagating
       return
@@ -33,7 +35,9 @@ window.addEventListener('error', (event) => {
   if (event.message && (
     event.message.includes('message channel closed') ||
     event.message.includes('listener indicated an asynchronous response') ||
-    event.message.includes('Extension context invalidated')
+    event.message.includes('Extension context invalidated') ||
+    event.message.includes('No Listener') ||
+    event.message.includes('tabs:outgoing')
   )) {
     console.warn('🚫 Browser extension error caught and prevented:', event.message)
     event.preventDefault() // Prevent the error from propagating

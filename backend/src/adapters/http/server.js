@@ -246,40 +246,40 @@ app.get('/api/debug/env', (req, res) => {
   });
 });
 
+// Shared MIME type setter for static files
+const setStaticHeaders = (res, filePath, stat) => {
+  if (filePath.endsWith('.css')) {
+    res.setHeader('Content-Type', 'text/css; charset=utf-8');
+  } else if (filePath.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+  } else if (filePath.endsWith('.json') || filePath.endsWith('.webmanifest')) {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  } else if (filePath.endsWith('.woff') || filePath.endsWith('.woff2')) {
+    res.setHeader('Content-Type', 'font/woff2');
+  } else if (filePath.endsWith('.ttf')) {
+    res.setHeader('Content-Type', 'font/ttf');
+  } else if (filePath.endsWith('.png')) {
+    res.setHeader('Content-Type', 'image/png');
+  } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
+    res.setHeader('Content-Type', 'image/jpeg');
+  } else if (filePath.endsWith('.svg')) {
+    res.setHeader('Content-Type', 'image/svg+xml');
+  } else if (filePath.endsWith('.html')) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  }
+};
+
 // Serve static files from React build (always, if present)
 // Serve static files with proper MIME types
-app.use('/assets', express.static(path.join(__dirname, '../public/assets'), {
-  maxAge: '1y', // Cache static assets for 1 year
-  setHeaders: (res, filePath, stat) => {
-    // Set proper MIME types for common file extensions
-    if (filePath.endsWith('.css')) {
-      res.setHeader('Content-Type', 'text/css; charset=utf-8');
-    } else if (filePath.endsWith('.js')) {
-      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-    } else if (filePath.endsWith('.json')) {
-      res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    } else if (filePath.endsWith('.woff') || filePath.endsWith('.woff2')) {
-      res.setHeader('Content-Type', 'font/woff2');
-    } else if (filePath.endsWith('.ttf')) {
-      res.setHeader('Content-Type', 'font/ttf');
-    } else if (filePath.endsWith('.png')) {
-      res.setHeader('Content-Type', 'image/png');
-    } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-      res.setHeader('Content-Type', 'image/jpeg');
-    } else if (filePath.endsWith('.svg')) {
-      res.setHeader('Content-Type', 'image/svg+xml');
-    }
-  }
+app.use('/assets', express.static(path.join(__dirname, '../../public/assets'), {
+  maxAge: '1y',
+  setHeaders: setStaticHeaders
 }));
 
 // Serve other static files
-app.use(express.static(path.join(__dirname, '../public'), {
-  maxAge: '1d', // Cache for 1 day
-  setHeaders: (res, filePath, stat) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    }
-  }
+app.use(express.static(path.join(__dirname, '../../public'), {
+  maxAge: '1d',
+  setHeaders: setStaticHeaders
 }));
 
 // Handle React routing - ONLY for non-API and non-asset routes
@@ -290,7 +290,7 @@ app.get('*', (req, res, next) => {
       req.path.includes('.')) {
     return next();
   }
-  const indexPath = path.join(__dirname, '../public', 'index.html')
+  const indexPath = path.join(__dirname, '../../public', 'index.html')
   if (fs.existsSync(indexPath)) {
     return res.sendFile(indexPath);
   }
