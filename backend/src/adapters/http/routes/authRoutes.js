@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 const User = require('../../db/postgres/userRepo');
+const pool = require('../../db/postgres/pool');
 const tokenCleanup = require('../../../infrastructure/security/tokenCleanup');
 
 const router = express.Router();
@@ -35,6 +36,22 @@ const generateToken = (userId) => {
     throw new Error('JWT_SECRET is not configured. Set JWT_SECRET environment variable.');
   }
   return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
+};
+
+// Quick DB health check (cached for 30s to avoid flooding)
+let dbHealthy = null;
+let dbLastCheck = 0;
+const checkDb = async () => {
+  const now = Date.now();
+  if (dbLastCheck && (now - dbLastCheck) < 30000) return dbHealthy;
+  try {
+    await pool.query('SELECT 1');
+    dbHealthy = true;
+  } catch (e) {
+    dbHealthy = false;
+  }
+  dbLastCheck = now;
+  return dbHealthy;
 };
 
 // Register
@@ -80,7 +97,7 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
 });
 
 // Login
-router.post('/login', authLimiter, loginValidation, async (req, res) => {
+router.post('/login', authLimiter, loginValidation, async (req, res, next) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -91,6 +108,15 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     }
 
     const { email, password } = req.body;
+
+    // Fast-fail if DB is unreachable
+    const dbOk = await checkDb();
+    if (!dbOk) {
+      return res.status(503).json({
+        error: 'Service temporarily unavailable',
+        detail: 'Database connection failed. Please try again later.'
+      });
+    }
 
     // Find user
     const user = await User.findOne({ email });
@@ -115,7 +141,11 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
 
   } catch (error) {
     console.error('Login error:', error.message, error.stack);
-    res.status(500).json({ error: 'Login failed', detail: error.message });
+    // Always send JSON, even on unexpected errors
+    return res.status(500).json({
+      error: 'Login failed',
+      detail: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message
+    });
   }
 });
 
