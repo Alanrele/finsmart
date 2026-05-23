@@ -183,11 +183,13 @@ app.get('/health', async (req, res) => {
 
   // PostgreSQL latency check
   let dbLatency = null;
+  let dbError = null;
   try {
     const startTime = Date.now();
     await pool.query('SELECT 1');
     dbLatency = Date.now() - startTime;
   } catch (error) {
+    dbError = error.message;
     logger.error('Health check: PostgreSQL ping failed', { error: error.message });
   }
 
@@ -200,7 +202,8 @@ app.get('/health', async (req, res) => {
     database: {
       type: 'postgresql',
       configured: (process.env.DATABASE_URL || process.env.MONGODB_URI) ? 'yes' : 'no',
-      latency_ms: dbLatency
+      latency_ms: dbLatency,
+      error: dbError
     },
     openai: env.openAiKeyConfigured ? 'configured' : 'missing',
     azure_ocr: env.azureOcrConfigured ? 'configured' : 'missing',
