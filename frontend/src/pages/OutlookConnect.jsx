@@ -385,7 +385,7 @@ const OutlookConnect = () => {
                 Conecta tu cuenta de Microsoft
               </h4>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                Autoriza a FinSmart para acceder a tus correos de Outlook de forma segura
+                Autoriza a Kipu para acceder a tus correos de Outlook de forma segura
               </p>
             </div>
           </div>
@@ -399,7 +399,7 @@ const OutlookConnect = () => {
                 Sincronización automática
               </h4>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                FinSmart lee los correos del BCP y extrae automáticamente la información de transacciones
+                Kipu lee los correos del BCP y extrae automáticamente la información de transacciones
               </p>
             </div>
           </div>

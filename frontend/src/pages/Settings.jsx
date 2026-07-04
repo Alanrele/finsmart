@@ -72,7 +72,7 @@ const Settings = () => {
           Configuración
         </h1>
         <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Personaliza tu experiencia en FinSmart
+          Personaliza tu experiencia en Kipu
         </p>
       </div>
 

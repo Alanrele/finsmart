@@ -1,5 +1,5 @@
 /*
-  Proyecto: FinSmart
+  Proyecto: Kipu
   Autor: Alan Reyes Leandro
   Correo: alanreyesleandro5@gmail.com
   Derechos: © 2025 Alan Reyes Leandro – Todos los derechos reservados.
@@ -205,7 +205,7 @@ function App() {
       {/* Main content */}
       <div>
       <Routes>
-        {/* FinSmart Upgrade: Ruta raíz con pantalla de bienvenida */}
+        {/* Kipu Upgrade: Ruta raíz con pantalla de bienvenida */}
         <Route
           path="/"
           element={
@@ -233,7 +233,7 @@ function App() {
           element={<AuthCallback />}
         />
 
-        {/* FinSmart Upgrade: Rutas protegidas */}
+        {/* Kipu Upgrade: Rutas protegidas */}
 
         <Route
           path="/dashboard"

@@ -1,5 +1,5 @@
 /*
-  Proyecto: FinSmart
+  Proyecto: Kipu
   Autor: Alan Reyes Leandro
   Correo: alanreyesleandro5@gmail.com
   Derechos: © 2025 Alan Reyes Leandro – Todos los derechos reservados.
@@ -14,7 +14,7 @@ import useAuthStore from '../../stores/authStore';
 import { useMicrosoftAuth } from '../../hooks/useMicrosoftAuth';
 import { loginUser, registerUser } from '../../services/api';
 
-// FinSmart Upgrade: Modal de autenticación modular
+// Kipu Upgrade: Modal de autenticación modular
 const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }) => {
   const [mode, setMode] = useState(initialMode); // 'login' | 'register'
   const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +30,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
     confirmPassword: ''
   });
 
-  // FinSmart Upgrade: Animaciones del modal
+  // Kipu Upgrade: Animaciones del modal
   const overlayVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 }
@@ -169,8 +169,8 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             </h2>
             <p className="text-blue-100 text-sm mt-1">
               {mode === 'login'
-                ? 'Accede a tu cuenta FinSmart'
-                : 'Únete a FinSmart hoy'}
+                ? 'Accede a tu cuenta Kipu'
+                : 'Únete a Kipu hoy'}
             </p>
           </div>
 

@@ -17,6 +17,7 @@ import {
   Calculator
 } from 'lucide-react'
 import useAppStore from '../../stores/appStore'
+import BrandLogo from '../common/BrandLogo'
 
 const Navbar = () => {
   const location = useLocation()
@@ -49,11 +50,8 @@ const Navbar = () => {
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">F</span>
-              </div>
-              <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">FinSmart</span>
+            <Link to="/dashboard" className="flex items-center">
+              <BrandLogo iconSize={32} />
             </Link>
 
             {/* Right side buttons */}

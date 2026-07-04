@@ -2,15 +2,16 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#3F7079" />
-    <meta name="description" content="FinSmart - Análisis financiero inteligente con integración BCP" />
+    <meta name="description" content="Kipu - Tus movimientos del BCP, anudados y en orden" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="FinSmart" />
+    <meta name="apple-mobile-web-app-title" content="Kipu" />
 
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
@@ -18,9 +19,9 @@
     <!-- Preconnect to improve performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
 
-    <title>FinSmart - Análisis Financiero Inteligente</title>
+    <title>Kipu — Tus finanzas del BCP, en orden</title>
 
     <style>
       /* Prevent flash of unstyled content */
@@ -53,8 +54,9 @@
         color: #3F7079;
         font-size: 2rem;
         font-weight: 800;
-        letter-spacing: -0.02em;
-        font-family: 'Inter', system-ui, sans-serif;
+        letter-spacing: -0.03em;
+        text-transform: lowercase;
+        font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
         animation: pulse 1.5s ease-in-out infinite;
       }
 
@@ -86,7 +88,7 @@
   </head>
   <body>
     <div id="initial-loader">
-      <div class="loader-logo">FinSmart</div>
+      <div class="loader-logo">kipu</div>
     </div>
 
     <div id="root"></div>
@@ -118,7 +120,7 @@
         installPrompt.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <div style="font-weight: 600; margin-bottom: 4px;">Instalar FinSmart</div>
+              <div style="font-weight: 600; margin-bottom: 4px;">Instalar Kipu</div>
               <div style="font-size: 14px; opacity: 0.8;">Acceso rápido desde tu pantalla de inicio</div>
             </div>
             <div>

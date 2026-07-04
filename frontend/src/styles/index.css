@@ -40,6 +40,24 @@
   box-sizing: border-box;
 }
 
+/* Tipografía display (Bricolage Grotesque) para títulos: identidad Kipu */
+@layer base {
+  h1, h2 {
+    font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Firma de marca: cejilla con nudo (etiqueta de sección precedida por un nudo del quipu) */
+.eyebrow {
+  @apply inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-taupe-500 dark:text-taupe-300;
+}
+
+.eyebrow::before {
+  content: '';
+  @apply inline-block h-2 w-2 rounded-full bg-primary;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--color-bg);

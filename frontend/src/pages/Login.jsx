@@ -102,7 +102,7 @@ const Login = () => {
           >
             <span className="text-white font-bold text-2xl">F</span>
           </motion.div>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">FinSmart</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">Kipu</h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-2">
             Análisis financiero inteligente con IA
           </p>
@@ -121,7 +121,7 @@ const Login = () => {
               </h2>
               <p className="text-zinc-500 dark:text-zinc-400 mt-2">
                 {isRegister
-                  ? 'Únete a FinSmart para analizar tus finanzas'
+                  ? 'Únete a Kipu para analizar tus finanzas'
                   : 'Accede a tu análisis financiero personal'
                 }
               </p>

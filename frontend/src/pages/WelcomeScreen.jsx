@@ -1,5 +1,5 @@
 /*
-  Proyecto: FinSmart
+  Proyecto: Kipu
   Autor: Alan Reyes Leandro
   Correo: alanreyesleandro5@gmail.com
   Derechos: © 2025 Alan Reyes Leandro – Todos los derechos reservados.
@@ -11,12 +11,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, TrendingUp, Shield, Sparkles, Mail, Lock, User, X } from 'lucide-react';
 import LoginDialog from '../components/auth/LoginDialog';
 
-// FinSmart Upgrade: Hero animado con transiciones suaves
+// Kipu Upgrade: Hero animado con transiciones suaves
 const WelcomeScreen = ({ onAuthenticated }) => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [loginMode, setLoginMode] = useState('login'); // 'login' | 'register'
 
-  // FinSmart Upgrade: Animación de entrada del hero (más lenta y apreciable)
+  // Kipu Upgrade: Animación de entrada del hero (más lenta y apreciable)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -68,7 +68,7 @@ const WelcomeScreen = ({ onAuthenticated }) => {
         >
           <div className="flex items-center space-x-3">
             <Wallet className="w-9 h-9 text-blue-600 dark:text-blue-400" />
-            <span className="text-2xl font-bold text-zinc-900 dark:text-white">FinSmart</span>
+            <span className="text-2xl font-bold text-zinc-900 dark:text-white">Kipu</span>
           </div>
           <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
             © 2025 Alan Reyes Leandro
@@ -106,7 +106,7 @@ const WelcomeScreen = ({ onAuthenticated }) => {
               className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent"
               variants={itemVariants}
             >
-              Bienvenido a FinSmart
+              Bienvenido a Kipu
             </motion.h1>
 
             <motion.p
@@ -236,7 +236,7 @@ const WelcomeScreen = ({ onAuthenticated }) => {
           transition={{ duration: 0.8, delay: 0.4 }}
         >
           <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">
-            FinSmart © 2025 – Todos los derechos reservados
+            Kipu © 2025 – Todos los derechos reservados
           </p>
           <p className="text-xs mt-1 text-zinc-600 dark:text-zinc-400">
             Desarrollado por Alan Reyes Leandro | alanreyesleandro5@gmail.com

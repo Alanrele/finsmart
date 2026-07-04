@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 64" role="img" aria-label="Kipu">
+  <!-- Versión horizontal: símbolo + wordmark (usar Bricolage Grotesque donde esté disponible) -->
+  <rect width="64" height="64" rx="14" fill="#3F7079"/>
+  <path d="M13 17 Q32 22 51 17" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+  <line x1="20" y1="19.4" x2="20" y2="45" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <line x1="32" y1="20.6" x2="32" y2="36" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <line x1="44" y1="19.4" x2="44" y2="50" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="20" cy="37" r="5" fill="#D4CBB0"/>
+  <circle cx="32" cy="29" r="5" fill="#A6C0B4"/>
+  <circle cx="44" cy="42" r="5" fill="#D4CBB0"/>
+  <text x="80" y="46" font-family="Bricolage Grotesque, Inter, system-ui, sans-serif" font-size="40" font-weight="700" letter-spacing="-1" fill="#16282C">kipu</text>
+</svg>

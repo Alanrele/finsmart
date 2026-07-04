@@ -1,4 +1,14 @@
-# Guía de Estilo ManzanApp (UI Kit)
+# Guía de Estilo (UI Kit)
+
+> **Addendum Kipu (2026-07)** — esta guía sigue siendo la base del sistema; la capa de
+> marca vive en `BRANDING.md`. Cambios que la evolucionan:
+> - **Tipografía**: se suma `Bricolage Grotesque` como fuente display (títulos `h1/h2`,
+>   cifras protagonistas y wordmark). `Inter` sigue siendo la única fuente de cuerpo/UI.
+> - **Firma visual**: el "cordón anudado" del quipu — clase `.eyebrow` (cejilla con nudo),
+>   ilustraciones de hebras en login/estados vacíos, y el logo (`BrandLogo.jsx`).
+> - **Paleta aplicada**: petróleo `#3F7079` (primario), salvia `#A6C0B4`, arena `#D4CBB0`,
+>   taupe `#A79E82` — tokens en `tailwind.config.js` y `:root`.
+
 
 Sistema visual de la app, extraído del código real. Sirve para replicar el estilo
 en otra aplicación (React + Tailwind). La paleta de colores es intercambiable:

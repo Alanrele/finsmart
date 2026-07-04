@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { KipuIcon } from './BrandLogo'
 
 const LoadingScreen = () => {
   return (
@@ -10,20 +11,20 @@ const LoadingScreen = () => {
         className="text-center"
       >
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/15"
+          animate={{ scale: [1, 1.06, 1] }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          className="mx-auto mb-4 w-16 h-16 motion-reduce:animate-none"
         >
-          <span className="text-white font-bold text-2xl">F</span>
+          <KipuIcon size={64} />
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 mb-2"
+          className="text-2xl font-bold tracking-tight lowercase text-zinc-900 dark:text-zinc-50 mb-2"
         >
-          FinSmart
+          kipu
         </motion.h1>
 
         <motion.p

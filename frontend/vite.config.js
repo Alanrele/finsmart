@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'FinSmart - Análisis Financiero Inteligente',
-        short_name: 'FinSmart',
-        description: 'Aplicación web móvil para análisis financiero inteligente con integración BCP',
+        name: 'Kipu — Tus finanzas del BCP, en orden',
+        short_name: 'Kipu',
+        description: 'Tus movimientos del BCP, anudados y en orden',
         theme_color: '#3F7079',
         background_color: '#F2F2F7',
         display: 'standalone',
@@ -21,17 +21,17 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'pwa-192x192.png',
+            src: 'android-chrome-192x192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'pwa-512x512.png',
+            src: 'android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

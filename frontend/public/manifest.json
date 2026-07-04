@@ -1,7 +1,7 @@
 {
-  "name": "FinSmart PWA",
-  "short_name": "FinSmart",
-  "description": "Análisis financiero inteligente con integración BCP",
+  "name": "Kipu — Finanzas BCP",
+  "short_name": "Kipu",
+  "description": "Tus movimientos del BCP, anudados y en orden",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F2F2F7",

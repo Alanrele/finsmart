@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import useAuthStore from '../../stores/authStore'
 import useAppStore from '../../stores/appStore'
+import BrandLogo, { KipuIcon } from '../common/BrandLogo'
 
 const Sidebar = () => {
   const location = useLocation()
@@ -47,13 +48,8 @@ const Sidebar = () => {
     <div className="flex flex-col h-full bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800">
       {/* Logo */}
       <div className="p-6">
-        <Link to="/dashboard" className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">F</span>
-          </div>
-          {!isCollapsed && (
-            <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">FinSmart</span>
-          )}
+        <Link to="/dashboard" className="flex items-center">
+          {isCollapsed ? <KipuIcon size={32} /> : <BrandLogo iconSize={32} />}
         </Link>
       </div>
 

@@ -23,7 +23,7 @@ const diagnoseRailwayBackend = async () => {
         method: 'GET',
         cache: 'no-cache',
         headers: {
-          'User-Agent': 'FinSmart-Diagnostic/1.0'
+          'User-Agent': 'Kipu-Diagnostic/1.0'
         }
       });
       const endTime = Date.now();
