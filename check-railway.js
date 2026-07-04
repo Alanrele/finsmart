@@ -85,7 +85,7 @@ if (allPassed) {
   console.log('4. Configurar variables de entorno en Railway');
   console.log('5. Actualizar Azure AD con la URL de Railway');
   console.log('');
-  console.log('📖 Ver: RAILWAY_DEPLOYMENT.md para instrucciones detalladas');
+  console.log('📖 Ver: DOC/historial/RAILWAY_DEPLOYMENT.md para instrucciones detalladas');
 } else {
   console.log('⚠️ Hay algunos problemas que resolver antes del despliegue');
   console.log('📝 Sigue las instrucciones de "Fix" arriba');

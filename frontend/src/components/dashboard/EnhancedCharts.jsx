@@ -24,7 +24,7 @@ import {
   Sector
 } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency } from '../../utils/formatters';
 
 // Paleta oficial centralizada (misma fuente que tailwind.config.js — DOC/GUIA_DE_ESTILO.md)
 const PALETTE = {

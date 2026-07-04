@@ -4,7 +4,7 @@ import { TrendingUp, Target, Lightbulb, AlertCircle } from 'lucide-react'
 import { analyzeFinancialData, getFinancialRecommendations, getFinancialInsights } from '../services/api'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
-import LoadingCard from './LoadingCard'
+import LoadingCard from '../components/common/LoadingCard'
 
 const Analysis = () => {
   const { aiAnalysis, setAiAnalysis, aiLoading, setAiLoading } = useAppStore()

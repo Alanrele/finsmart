@@ -32,8 +32,8 @@ import {
 import useAppStore from '../stores/appStore';
 import { getDashboardData } from '../services/api'; // Importar directamente
 import toast from 'react-hot-toast';
-import LoadingCard from './LoadingCard';
-import EmailSyncControl from './EmailSyncControl';
+import LoadingCard from '../components/common/LoadingCard';
+import EmailSyncControl from '../components/dashboard/EmailSyncControl';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
 
 // Import Enhanced Charts
@@ -43,7 +43,7 @@ import {
   IncomeExpenseAreaChart,
   FinancialHealthRadar,
   MonthOverMonthComparison
-} from './EnhancedCharts';
+} from '../components/dashboard/EnhancedCharts';
 
 // Paleta oficial centralizada (misma fuente que tailwind.config.js — DOC/GUIA_DE_ESTILO.md)
 const COLORS = ['#3F7079', '#A6C0B4', '#A79E82', '#D4CBB0', '#63929B', '#658876'];

@@ -15,8 +15,8 @@ import {
   Brain,
   Calculator
 } from 'lucide-react'
-import useAuthStore from '../stores/authStore'
-import useAppStore from '../stores/appStore'
+import useAuthStore from '../../stores/authStore'
+import useAppStore from '../../stores/appStore'
 
 const Sidebar = () => {
   const location = useLocation()

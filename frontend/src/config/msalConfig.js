@@ -12,7 +12,8 @@ console.log('� MSAL Config - Railway Environment:', {
 
 export const msalConfig = {
   auth: {
-    clientId: '29f56526-69dc-4e89-9955-060aa8292fd0',
+    // Configurable vía VITE_AZURE_CLIENT_ID; el fallback mantiene el valor actual
+    clientId: import.meta.env.VITE_AZURE_CLIENT_ID || '29f56526-69dc-4e89-9955-060aa8292fd0',
     authority: 'https://login.microsoftonline.com/common',
     redirectUri: railwayConfig.redirectUri,
     postLogoutRedirectUri: railwayConfig.isProduction

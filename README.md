@@ -37,10 +37,13 @@ FinSmart es una Progressive Web Application (PWA) completa para gestión financi
 - **🚂 Railway Dashboard**: https://railway.app/dashboard
 
 ### Documentación
-- **🚀 Guía de Despliegue Railway**: [DESPLIEGUE_RAILWAY.md](./DESPLIEGUE_RAILWAY.md)
-- **🔍 Diagnóstico y Troubleshooting**: [RAILWAY_DIAGNOSTIC.md](./RAILWAY_DIAGNOSTIC.md)
-- **🔒 Variables de Entorno**: [CLAVES_REALES.md](./CLAVES_REALES.md) (archivo local)
-- **📖 Configuración Azure AD**: [AZURE_AD_SETUP.md](./AZURE_AD_SETUP.md)
+- **🎨 Guía de Estilo (UI)**: [DOC/GUIA_DE_ESTILO.md](./DOC/GUIA_DE_ESTILO.md)
+- **🗂️ Plan de Refactor**: [DOC/PLAN_REFACTOR.md](./DOC/PLAN_REFACTOR.md)
+- **🚀 Guía de Despliegue Railway**: [DOC/historial/DESPLIEGUE_RAILWAY.md](./DOC/historial/DESPLIEGUE_RAILWAY.md)
+- **🔍 Diagnóstico y Troubleshooting**: [DOC/historial/RAILWAY_DIAGNOSTIC.md](./DOC/historial/RAILWAY_DIAGNOSTIC.md)
+- **🔒 Variables de Entorno**: `CLAVES_REALES.md` (archivo local, fuera de git)
+- **📖 Configuración Azure AD**: [DOC/historial/AZURE_AD_SETUP.md](./DOC/historial/AZURE_AD_SETUP.md)
+- **📚 Historial de fixes y features**: carpeta [DOC/historial/](./DOC/historial/)
 
 ### Verificación Rápida
 ```bash
@@ -56,8 +59,8 @@ bash scripts/check-deployment.sh
 - **Backend**: http://localhost:5001
 - **API Docs**: http://localhost:5001/api/docs
 
-### 📋 Client ID Configurado
-- **Azure Client ID**: `29f56526-69dc-4e89-9955-060aa8292fd0`
+### 📋 Client ID
+- Configurable vía `VITE_AZURE_CLIENT_ID` en `frontend/.env` (ver `frontend/.env.example`); si no se define, se usa el valor por defecto registrado en `src/config/msalConfig.js`.
 
 ## ✨ Características Principales
 
@@ -122,6 +125,39 @@ bash scripts/check-deployment.sh
 - **Microsoft Graph API** - Acceso a correos de Outlook
 - **Azure Cognitive Services** - OCR para procesar imágenes
 - **OpenAI GPT-4** - Análisis inteligente y chat
+
+## 🗂️ Estructura del Proyecto
+
+```
+PAIR-BCP/
+├── DOC/                    # Documentación (guía de estilo, plan de refactor, historial)
+│   └── historial/          # Docs históricos de deploys, fixes y features
+├── backend/                # API Node.js/Express (config, domain, routes, services, ...)
+├── frontend/
+│   └── src/
+│       ├── pages/          # Vistas de ruta: Dashboard, Transactions, Analysis, ChatIA,
+│       │                   # EnhancedAIAssistant, FinancialTools, OutlookConnect,
+│       │                   # Settings, Login, WelcomeScreen
+│       ├── components/
+│       │   ├── layout/     # Layout, Navbar, Sidebar, NotificationPanel
+│       │   ├── auth/       # AuthCallback, LoginDialog, MSALInitializing
+│       │   ├── common/     # ErrorBoundary, LoadingCard/Screen, ConnectivityStatus, SSL
+│       │   ├── dashboard/  # EnhancedCharts, EmailSyncControl
+│       │   ├── transactions/ # TransactionDetailModal
+│       │   └── debug/      # Paneles de debug (activables con ?debug=1 o Ctrl+Alt+D)
+│       ├── config/         # msalConfig, railway
+│       ├── hooks/          # useMicrosoftAuth
+│       ├── services/       # api (axios), socket (socket.io)
+│       ├── stores/         # appStore, authStore (zustand)
+│       ├── styles/         # index.css (tokens de la paleta + clases de la guía)
+│       └── utils/          # formatters
+├── infra/                  # Bicep para Azure
+└── scripts/                # Scripts de verificación de despliegue
+```
+
+La paleta oficial y los lineamientos visuales están en [DOC/GUIA_DE_ESTILO.md](./DOC/GUIA_DE_ESTILO.md):
+arena `#D4CBB0`, taupe `#A79E82`, salvia `#A6C0B4` y azul petróleo `#3F7079` (primario/CTA),
+definidos como tokens en `frontend/tailwind.config.js` y variables en `frontend/src/styles/index.css`.
 
 ## 📋 Requisitos Previos
 

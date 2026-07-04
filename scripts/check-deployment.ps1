@@ -98,7 +98,7 @@ Write-Host "4. Try logging in with Microsoft"
 Write-Host "5. Verify dashboard loads correctly"
 Write-Host ""
 Write-Host "Railway Dashboard: https://railway.app/dashboard" -ForegroundColor Blue
-Write-Host "Full diagnostic guide: ./RAILWAY_DIAGNOSTIC.md" -ForegroundColor Blue
+Write-Host "Full diagnostic guide: ./DOC/historial/RAILWAY_DIAGNOSTIC.md" -ForegroundColor Blue
 Write-Host ""
 Write-Host "If you see errors, check:" -ForegroundColor Yellow
 Write-Host "- Railway deployment logs for build errors"

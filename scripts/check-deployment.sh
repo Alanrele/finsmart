@@ -107,9 +107,9 @@ else
     echo "1. Check Railway deployment logs"
     echo "2. Verify frontend built correctly"
     echo "3. Check environment variables in Railway"
-    echo "4. See RAILWAY_DIAGNOSTIC.md for detailed guide"
+    echo "4. See DOC/historial/RAILWAY_DIAGNOSTIC.md for detailed guide"
 fi
 
 echo ""
 echo "🔗 Railway Dashboard: https://railway.app/dashboard"
-echo "📚 Full diagnostic guide: ./RAILWAY_DIAGNOSTIC.md"
+echo "📚 Full diagnostic guide: ./DOC/historial/RAILWAY_DIAGNOSTIC.md"

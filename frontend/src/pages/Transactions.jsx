@@ -3,8 +3,8 @@ import { motion } from 'framer-motion'
 import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { getTransactions } from '../services/api' // Importar directamente la función
 import toast from 'react-hot-toast'
-import LoadingCard from './LoadingCard'
-import TransactionDetailModal from './TransactionDetailModal'
+import LoadingCard from '../components/common/LoadingCard'
+import TransactionDetailModal from '../components/transactions/TransactionDetailModal'
 import { formatCurrency, formatCurrencyAuto } from '../utils/formatters'
 
 const Transactions = () => {

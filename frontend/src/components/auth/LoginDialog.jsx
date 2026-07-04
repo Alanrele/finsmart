@@ -10,9 +10,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
-import useAuthStore from '../stores/authStore';
-import { useMicrosoftAuth } from '../hooks/useMicrosoftAuth';
-import { loginUser, registerUser } from '../services/api';
+import useAuthStore from '../../stores/authStore';
+import { useMicrosoftAuth } from '../../hooks/useMicrosoftAuth';
+import { loginUser, registerUser } from '../../services/api';
 
 // FinSmart Upgrade: Modal de autenticación modular
 const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }) => {

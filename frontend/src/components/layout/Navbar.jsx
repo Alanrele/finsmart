@@ -16,7 +16,7 @@ import {
   Brain,
   Calculator
 } from 'lucide-react'
-import useAppStore from '../stores/appStore'
+import useAppStore from '../../stores/appStore'
 
 const Navbar = () => {
   const location = useLocation()

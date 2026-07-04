@@ -3,7 +3,7 @@ import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 import NotificationPanel from './NotificationPanel'
-import useAppStore from '../stores/appStore'
+import useAppStore from '../../stores/appStore'
 
 const Layout = () => {
   const appReady = useAppStore(state => state.appReady)

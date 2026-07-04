@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FileText, Send, CheckCircle, AlertCircle, Copy } from 'lucide-react'
-import { testEmailParser } from '../services/api'
+import { testEmailParser } from '../../services/api'
 import toast from 'react-hot-toast'
 
 const EmailParserTester = () => {

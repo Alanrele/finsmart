@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
-import useAuthStore from '../stores/authStore'
-import { completeMicrosoftLogin } from '../services/api'
-import LoadingScreen from './LoadingScreen'
+import useAuthStore from '../../stores/authStore'
+import { completeMicrosoftLogin } from '../../services/api'
+import LoadingScreen from '../common/LoadingScreen'
 import toast from 'react-hot-toast'
 
 const AuthCallback = () => {

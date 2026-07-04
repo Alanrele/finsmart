@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, TrendingUp, Shield, Sparkles, Mail, Lock, User, X } from 'lucide-react';
-import LoginDialog from './LoginDialog';
+import LoginDialog from '../components/auth/LoginDialog';
 
 // FinSmart Upgrade: Hero animado con transiciones suaves
 const WelcomeScreen = ({ onAuthenticated }) => {

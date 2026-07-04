@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { getSyncStatus, toggleSync as apiToggleSync, syncEmails } from '../services/api'
-import useAuthStore from '../stores/authStore'
+import { getSyncStatus, toggleSync as apiToggleSync, syncEmails } from '../../services/api'
+import useAuthStore from '../../stores/authStore'
 import toast from 'react-hot-toast'
 
 const EmailSyncControl = () => {

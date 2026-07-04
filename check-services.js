@@ -94,7 +94,7 @@ async function checkServices() {
 
   console.log('\n📝 Configuración Pendiente:');
   console.log('─'.repeat(40));
-  console.log('• Azure AD URIs de redirección (ver AZURE_AD_SETUP.md)');
+  console.log('• Azure AD URIs de redirección (ver DOC/historial/AZURE_AD_SETUP.md)');
   console.log('• Variables de entorno de producción');
 
   console.log('\n🚀 Para iniciar los servicios:');

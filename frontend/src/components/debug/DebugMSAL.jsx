@@ -1,6 +1,6 @@
 import React from 'react'
 import { useMsal } from '@azure/msal-react'
-import useAuthStore from '../stores/authStore'
+import useAuthStore from '../../stores/authStore'
 
 const DebugMSAL = () => {
   const { instance, accounts, inProgress } = useMsal()

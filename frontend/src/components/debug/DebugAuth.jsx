@@ -1,5 +1,5 @@
 import React from 'react'
-import useAuthStore from '../stores/authStore'
+import useAuthStore from '../../stores/authStore'
 
 const DebugAuth = () => {
   const { user, token, isAuthenticated, logout } = useAuthStore()

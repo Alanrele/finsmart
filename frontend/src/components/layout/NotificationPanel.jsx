@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Bell, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react'
-import useAppStore from '../stores/appStore'
+import useAppStore from '../../stores/appStore'
 
 const NotificationPanel = () => {
   const { notifications, removeNotification, clearNotifications } = useAppStore()

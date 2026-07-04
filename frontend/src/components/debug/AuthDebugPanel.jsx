@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useIsAuthenticated, useMsal } from '@azure/msal-react';
-import useAuthStore from '../stores/authStore';
+import useAuthStore from '../../stores/authStore';
 
 const AuthDebugPanel = () => {
   const [isVisible, setIsVisible] = useState(false);

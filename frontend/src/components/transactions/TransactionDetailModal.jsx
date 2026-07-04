@@ -14,7 +14,7 @@ import {
   Building,
   User
 } from 'lucide-react'
-import { formatCurrency, formatDateTime } from '../utils/formatters'
+import { formatCurrency, formatDateTime } from '../../utils/formatters'
 
 const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
   if (!transaction) return null

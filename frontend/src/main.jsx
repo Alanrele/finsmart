@@ -6,9 +6,9 @@ import { PublicClientApplication } from '@azure/msal-browser'
 import { msalConfig } from './config/msalConfig'
 import App from './App.jsx'
 import useAppStore from './stores/appStore'
-import MSALInitializing from './components/MSALInitializing.jsx'
-import ErrorBoundary from './components/ErrorBoundary.jsx'
-import './index.css'
+import MSALInitializing from './components/auth/MSALInitializing.jsx'
+import ErrorBoundary from './components/common/ErrorBoundary.jsx'
+import './styles/index.css'
 import { registerSW } from 'virtual:pwa-register'
 
 // Global error handlers for browser extension interference

@@ -15,34 +15,35 @@ import useAuthStore from './stores/authStore'
 import socketService from './services/socket'
 
 
-// Components
-import Layout from './components/Layout'
-import Login from './components/Login'
-import Dashboard from './components/Dashboard'
-import Transactions from './components/Transactions'
-import Analysis from './components/Analysis'
-import ChatIA from './components/ChatIA'
-import OutlookConnect from './components/OutlookConnect'
-import Settings from './components/Settings'
-import LoadingScreen from './components/LoadingScreen'
-import AuthCallback from './components/AuthCallback'
-import DebugAuth from './components/DebugAuth'
-import DebugMSAL from './components/DebugMSAL'
-import AuthDebugPanel from './components/AuthDebugPanel'
-import ConnectivityStatus from './components/ConnectivityStatus'
-import SSLErrorNotification from './components/SSLErrorNotification'
+// Layout
+import Layout from './components/layout/Layout'
+
+// Páginas
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import Transactions from './pages/Transactions'
+import Analysis from './pages/Analysis'
+import ChatIA from './pages/ChatIA'
+import OutlookConnect from './pages/OutlookConnect'
+import Settings from './pages/Settings'
+import EnhancedAIAssistant from './pages/EnhancedAIAssistant'
+import FinancialTools from './pages/FinancialTools'
+import WelcomeScreen from './pages/WelcomeScreen'
+
+// Auth y comunes
+import AuthCallback from './components/auth/AuthCallback'
+import LoadingScreen from './components/common/LoadingScreen'
+import ConnectivityStatus from './components/common/ConnectivityStatus'
+import SSLErrorNotification from './components/common/SSLErrorNotification'
 import useAppStore from './stores/appStore'
 
-import AuthStorageDebug from './components/AuthStorageDebug'
-import EmailParserTester from './components/EmailParserTester'
-import SocketDebugPanel from './components/SocketDebugPanel'
-
-// Enhanced Components
-import EnhancedAIAssistant from './components/EnhancedAIAssistant'
-import FinancialTools from './components/FinancialTools'
-
-// FinSmart Upgrade: Pantalla de bienvenida
-import WelcomeScreen from './components/WelcomeScreen'
+// Paneles de debug
+import DebugAuth from './components/debug/DebugAuth'
+import DebugMSAL from './components/debug/DebugMSAL'
+import AuthDebugPanel from './components/debug/AuthDebugPanel'
+import AuthStorageDebug from './components/debug/AuthStorageDebug'
+import EmailParserTester from './components/debug/EmailParserTester'
+import SocketDebugPanel from './components/debug/SocketDebugPanel'
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
