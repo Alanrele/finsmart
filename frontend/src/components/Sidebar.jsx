@@ -44,15 +44,15 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700">
+    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800">
       {/* Logo */}
       <div className="p-6">
         <Link to="/dashboard" className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-dark-primary to-dark-accent rounded-lg flex items-center justify-center">
-            <span className="text-dark-bg font-bold text-sm">F</span>
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">F</span>
           </div>
           {!isCollapsed && (
-            <span className="text-xl font-bold text-gradient">FinSmart</span>
+            <span className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">FinSmart</span>
           )}
         </Link>
       </div>
@@ -69,22 +69,22 @@ const Sidebar = () => {
                 <Link
                   to={item.href}
                   className={`
-                    relative flex items-center px-3 py-3 rounded-lg transition-all duration-200
+                    relative flex items-center px-3 py-3 min-h-[44px] rounded-xl transition
                     ${isActive
-                      ? 'bg-gradient-to-r from-dark-primary to-dark-accent text-dark-bg shadow-lg'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                      ? 'bg-primary text-white shadow-lg shadow-primary/15'
+                      : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                     }
                   `}
                 >
                   <Icon className="w-5 h-5" />
                   {!isCollapsed && (
-                    <span className="ml-3 font-medium">{item.name}</span>
+                    <span className="ml-3 font-bold text-sm">{item.name}</span>
                   )}
 
                   {isActive && (
                     <motion.div
                       layoutId="sidebar-active"
-                      className="absolute inset-0 bg-gradient-to-r from-dark-primary to-dark-accent rounded-lg -z-10"
+                      className="absolute inset-0 bg-primary rounded-xl -z-10"
                       initial={false}
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
@@ -97,15 +97,15 @@ const Sidebar = () => {
       </nav>
 
       {/* User section */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center px-3 py-2 mb-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="w-full flex items-center px-3 py-2 mb-3 text-zinc-500 dark:text-zinc-400 hover:text-primary hover:bg-primary/10 rounded-xl transition"
         >
           {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           {!isCollapsed && (
-            <span className="ml-3 font-medium">
+            <span className="ml-3 font-bold text-sm">
               {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
             </span>
           )}
@@ -113,15 +113,15 @@ const Sidebar = () => {
 
         {/* User profile */}
         <div className="flex items-center space-x-3 mb-3">
-          <div className="w-8 h-8 bg-dark-primary rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-dark-bg" />
+          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+            <User className="w-4 h-4 text-primary dark:text-primary-300" />
           </div>
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 truncate">
                 {user?.firstName} {user?.lastName}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
                 {user?.email}
               </p>
             </div>
@@ -131,11 +131,11 @@ const Sidebar = () => {
         {/* Logout button */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+          className="w-full flex items-center px-3 py-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition"
         >
           <LogOut className="w-5 h-5" />
           {!isCollapsed && (
-            <span className="ml-3 font-medium">Cerrar Sesión</span>
+            <span className="ml-3 font-bold text-sm">Cerrar Sesión</span>
           )}
         </button>
       </div>

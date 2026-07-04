@@ -68,10 +68,10 @@ const Settings = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
           Configuración
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
           Personaliza tu experiencia en FinSmart
         </p>
       </div>
@@ -86,14 +86,14 @@ const Settings = () => {
           <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
             <User className="w-5 h-5 text-blue-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Perfil de Usuario
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Nombre
             </label>
             <input
@@ -105,7 +105,7 @@ const Settings = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Apellido
             </label>
             <input
@@ -117,11 +117,11 @@ const Settings = () => {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Correo Electrónico
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
               <input
                 type="email"
                 value={user?.email || ''}
@@ -150,7 +150,7 @@ const Settings = () => {
           <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
             <Shield className="w-5 h-5 text-purple-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Preferencias de la App
           </h2>
         </div>
@@ -160,15 +160,15 @@ const Settings = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {preferences.theme === 'dark' ? (
-                <Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <Moon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
               ) : (
-                <Sun className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <Sun className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
               )}
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
+                <h4 className="font-medium text-zinc-900 dark:text-white">
                   Tema de la Aplicación
                 </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   Elige entre modo claro u oscuro
                 </p>
               </div>
@@ -189,10 +189,10 @@ const Settings = () => {
           {/* Currency */}
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">
+              <h4 className="font-medium text-zinc-900 dark:text-white">
                 Moneda
               </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Moneda para mostrar tus transacciones
               </p>
             </div>
@@ -212,14 +212,14 @@ const Settings = () => {
 
           {/* Notifications */}
           <div>
-            <h4 className="font-medium text-gray-900 dark:text-white mb-3">
+            <h4 className="font-medium text-zinc-900 dark:text-white mb-3">
               Notificaciones
             </h4>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Mail className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <Mail className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                  <span className="text-sm text-zinc-700 dark:text-zinc-300">
                     Notificaciones por email
                   </span>
                 </div>
@@ -233,14 +233,14 @@ const Settings = () => {
                       email: e.target.checked
                     }
                   })}
-                  className="rounded text-dark-primary focus:ring-dark-primary"
+                  className="rounded text-primary focus:ring-primary/40"
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Bell className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                  <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                  <span className="text-sm text-zinc-700 dark:text-zinc-300">
                     Notificaciones push
                   </span>
                 </div>
@@ -254,13 +254,13 @@ const Settings = () => {
                       push: e.target.checked
                     }
                   })}
-                  className="rounded text-dark-primary focus:ring-dark-primary"
+                  className="rounded text-primary focus:ring-primary/40"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
             <button
               onClick={handleSavePreferences}
               disabled={loading}
@@ -283,20 +283,20 @@ const Settings = () => {
           <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
             <Shield className="w-5 h-5 text-green-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Datos y Privacidad
           </h2>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
             <div className="flex items-center space-x-3">
               <Download className="w-5 h-5 text-blue-600" />
               <div>
-                <h4 className="font-medium text-gray-900 dark:text-white">
+                <h4 className="font-medium text-zinc-900 dark:text-white">
                   Exportar mis datos
                 </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   Descarga una copia de toda tu información
                 </p>
               </div>

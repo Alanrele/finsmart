@@ -43,13 +43,13 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-gray-800 rounded-lg p-6 text-center">
+        <div className="min-h-screen bg-zinc-900 flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-zinc-800 rounded-lg p-6 text-center">
             <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-white mb-2">
               Algo salió mal
             </h2>
-            <p className="text-gray-400 mb-6">
+            <p className="text-zinc-400 mb-6">
               Ha ocurrido un error inesperado. Esto puede ser causado por una extensión del navegador.
             </p>
 
@@ -63,10 +63,10 @@ class ErrorBoundary extends React.Component {
               </button>
 
               <details className="text-left">
-                <summary className="text-sm text-gray-500 cursor-pointer hover:text-gray-400">
+                <summary className="text-sm text-zinc-500 cursor-pointer hover:text-zinc-400">
                   Detalles técnicos
                 </summary>
-                <pre className="mt-2 text-xs text-red-400 bg-gray-900 p-2 rounded overflow-auto max-h-32">
+                <pre className="mt-2 text-xs text-red-400 bg-zinc-900 p-2 rounded overflow-auto max-h-32">
                   {this.state.error && this.state.error.toString()}
                   {this.state.errorInfo && (
                     <div className="mt-2">
@@ -77,7 +77,7 @@ class ErrorBoundary extends React.Component {
               </details>
             </div>
 
-            <div className="mt-6 text-xs text-gray-500">
+            <div className="mt-6 text-xs text-zinc-500">
               <p>💡 Si el problema persiste, intenta:</p>
               <ul className="mt-1 text-left list-disc list-inside">
                 <li>Desactivar extensiones del navegador</li>

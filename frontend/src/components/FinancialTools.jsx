@@ -175,10 +175,10 @@ const FinancialTools = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
           Herramientas Financieras
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
           Calculadoras y herramientas para mejorar tu salud financiera
         </p>
       </div>
@@ -191,8 +191,8 @@ const FinancialTools = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
               activeTab === tab.id
-                ? 'bg-gradient-to-r from-[#C6A664] to-[#8B7355] text-white shadow-lg'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-[#C6A664]/20 dark:hover:bg-[#C6A664]/30'
+                ? 'bg-primary text-white shadow-lg shadow-primary/15'
+                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-primary/10 dark:hover:bg-primary/20'
             }`}
           >
             <tab.icon className="w-4 h-4" />
@@ -209,73 +209,73 @@ const FinancialTools = () => {
           className="space-y-6"
         >
           <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+            <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
               <Trophy className="w-5 h-5 mr-2 text-yellow-500" />
               Calculadora de Salud Financiera
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Ingresos Mensuales
                 </label>
                 <input
                   type="number"
                   value={healthInputs.monthlyIncome}
                   onChange={(e) => setHealthInputs({ ...healthInputs, monthlyIncome: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                   placeholder="S/ 0.00"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Gastos Mensuales
                 </label>
                 <input
                   type="number"
                   value={healthInputs.monthlyExpenses}
                   onChange={(e) => setHealthInputs({ ...healthInputs, monthlyExpenses: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                   placeholder="S/ 0.00"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Ahorros Totales
                 </label>
                 <input
                   type="number"
                   value={healthInputs.savings}
                   onChange={(e) => setHealthInputs({ ...healthInputs, savings: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                   placeholder="S/ 0.00"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Deudas Totales
                 </label>
                 <input
                   type="number"
                   value={healthInputs.debts}
                   onChange={(e) => setHealthInputs({ ...healthInputs, debts: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                   placeholder="S/ 0.00"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                   Fondo de Emergencia
                 </label>
                 <input
                   type="number"
                   value={healthInputs.emergencyFund}
                   onChange={(e) => setHealthInputs({ ...healthInputs, emergencyFund: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                   placeholder="S/ 0.00"
                 />
               </div>
@@ -292,41 +292,41 @@ const FinancialTools = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="mt-6 p-6 bg-gradient-to-br from-[#C6A664]/20 to-[#8B7355]/20 dark:from-[#C6A664]/20 dark:to-[#8B7355]/20 rounded-xl border border-[#C6A664]/30"
+                className="mt-6 p-6 bg-primary/10 rounded-xl border border-primary/20"
               >
                 <div className="text-center mb-6">
                   <div className={`inline-flex items-center justify-center w-32 h-32 rounded-full text-4xl font-bold shadow-lg ${
                     healthScore.total >= 80
                       ? 'bg-gradient-to-br from-green-500 to-green-600 text-white'
                       : healthScore.total >= 60
-                      ? 'bg-gradient-to-br from-[#C6A664] to-[#8B7355] text-white'
+                      ? 'bg-gradient-to-br from-primary to-primary-700 text-white'
                       : healthScore.total >= 40
                       ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white'
                       : 'bg-gradient-to-br from-red-500 to-red-600 text-white'
                   }`}>
                     {healthScore.total}
                   </div>
-                  <p className="mt-4 text-xl font-semibold text-gray-900 dark:text-white">
+                  <p className="mt-4 text-xl font-semibold text-zinc-900 dark:text-white">
                     {healthScore.level}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                     <p className="text-2xl font-bold text-green-600">{healthScore.savingsRate}%</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Tasa de Ahorro</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Tasa de Ahorro</p>
                   </div>
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                     <p className="text-2xl font-bold text-blue-600">{healthScore.emergencyMonths}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Meses de Emergencia</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Meses de Emergencia</p>
                   </div>
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                     <p className="text-2xl font-bold text-orange-600">{healthScore.debtRatio}%</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Ratio de Deuda</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Ratio de Deuda</p>
                   </div>
-                  <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                     <p className="text-2xl font-bold text-purple-600">{healthScore.expenseRatio}%</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Ratio de Gastos</p>
+                    <p className="text-sm text-zinc-600 dark:text-zinc-400">Ratio de Gastos</p>
                   </div>
                 </div>
               </motion.div>
@@ -342,7 +342,7 @@ const FinancialTools = () => {
           animate={{ opacity: 1, y: 0 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
             <Calculator className="w-5 h-5 mr-2 text-blue-500" />
             Seguimiento de Presupuesto
           </h3>
@@ -353,9 +353,9 @@ const FinancialTools = () => {
               const isOverBudget = percentage > 100;
 
               return (
-                <div key={index} className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div key={index} className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-zinc-900 dark:text-white">
                       {budget.name}
                     </span>
                     <span className={`font-semibold ${
@@ -365,7 +365,7 @@ const FinancialTools = () => {
                     </span>
                   </div>
 
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
+                  <div className="w-full bg-zinc-200 dark:bg-zinc-600 rounded-full h-3">
                     <div
                       className={`h-3 rounded-full transition-all ${
                         isOverBudget ? 'bg-red-500' : 'bg-green-500'
@@ -375,7 +375,7 @@ const FinancialTools = () => {
                   </div>
 
                   <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
+                    <span className="text-zinc-600 dark:text-zinc-400">
                       {percentage.toFixed(1)}% usado
                     </span>
                     {isOverBudget && (
@@ -399,47 +399,47 @@ const FinancialTools = () => {
           animate={{ opacity: 1, y: 0 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
             <PiggyBank className="w-5 h-5 mr-2 text-pink-500" />
             Metas de Ahorro
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Meta de Ahorro
               </label>
               <input
                 type="number"
                 value={savingsGoal.target}
                 onChange={(e) => setSavingsGoal({ ...savingsGoal, target: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                 placeholder="S/ 0.00"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Ahorro Actual
               </label>
               <input
                 type="number"
                 value={savingsGoal.current}
                 onChange={(e) => setSavingsGoal({ ...savingsGoal, current: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                 placeholder="S/ 0.00"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Contribución Mensual
               </label>
               <input
                 type="number"
                 value={savingsGoal.monthlyContribution}
                 onChange={(e) => setSavingsGoal({ ...savingsGoal, monthlyContribution: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                 placeholder="S/ 0.00"
               />
             </div>
@@ -451,14 +451,14 @@ const FinancialTools = () => {
               <div className="p-6 bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-xl">
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                       Progreso
                     </span>
                     <span className="text-sm font-bold text-pink-600">
                       {progress.percentage}%
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                  <div className="w-full bg-zinc-200 dark:bg-zinc-600 rounded-full h-4">
                     <div
                       className="bg-gradient-to-r from-pink-500 to-purple-500 h-4 rounded-full transition-all"
                       style={{ width: `${Math.min(progress.percentage, 100)}%` }}
@@ -467,22 +467,22 @@ const FinancialTools = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                  <div className="text-center p-3 bg-white dark:bg-zinc-800 rounded-lg">
                     <p className="text-xl font-bold text-pink-600">
                       {formatCurrency(progress.remaining)}
                     </p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Falta</p>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400">Falta</p>
                   </div>
                   {progress.monthsNeeded > 0 && (
                     <>
-                      <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
+                      <div className="text-center p-3 bg-white dark:bg-zinc-800 rounded-lg">
                         <p className="text-xl font-bold text-purple-600">
                           {progress.monthsNeeded}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">Meses</p>
+                        <p className="text-xs text-zinc-600 dark:text-zinc-400">Meses</p>
                       </div>
-                      <div className="col-span-2 text-center p-3 bg-white dark:bg-gray-800 rounded-lg">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="col-span-2 text-center p-3 bg-white dark:bg-zinc-800 rounded-lg">
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
                           Fecha estimada de logro:
                         </p>
                         <p className="text-lg font-bold text-blue-600">
@@ -505,27 +505,27 @@ const FinancialTools = () => {
           animate={{ opacity: 1, y: 0 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
             <DollarSign className="w-5 h-5 mr-2 text-green-500" />
             Calculadora de Pago de Deudas
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Monto de la Deuda
               </label>
               <input
                 type="number"
                 value={debtInputs.principal}
                 onChange={(e) => setDebtInputs({ ...debtInputs, principal: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                 placeholder="S/ 0.00"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Tasa de Interés Anual (%)
               </label>
               <input
@@ -533,20 +533,20 @@ const FinancialTools = () => {
                 step="0.1"
                 value={debtInputs.interestRate}
                 onChange={(e) => setDebtInputs({ ...debtInputs, interestRate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                 placeholder="0.00"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
                 Pago Mensual
               </label>
               <input
                 type="number"
                 value={debtInputs.monthlyPayment}
                 onChange={(e) => setDebtInputs({ ...debtInputs, monthlyPayment: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary/40 dark:bg-zinc-700 dark:text-white"
                 placeholder="S/ 0.00"
               />
             </div>
@@ -566,25 +566,25 @@ const FinancialTools = () => {
               className="p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl"
             >
               <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                   <p className="text-3xl font-bold text-green-600">{debtResults.months}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Meses para pagar</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Meses para pagar</p>
                 </div>
-                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                   <p className="text-3xl font-bold text-blue-600">{debtResults.years}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Años</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Años</p>
                 </div>
-                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                   <p className="text-xl font-bold text-orange-600">
                     {formatCurrency(debtResults.totalInterest)}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Interés Total</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Interés Total</p>
                 </div>
-                <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg">
+                <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
                   <p className="text-xl font-bold text-purple-600">
                     {formatCurrency(debtResults.totalPaid)}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total a Pagar</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">Total a Pagar</p>
                 </div>
               </div>
 

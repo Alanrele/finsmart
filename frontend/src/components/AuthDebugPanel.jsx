@@ -50,7 +50,7 @@ const AuthDebugPanel = () => {
         <h3 className="font-bold text-sm">Auth Debug Panel</h3>
         <button
           onClick={() => setIsVisible(false)}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-zinc-500 hover:text-zinc-700"
         >
           ✕
         </button>
@@ -95,8 +95,8 @@ const AuthDebugPanel = () => {
           <strong>Recent Logs:</strong>
           <div className="max-h-32 overflow-y-auto">
             {logs.slice(-5).map((log, index) => (
-              <div key={index} className="text-xs text-gray-600">
-                <span className="text-gray-400">{log.timestamp.split('T')[1].split('.')[0]}</span>
+              <div key={index} className="text-xs text-zinc-600">
+                <span className="text-zinc-400">{log.timestamp.split('T')[1].split('.')[0]}</span>
                 {' - '}
                 {log.message}
               </div>

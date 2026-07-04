@@ -63,7 +63,7 @@ const ProtectedRoute = ({ children }) => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-gray-600">Verificando autenticación...</p>
+          <p className="mt-2 text-zinc-600">Verificando autenticación...</p>
         </div>
       </div>
     );
@@ -195,7 +195,7 @@ function App() {
   }, [isAuthenticated, user, token, initializeTheme, addNotification])
 
   return (
-    <div className="App min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+    <div className="App min-h-screen bg-page dark:bg-page-dark text-zinc-900 dark:text-zinc-50">
 
       {/* Debug panels - only render when debug mode enabled */}
       {debugEnabled && <DebugAuth />}
@@ -276,20 +276,20 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: 'var(--color-fondo)',
-            color: 'var(--color-texto)',
-            border: '1px solid var(--color-principal)',
+            background: 'var(--color-surface)',
+            color: 'var(--color-text)',
+            border: '1px solid var(--color-border)',
           },
           success: {
             iconTheme: {
-              primary: 'var(--color-detalle)',
-              secondary: 'var(--color-fondo)',
+              primary: 'var(--color-sage)',
+              secondary: 'var(--color-surface)',
             },
           },
           error: {
             iconTheme: {
               primary: '#ef4444',
-              secondary: 'var(--color-fondo)',
+              secondary: 'var(--color-surface)',
             },
           },
         }}

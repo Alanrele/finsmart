@@ -8,25 +8,62 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Modo oscuro
-        dark: {
-          bg: '#0D0D0D',
-          primary: '#C6A664',
-          secondary: '#F5F5F5',
-          accent: '#D4AF37',
-          text: '#FFFFFF',
+        // Paleta oficial (DOC/GUIA_DE_ESTILO.md) — única fuente de color de marca
+        // Azul petróleo / teal: elementos primarios y CTA (AA sobre blanco)
+        primary: {
+          50: '#EEF4F5',
+          100: '#DCE8EA',
+          200: '#B7D0D4',
+          300: '#8FB4BA',
+          400: '#63929B',
+          500: '#3F7079',
+          600: '#355F67',
+          700: '#2B4D54',
+          800: '#213B40',
+          900: '#16282C',
+          DEFAULT: '#3F7079',
         },
-        // Modo claro
-        light: {
-          bg: '#F0EFED',
-          primary: '#D1C9B8',
-          secondary: '#5C5C5C',
-          accent: '#C8A55A',
-          text: '#2E2E2E',
-        }
+        // Beige claro / arena: superficies suaves y fondos teñidos
+        sand: {
+          50: '#FAF8F2',
+          100: '#F2EFE4',
+          200: '#E5DFCC',
+          300: '#D4CBB0',
+          400: '#C4B894',
+          500: '#B3A67B',
+          DEFAULT: '#D4CBB0',
+        },
+        // Taupe / beige oscuro: texto secundario con tinte, bordes cálidos
+        taupe: {
+          100: '#EDEBE3',
+          200: '#DBD7C8',
+          300: '#C2BBA5',
+          400: '#A79E82',
+          500: '#8C8368',
+          600: '#706953',
+          700: '#554F3F',
+          DEFAULT: '#A79E82',
+        },
+        // Verde salvia: éxito, positivo, acentos suaves
+        sage: {
+          50: '#F1F6F3',
+          100: '#E3EDE8',
+          200: '#C8DBD1',
+          300: '#A6C0B4',
+          400: '#84A595',
+          500: '#658876',
+          600: '#4F6C5E',
+          700: '#3D5348',
+          DEFAULT: '#A6C0B4',
+        },
+        // Fondo de página según la guía (claro/oscuro)
+        page: {
+          DEFAULT: '#F2F2F7',
+          dark: '#09090C',
+        },
       },
       fontFamily: {
-        sans: ['Inter', 'Poppins', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

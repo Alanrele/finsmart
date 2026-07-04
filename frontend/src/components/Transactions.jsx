@@ -142,10 +142,10 @@ const Transactions = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
           Transacciones
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
           Historial completo de tus movimientos financieros
         </p>
       </div>
@@ -158,11 +158,11 @@ const Transactions = () => {
       >
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Buscar
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
               <input
                 type="text"
                 value={filters.search}
@@ -174,7 +174,7 @@ const Transactions = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Categoría
             </label>
             <select
@@ -192,7 +192,7 @@ const Transactions = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Tipo
             </label>
             <select
@@ -210,7 +210,7 @@ const Transactions = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Fecha inicio
             </label>
             <input
@@ -222,7 +222,7 @@ const Transactions = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Fecha fin
             </label>
             <input
@@ -245,8 +245,8 @@ const Transactions = () => {
         <div className="space-y-3">
           {!transactions || transactions.length === 0 ? (
             <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">
+              <Calendar className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
+              <p className="text-zinc-500 dark:text-zinc-400">
                 No se encontraron transacciones con los filtros aplicados
               </p>
             </div>
@@ -258,7 +258,7 @@ const Transactions = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
                 onClick={() => handleTransactionClick(transaction)}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
+                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-600 transition-colors cursor-pointer"
               >
                 <div className="flex items-center space-x-4 flex-1 min-w-0">
                   <div className={`p-2 rounded-lg ${
@@ -274,10 +274,10 @@ const Transactions = () => {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate text-base md:text-[1rem]">
+                    <p className="font-medium text-zinc-900 dark:text-white truncate text-base md:text-[1rem]">
                       {transaction.description || transaction.merchant || 'Transacción'}
                     </p>
-                    <div className="flex items-center space-x-3 text-sm md:text-[0.9rem] text-gray-500 dark:text-gray-400 flex-wrap">
+                    <div className="flex items-center space-x-3 text-sm md:text-[0.9rem] text-zinc-500 dark:text-zinc-400 flex-wrap">
                       <span>{new Date(transaction.date).toLocaleDateString()}</span>
                       <span className="capitalize">{translateCategory(transaction.category)}</span>
                       <span className="capitalize">{transaction.channel}</span>
@@ -302,7 +302,7 @@ const Transactions = () => {
                     }
                   </p>
                   {transaction.balance != null && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
                       Saldo: {formatCurrency(transaction.balance)}
                     </p>
                   )}
@@ -321,7 +321,7 @@ const Transactions = () => {
           transition={{ delay: 0.3 }}
           className="flex items-center justify-between"
         >
-          <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="text-sm text-zinc-500 dark:text-zinc-400">
             Mostrando {transactions.length} de {pagination.totalCount} transacciones
           </div>
 
@@ -341,7 +341,7 @@ const Transactions = () => {
                 <>
                   <button
                     onClick={() => handlePageChange(1)}
-                    className="px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="px-3 py-2 text-sm rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700"
                   >
                     1
                   </button>
@@ -368,7 +368,7 @@ const Transactions = () => {
                       key={p}
                       onClick={() => handlePageChange(p)}
                       className={`px-3 py-2 text-sm rounded-lg ${
-                        p === current ? 'bg-blue-600 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                        p === current ? 'bg-blue-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'
                       }`}
                     >
                       {p}
@@ -384,7 +384,7 @@ const Transactions = () => {
                   {pagination.currentPage < pagination.totalPages - 3 && <span className="px-2">...</span>}
                   <button
                     onClick={() => handlePageChange(pagination.totalPages)}
-                    className="px-3 py-2 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                    className="px-3 py-2 text-sm rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700"
                   >
                     {pagination.totalPages}
                   </button>

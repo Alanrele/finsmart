@@ -4,8 +4,8 @@
   "description": "Análisis financiero inteligente con integración BCP",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0D0D0D",
-  "theme_color": "#C6A664",
+  "background_color": "#F2F2F7",
+  "theme_color": "#3F7079",
   "orientation": "portrait",
   "icons": [
     {

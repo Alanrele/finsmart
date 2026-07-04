@@ -49,9 +49,9 @@ const NotificationPanel = () => {
       {/* Notification Bell (Mobile) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 lg:hidden bg-white dark:bg-gray-800 p-3 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 z-40 safe-area-bottom"
+        className="fixed bottom-20 right-4 lg:hidden bg-white dark:bg-zinc-800 p-3 rounded-full shadow-lg border border-zinc-200 dark:border-zinc-700 z-40 safe-area-bottom"
       >
-        <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+        <Bell className="w-5 h-5 text-zinc-600 dark:text-zinc-300" />
         {notifications && notifications.length > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
             {notifications.length}
@@ -76,21 +76,21 @@ const NotificationPanel = () => {
                   {getIcon(notification.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <h4 className="text-sm font-semibold text-zinc-900 dark:text-white">
                     {notification.title}
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                  <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-1">
                     {notification.message}
                   </p>
                   {notification.timestamp && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                       {new Date(notification.timestamp).toLocaleTimeString()}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={() => removeNotification(notification.id)}
-                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className="flex-shrink-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -116,25 +116,25 @@ const NotificationPanel = () => {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.3 }}
-              className="fixed top-0 right-0 w-full max-w-sm h-full bg-white dark:bg-gray-900 z-50 lg:hidden overflow-y-auto"
+              className="fixed top-0 right-0 w-full max-w-sm h-full bg-white dark:bg-zinc-900 z-50 lg:hidden overflow-y-auto"
             >
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-700">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
                     Notificaciones
                   </h2>
                   <div className="flex items-center space-x-2">
                     {notifications && notifications.length > 0 && (
                       <button
                         onClick={clearNotifications}
-                        className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                        className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
                       >
                         Limpiar todo
                       </button>
                     )}
                     <button
                       onClick={() => setIsOpen(false)}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                     >
                       <X className="w-6 h-6" />
                     </button>
@@ -145,8 +145,8 @@ const NotificationPanel = () => {
               <div className="p-4">
                 {!notifications || notifications.length === 0 ? (
                   <div className="text-center py-8">
-                    <Bell className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400">
+                    <Bell className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
+                    <p className="text-zinc-500 dark:text-zinc-400">
                       No tienes notificaciones
                     </p>
                   </div>
@@ -164,21 +164,21 @@ const NotificationPanel = () => {
                             {getIcon(notification.type)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <h4 className="text-sm font-semibold text-zinc-900 dark:text-white">
                               {notification.title}
                             </h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                            <p className="text-sm text-zinc-600 dark:text-zinc-300 mt-1">
                               {notification.message}
                             </p>
                             {notification.timestamp && (
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
                                 {new Date(notification.timestamp).toLocaleString()}
                               </p>
                             )}
                           </div>
                           <button
                             onClick={() => removeNotification(notification.id)}
-                            className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            className="flex-shrink-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                           >
                             <X className="w-4 h-4" />
                           </button>

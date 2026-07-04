@@ -45,14 +45,15 @@ import {
   MonthOverMonthComparison
 } from './EnhancedCharts';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+// Paleta oficial centralizada (misma fuente que tailwind.config.js — DOC/GUIA_DE_ESTILO.md)
+const COLORS = ['#3F7079', '#A6C0B4', '#A79E82', '#D4CBB0', '#63929B', '#658876'];
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-2 rounded shadow-lg">
-        <p className="text-sm font-medium text-gray-900">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
-        <p className="text-xs text-gray-500">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
+        <p className="text-sm font-medium text-zinc-900">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
+        <p className="text-xs text-zinc-500">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
       </div>
     );
   }
@@ -73,7 +74,7 @@ class ChartErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
-      return <div className="text-sm text-gray-500 dark:text-gray-400">No se pudo renderizar el gráfico.</div>
+      return <div className="text-sm text-zinc-500 dark:text-zinc-400">No se pudo renderizar el gráfico.</div>
     }
     return this.props.children
   }
@@ -248,10 +249,10 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
             Panel Financiero
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
             Resumen completo de tus finanzas personales
           </p>
         </div>
@@ -296,10 +297,10 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                 Gasto Total
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-zinc-900 dark:text-white">
                 {formatCurrency(summary?.totalSpending || 0)}
               </p>
               <div className="flex items-center mt-2">
@@ -330,10 +331,10 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                 Ingresos Totales
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-zinc-900 dark:text-white">
                 {formatCurrency(summary?.totalIncome || 0)}
               </p>
               <div className="flex items-center mt-2">
@@ -358,7 +359,7 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                 Balance Actual
               </p>
               <p className={`text-2xl font-bold ${
@@ -367,8 +368,8 @@ const Dashboard = () => {
                 {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrency(Math.abs(summary?.balance || 0))}
               </p>
               <div className="flex items-center mt-2">
-                <Target className="w-4 h-4 text-gray-500" />
-                <span className="text-sm text-gray-500 ml-1">
+                <Target className="w-4 h-4 text-zinc-500" />
+                <span className="text-sm text-zinc-500 ml-1">
                   Este mes
                 </span>
               </div>
@@ -394,10 +395,10 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
                 Total de Transacciones
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-2xl font-bold text-zinc-900 dark:text-white">
                 {summary?.transactionCount || 0}
               </p>
               <div className="flex items-center mt-2">
@@ -430,10 +431,10 @@ const Dashboard = () => {
             />
           ) : (
             <>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
                 Gastos por Categoría
               </h3>
-              <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="flex items-center justify-center h-64 text-zinc-500">
                 No hay datos de categorías disponibles
               </div>
             </>
@@ -447,7 +448,7 @@ const Dashboard = () => {
           transition={{ delay: 0.5 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
             Transacciones Recientes
           </h3>
           <div className="space-y-3">
@@ -458,13 +459,13 @@ const Dashboard = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 * index }}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                    <p className="font-medium text-zinc-900 dark:text-white truncate">
                       {transaction.description || transaction.merchant || 'Transacción'}
                     </p>
-                    <div className="flex items-center space-x-3 text-sm text-gray-500 dark:text-gray-400 flex-wrap">
+                    <div className="flex items-center space-x-3 text-sm text-zinc-500 dark:text-zinc-400 flex-wrap">
                       <span>{new Date(transaction.date).toLocaleDateString()}</span>
                       {transaction.category && (
                         <span className="capitalize">{translateCategory(transaction.category)}</span>
@@ -487,7 +488,7 @@ const Dashboard = () => {
                       }
                     </p>
                     {transaction.category && (
-                      <p className="text-xs text-gray-500 capitalize">
+                      <p className="text-xs text-zinc-500 capitalize">
                         {translateCategory(transaction.category)}
                       </p>
                     )}
@@ -495,7 +496,7 @@ const Dashboard = () => {
                 </motion.div>
               ))
             ) : (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-zinc-500 py-8">
                 No hay transacciones recientes
               </div>
             )}
@@ -511,7 +512,7 @@ const Dashboard = () => {
           transition={{ delay: 0.6 }}
           className="card"
         >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
             Tendencia de Gastos (Últimos 7 días)
           </h3>
           <ChartErrorBoundary>
@@ -525,9 +526,9 @@ const Dashboard = () => {
                   isAnimationActive={false}
                   type="monotone"
                   dataKey="amount"
-                  stroke="#C6A664"
+                  stroke="#3F7079"
                   strokeWidth={3}
-                  dot={{ fill: '#C6A664', strokeWidth: 2, r: 4 }}
+                  dot={{ fill: '#3F7079', strokeWidth: 2, r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>

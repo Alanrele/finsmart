@@ -152,7 +152,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
         onClick={onClose}
       >
         <motion.div
-          className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden"
+          className="relative w-full max-w-md bg-white dark:bg-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
           variants={modalVariants}
           onClick={(e) => e.stopPropagation()}
         >
@@ -179,36 +179,36 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             {mode === 'register' && (
               <>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-zinc-800 dark:text-zinc-300 mb-2">
                     Nombre
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                     <input
                       type="text"
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleInputChange}
                       required
-                      className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                       placeholder="Tu nombre"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-semibold text-zinc-800 dark:text-zinc-300 mb-2">
                     Apellido
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                     <input
                       type="text"
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleInputChange}
                       required
-                      className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                       placeholder="Tu apellido"
                     />
                   </div>
@@ -217,42 +217,42 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-zinc-800 dark:text-zinc-300 mb-2">
                 Correo Electrónico
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                   placeholder="tu@email.com"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-zinc-800 dark:text-zinc-300 mb-2">
                 Contraseña
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-12 pr-14 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full pl-12 pr-14 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -261,24 +261,24 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
 
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-semibold text-zinc-800 dark:text-zinc-300 mb-2">
                   Confirmar Contraseña
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500 dark:text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-zinc-500 dark:text-zinc-400" />
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     required
-                    className="w-full pl-12 pr-14 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="w-full pl-12 pr-14 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                   >
                     {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -290,7 +290,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             <motion.button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2"
               whileHover={{ scale: isLoading ? 1 : 1.02 }}
               whileTap={{ scale: isLoading ? 1 : 0.98 }}
             >
@@ -307,10 +307,10 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t-2 border-gray-300 dark:border-gray-600"></div>
+                <div className="w-full border-t-2 border-zinc-300 dark:border-zinc-600"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-3 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">o continúa con</span>
+                <span className="px-3 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">o continúa con</span>
               </div>
             </div>
 
@@ -319,7 +319,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
               type="button"
               onClick={handleMicrosoftLogin}
               disabled={isLoading}
-              className="w-full py-3 bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-2 border-gray-400 dark:border-gray-600 text-gray-800 dark:text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-white dark:bg-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-600 border-2 border-zinc-400 dark:border-zinc-600 text-zinc-800 dark:text-white font-semibold rounded-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center space-x-2"
               whileHover={{ scale: isLoading ? 1 : 1.02 }}
               whileTap={{ scale: isLoading ? 1 : 0.98 }}
             >
@@ -347,7 +347,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
           </form>
 
           {/* Copyright footer */}
-          <div className="px-6 py-4 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 text-center text-xs text-gray-600 dark:text-gray-400 font-medium">
+          <div className="px-6 py-4 bg-zinc-100 dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 text-center text-xs text-zinc-600 dark:text-zinc-400 font-medium">
             © 2025 Alan Reyes Leandro – Todos los derechos reservados
           </div>
         </motion.div>

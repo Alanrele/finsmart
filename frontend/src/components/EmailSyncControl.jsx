@@ -107,19 +107,19 @@ const EmailSyncControl = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+      <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+          <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3 mb-4"></div>
+          <div className="h-8 bg-zinc-200 dark:bg-zinc-700 rounded w-full"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-zinc-800 rounded-lg shadow p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
           📧 Sincronización de Correos BCP
         </h3>
         {syncStatus.syncEnabled && (
@@ -133,20 +133,20 @@ const EmailSyncControl = () => {
       {syncStatus.isDemo ? (
         <div className="text-center py-8">
           <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             {syncStatus.message}
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-zinc-500">
             Conecta tu cuenta real de Microsoft para activar la sincronización automática
           </p>
         </div>
       ) : !syncStatus.hasConnection ? (
         <div className="text-center py-8">
           <div className="text-red-500 text-4xl mb-4">🔗</div>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
             No hay conexión con Microsoft Graph
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-zinc-500">
             Conecta tu cuenta de Microsoft primero
           </p>
         </div>
@@ -155,18 +155,18 @@ const EmailSyncControl = () => {
           {/* Status Info */}
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500 dark:text-gray-400">Estado:</span>
+              <span className="text-zinc-500 dark:text-zinc-400">Estado:</span>
               <span className={`ml-2 font-medium ${
                 syncStatus.syncEnabled
                   ? 'text-green-600 dark:text-green-400'
-                  : 'text-gray-600 dark:text-gray-400'
+                  : 'text-zinc-600 dark:text-zinc-400'
               }`}>
                 {syncStatus.syncEnabled ? 'Activa' : 'Inactiva'}
               </span>
             </div>
             <div>
-              <span className="text-gray-500 dark:text-gray-400">Última sync:</span>
-              <span className="ml-2 font-medium text-gray-900 dark:text-white">
+              <span className="text-zinc-500 dark:text-zinc-400">Última sync:</span>
+              <span className="ml-2 font-medium text-zinc-900 dark:text-white">
                 {formatLastSync(syncStatus.lastSync)}
               </span>
             </div>
@@ -223,7 +223,7 @@ const EmailSyncControl = () => {
           </div>
 
           {/* Description */}
-          <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded p-3">
+          <div className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-700/50 rounded p-3">
             <p className="mb-1">
               <strong>Sincronización automática:</strong> Revisa nuevos correos de BCP cada 15 minutos
             </p>

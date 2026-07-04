@@ -54,10 +54,10 @@ const EmailParserTester = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
           Email Parser Tester
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
           Prueba la funcionalidad de parsing de emails bancarios
         </p>
       </div>
@@ -72,23 +72,23 @@ const EmailParserTester = () => {
           <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
             <FileText className="w-5 h-5 text-blue-600" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Contenido del Email
           </h2>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
               Pega aquí el HTML del email bancario
             </label>
             <textarea
               value={emailContent}
               onChange={(e) => setEmailContent(e.target.value)}
-              className="w-full h-40 p-3 border border-gray-300 dark:border-gray-600 rounded-lg
-                       bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+              className="w-full h-40 p-3 border border-zinc-300 dark:border-zinc-600 rounded-lg
+                       bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white
                        focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                       placeholder-gray-500 dark:placeholder-gray-400"
+                       placeholder-zinc-500 dark:placeholder-zinc-400"
               placeholder="Pega el contenido HTML del email aquí..."
             />
           </div>
@@ -133,12 +133,12 @@ const EmailParserTester = () => {
           {/* Parsed Data */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
                 Datos Extraídos
               </h3>
               <button
                 onClick={() => copyToClipboard(result.parsedData)}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
               >
                 <Copy className="w-4 h-4" />
                 <span>Copiar</span>
@@ -147,11 +147,11 @@ const EmailParserTester = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Object.entries(result.parsedData || {}).map(([key, value]) => (
-                <div key={key} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="font-medium text-gray-900 dark:text-white capitalize">
+                <div key={key} className="p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+                  <div className="font-medium text-zinc-900 dark:text-white capitalize">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300 mt-1">
+                  <div className="text-zinc-600 dark:text-zinc-300 mt-1">
                     {value || 'N/A'}
                   </div>
                 </div>
@@ -162,12 +162,12 @@ const EmailParserTester = () => {
           {/* Transaction Data */}
           <div className="card">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">
                 Transacción Generada
               </h3>
               <button
                 onClick={() => copyToClipboard(result.transactionData)}
-                className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                className="flex items-center space-x-1 text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
               >
                 <Copy className="w-4 h-4" />
                 <span>Copiar</span>
@@ -198,17 +198,17 @@ const EmailParserTester = () => {
                 </div>
               </div>
 
-              <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <div className="font-medium text-gray-900 dark:text-white mb-2">Descripción</div>
-                <div className="text-gray-600 dark:text-gray-300">
+              <div className="p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+                <div className="font-medium text-zinc-900 dark:text-white mb-2">Descripción</div>
+                <div className="text-zinc-600 dark:text-zinc-300">
                   {result.transactionData?.description}
                 </div>
               </div>
 
               {result.transactionData?.metadata && (
-                <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="font-medium text-gray-900 dark:text-white mb-2">Metadatos</div>
-                  <pre className="text-xs text-gray-600 dark:text-gray-300 overflow-x-auto">
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+                  <div className="font-medium text-zinc-900 dark:text-white mb-2">Metadatos</div>
+                  <pre className="text-xs text-zinc-600 dark:text-zinc-300 overflow-x-auto">
                     {JSON.stringify(result.transactionData.metadata, null, 2)}
                   </pre>
                 </div>

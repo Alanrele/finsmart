@@ -104,7 +104,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
         </div>
         <button
           onClick={() => setIsVisible(false)}
-          className="text-gray-500 hover:text-gray-700 text-sm"
+          className="text-zinc-500 hover:text-zinc-700 text-sm"
         >
           ✕
         </button>
@@ -178,7 +178,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
           </div>
         )}
 
-        <div className="text-xs text-gray-500 mt-2">
+        <div className="text-xs text-zinc-500 mt-2">
           Última verificación: {new Date().toLocaleTimeString()}
         </div>
       </div>

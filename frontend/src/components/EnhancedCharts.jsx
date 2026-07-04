@@ -26,7 +26,28 @@ import {
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 
-const COLORS = ['#C6A664', '#8B7355', '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
+// Paleta oficial centralizada (misma fuente que tailwind.config.js — DOC/GUIA_DE_ESTILO.md)
+const PALETTE = {
+  primary: '#3F7079',      // azul petróleo — primario / balance
+  primaryLight: '#63929B',
+  primaryDark: '#2B4D54',
+  sage: '#A6C0B4',         // verde salvia — ingresos / positivo
+  sageDark: '#658876',
+  taupe: '#A79E82',        // taupe — gastos / secundario
+  taupeDark: '#8C8368',
+  sand: '#D4CBB0',         // arena — superficies / series suaves
+};
+
+const COLORS = [
+  PALETTE.primary,
+  PALETTE.sage,
+  PALETTE.taupe,
+  PALETTE.sand,
+  PALETTE.primaryLight,
+  PALETTE.sageDark,
+  PALETTE.taupeDark,
+  PALETTE.primaryDark,
+];
 
 // Error Boundary para charts
 class ChartErrorBoundary extends React.Component {
@@ -43,7 +64,7 @@ class ChartErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-zinc-500">
           No se pudo renderizar el gráfico
         </div>
       );
@@ -56,15 +77,15 @@ class ChartErrorBoundary extends React.Component {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
-        <p className="font-semibold text-gray-900 dark:text-white mb-2">{label}</p>
+      <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700">
+        <p className="font-semibold text-zinc-900 dark:text-white mb-2">{label}</p>
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center space-x-2">
             <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm text-gray-700 dark:text-gray-300">
+            <span className="text-sm text-zinc-700 dark:text-zinc-300">
               {entry.name}: {formatCurrency(entry.value)}
             </span>
           </div>
@@ -103,7 +124,7 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
   return (
     <div ref={chartRef} className="relative">
       {title && (
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">{title}</h3>
       )}
       <ChartErrorBoundary>
         <ResponsiveContainer width="100%" height={350}>
@@ -172,7 +193,7 @@ export const EnhancedBarChart = ({ data, title, dataKey = 'value' }) => {
     <div ref={chartRef} className="relative">
       {title && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
         </div>
       )}
       <ChartErrorBoundary>
@@ -180,8 +201,8 @@ export const EnhancedBarChart = ({ data, title, dataKey = 'value' }) => {
           <BarChart data={data}>
             <defs>
               <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C6A664" stopOpacity={1} />
-                <stop offset="100%" stopColor="#8B7355" stopOpacity={0.8} />
+                <stop offset="0%" stopColor={PALETTE.primary} stopOpacity={1} />
+                <stop offset="100%" stopColor={PALETTE.primaryDark} stopOpacity={0.8} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
@@ -218,7 +239,7 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
     <div ref={chartRef} className="relative">
       {title && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
         </div>
       )}
       <ChartErrorBoundary>
@@ -226,12 +247,12 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
           <ComposedChart data={data}>
             <defs>
               <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#00C49F" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#00C49F" stopOpacity={0.1} />
+                <stop offset="5%" stopColor={PALETTE.sageDark} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={PALETTE.sageDark} stopOpacity={0.1} />
               </linearGradient>
               <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#FF8042" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#FF8042" stopOpacity={0.1} />
+                <stop offset="5%" stopColor={PALETTE.taupe} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={PALETTE.taupe} stopOpacity={0.1} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
@@ -242,7 +263,7 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
             <Area
               type="monotone"
               dataKey="income"
-              stroke="#00C49F"
+              stroke={PALETTE.sageDark}
               fillOpacity={1}
               fill="url(#incomeGradient)"
               name="Ingresos"
@@ -251,7 +272,7 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
             <Area
               type="monotone"
               dataKey="expense"
-              stroke="#FF8042"
+              stroke={PALETTE.taupe}
               fillOpacity={1}
               fill="url(#expenseGradient)"
               name="Gastos"
@@ -260,11 +281,11 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
             <Line
               type="monotone"
               dataKey="balance"
-              stroke="#C6A664"
+              stroke={PALETTE.primary}
               strokeWidth={3}
               name="Balance"
               isAnimationActive={false}
-              dot={{ fill: '#C6A664', r: 5 }}
+              dot={{ fill: PALETTE.primary, r: 5 }}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -278,15 +299,15 @@ export const FinancialHealthRadar = ({ data, title }) => {
   return (
     <div className="relative">
       {title && (
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">{title}</h3>
       )}
       <ChartErrorBoundary>
         <ResponsiveContainer width="100%" height={350}>
           <RadarChart data={data}>
             <defs>
               <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C6A664" stopOpacity={0.8} />
-                <stop offset="100%" stopColor="#8B7355" stopOpacity={0.3} />
+                <stop offset="0%" stopColor={PALETTE.primary} stopOpacity={0.8} />
+                <stop offset="100%" stopColor={PALETTE.sage} stopOpacity={0.3} />
               </linearGradient>
             </defs>
             <PolarGrid stroke="#e0e0e0" />
@@ -295,7 +316,7 @@ export const FinancialHealthRadar = ({ data, title }) => {
             <Radar
               name="Salud Financiera"
               dataKey="score"
-              stroke="#C6A664"
+              stroke={PALETTE.primary}
               fill="url(#radarGradient)"
               fillOpacity={0.6}
               isAnimationActive={false}
@@ -332,7 +353,7 @@ export const MonthOverMonthComparison = ({ currentMonth, previousMonth, title })
     <div className="relative">
       {title && (
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
           <div className="flex items-center space-x-2 mt-2">
             {isIncrease ? (
               <TrendingUp className="w-5 h-5 text-red-500" />
@@ -350,12 +371,12 @@ export const MonthOverMonthComparison = ({ currentMonth, previousMonth, title })
           <BarChart data={comparisonData}>
             <defs>
               <linearGradient id="gastosGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#FF8042" stopOpacity={1} />
-                <stop offset="100%" stopColor="#FF8042" stopOpacity={0.7} />
+                <stop offset="0%" stopColor={PALETTE.taupe} stopOpacity={1} />
+                <stop offset="100%" stopColor={PALETTE.taupe} stopOpacity={0.7} />
               </linearGradient>
               <linearGradient id="ingresosGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#00C49F" stopOpacity={1} />
-                <stop offset="100%" stopColor="#00C49F" stopOpacity={0.7} />
+                <stop offset="0%" stopColor={PALETTE.sageDark} stopOpacity={1} />
+                <stop offset="100%" stopColor={PALETTE.sageDark} stopOpacity={0.7} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />

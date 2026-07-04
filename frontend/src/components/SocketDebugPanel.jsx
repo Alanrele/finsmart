@@ -98,12 +98,12 @@ const SocketDebugPanel = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto">
+    <div className="fixed bottom-4 right-4 z-50 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded-lg shadow-xl p-4 w-80 max-h-96 overflow-y-auto">
       <div className="flex justify-between items-center mb-3">
-        <h3 className="font-semibold text-gray-800 dark:text-gray-200">Socket.io Debug</h3>
+        <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">Socket.io Debug</h3>
         <button
           onClick={() => setIsVisible(false)}
-          className="text-gray-500 hover:text-gray-700"
+          className="text-zinc-500 hover:text-zinc-700"
         >
           ✕
         </button>
@@ -112,7 +112,7 @@ const SocketDebugPanel = () => {
       <div className="space-y-3">
         {/* Status */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Status:</span>
+          <span className="text-sm text-zinc-600 dark:text-zinc-400">Status:</span>
           <span className={`text-sm font-medium ${
             socketStatus === 'connected' ? 'text-green-600' :
             socketStatus === 'disconnected' ? 'text-red-600' :
@@ -124,13 +124,13 @@ const SocketDebugPanel = () => {
 
         {/* Transport */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Transport:</span>
+          <span className="text-sm text-zinc-600 dark:text-zinc-400">Transport:</span>
           <span className="text-sm font-medium text-blue-600">{transportType}</span>
         </div>
 
         {/* Auth Status */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Auth:</span>
+          <span className="text-sm text-zinc-600 dark:text-zinc-400">Auth:</span>
           <span className={`text-sm font-medium ${isAuthenticated ? 'text-green-600' : 'text-red-600'}`}>
             {isAuthenticated ? 'Yes' : 'No'}
           </span>
@@ -155,18 +155,18 @@ const SocketDebugPanel = () => {
 
         {/* Logs */}
         <div className="border-t pt-2">
-          <div className="text-xs text-gray-500 mb-1">Connection Logs:</div>
+          <div className="text-xs text-zinc-500 mb-1">Connection Logs:</div>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {connectionLogs.length === 0 ? (
-              <div className="text-xs text-gray-400">No logs yet...</div>
+              <div className="text-xs text-zinc-400">No logs yet...</div>
             ) : (
               connectionLogs.map((log, index) => (
                 <div key={index} className={`text-xs ${
                   log.type === 'success' ? 'text-green-600' :
                   log.type === 'error' ? 'text-red-600' :
-                  'text-gray-600'
+                  'text-zinc-600'
                 }`}>
-                  <span className="text-gray-400">{log.timestamp}</span> {log.message}
+                  <span className="text-zinc-400">{log.timestamp}</span> {log.message}
                 </div>
               ))
             )}

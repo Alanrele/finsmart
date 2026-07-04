@@ -221,10 +221,10 @@ const OutlookConnect = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
           Conexión con Outlook
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
           Conecta tu cuenta de Microsoft Outlook para analizar correos del BCP
         </p>
       </div>
@@ -236,7 +236,7 @@ const OutlookConnect = () => {
         className="card"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Estado de Conexión
           </h2>
           <div className="flex items-center space-x-2">
@@ -254,28 +254,28 @@ const OutlookConnect = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <Mail className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Microsoft Graph
               </span>
             </div>
             <p className={`text-lg font-bold ${
-              isGraphConnected ? 'text-green-600' : 'text-gray-500'
+              isGraphConnected ? 'text-green-600' : 'text-zinc-500'
             }`}>
               {isGraphConnected ? 'Activo' : 'Inactivo'}
             </p>
           </div>
 
-          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <Calendar className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Última Sincronización
               </span>
             </div>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <p className="text-lg font-bold text-zinc-900 dark:text-white">
               {lastSync
                 ? new Date(lastSync).toLocaleDateString()
                 : 'Nunca'
@@ -283,14 +283,14 @@ const OutlookConnect = () => {
             </p>
           </div>
 
-          <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <Download className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Transacciones
               </span>
             </div>
-            <p className="text-lg font-bold text-gray-900 dark:text-white">
+            <p className="text-lg font-bold text-zinc-900 dark:text-white">
               {connectionStatus?.processedCount || 0}
             </p>
           </div>
@@ -371,7 +371,7 @@ const OutlookConnect = () => {
         transition={{ delay: 0.2 }}
         className="card"
       >
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
           Cómo Funciona
         </h3>
 
@@ -381,10 +381,10 @@ const OutlookConnect = () => {
               <span className="text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">
+              <h4 className="font-medium text-zinc-900 dark:text-white">
                 Conecta tu cuenta de Microsoft
               </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 Autoriza a FinSmart para acceder a tus correos de Outlook de forma segura
               </p>
             </div>
@@ -395,10 +395,10 @@ const OutlookConnect = () => {
               <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">
+              <h4 className="font-medium text-zinc-900 dark:text-white">
                 Sincronización automática
               </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 FinSmart lee los correos del BCP y extrae automáticamente la información de transacciones
               </p>
             </div>
@@ -409,10 +409,10 @@ const OutlookConnect = () => {
               <span className="text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
             </div>
             <div>
-              <h4 className="font-medium text-gray-900 dark:text-white">
+              <h4 className="font-medium text-zinc-900 dark:text-white">
                 Análisis inteligente
               </h4>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 La IA analiza tus gastos y genera recomendaciones personalizadas
               </p>
             </div>

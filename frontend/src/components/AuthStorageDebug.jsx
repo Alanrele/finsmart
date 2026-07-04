@@ -61,7 +61,7 @@ const AuthStorageDebug = () => {
           </button>
           <button
             onClick={() => setIsVisible(false)}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-zinc-500 hover:text-zinc-700"
           >
             ✕
           </button>
@@ -80,7 +80,7 @@ const AuthStorageDebug = () => {
               <Copy className="w-3 h-3" />
             </button>
           </div>
-          <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto max-h-20">
+          <pre className="bg-zinc-100 p-2 rounded text-xs overflow-x-auto max-h-20">
             {rawData}
           </pre>
         </div>
@@ -88,7 +88,7 @@ const AuthStorageDebug = () => {
         {authData && (
           <div>
             <strong>Parsed Data:</strong>
-            <div className="bg-gray-50 p-2 rounded mt-1 space-y-1">
+            <div className="bg-zinc-50 p-2 rounded mt-1 space-y-1">
               {authData.error ? (
                 <div className="text-red-600">
                   Error: {authData.error}
