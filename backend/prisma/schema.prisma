@@ -1,0 +1,74 @@
+// Esquema PostgreSQL de FinSmart (migrado desde MongoDB/Mongoose)
+// DATABASE_URL: cadena de conexión de Railway Postgres (o local para desarrollo)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String
+  firstName     String
+  lastName      String
+  microsoftId   String?       @unique
+  accessToken   String?
+  refreshToken  String?
+  tokenExpiry   DateTime?
+  isVerified    Boolean       @default(false)
+  // { theme, currency, notifications: { email, push } } — mismo shape que en Mongo
+  preferences   Json          @default("{\"theme\":\"dark\",\"currency\":\"PEN\",\"notifications\":{\"email\":true,\"push\":true}}")
+  lastSync      DateTime?
+  lastReprocess DateTime?
+  syncEnabled   Boolean       @default(false)
+  isDemo        Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  transactions  Transaction[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId       String   @unique
+  amount          Float
+  currency        String   @default("PEN")
+  // Valores validados en la capa de aplicación (enums heredados de Mongoose):
+  // type: debit|credit|transfer|payment|withdrawal|deposit
+  // category: food|transport|entertainment|shopping|healthcare|utilities|education|travel|investment|income|transfer|other
+  // channel: online|atm|pos|mobile|branch|other
+  type            String
+  category        String    @default("other")
+  subcategory     String?
+  merchant        String?
+  description     String
+  channel         String    @default("other")
+  operationNumber String?
+  cardNumber      String?
+  date            DateTime
+  balance         Float?
+  location        String?
+  rawText         String
+  isProcessed     Boolean   @default(false)
+  // { confidence, insights[], recommendations[] }
+  aiAnalysis      Json?
+  notes           String?
+  reprocessCount  Int       @default(0)
+  lastUpdated     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId, date(sort: Desc)])
+  @@index([userId, category])
+  @@index([userId, type])
+  @@index([userId, operationNumber])
+  @@map("transactions")
+}

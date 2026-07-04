@@ -1,114 +1,57 @@
-const mongoose = require('mongoose');
+/*
+  Modelo User respaldado por Prisma/PostgreSQL.
+  Mantiene la API que el resto del código usaba con Mongoose:
+  findOne/findById/find/findByIdAndUpdate/findByIdAndDelete/updateMany,
+  documentos con .save(), .comparePassword(), .toJSON() (sin campos sensibles)
+  y hash de contraseña automático al crear o modificar.
+*/
 const bcrypt = require('bcryptjs');
+const { buildDocumentClass, buildModel } = require('./compat');
 
-const userSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-  firstName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  lastName: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  microsoftId: {
-    type: String,
-    sparse: true,
-    unique: true
-  },
-  accessToken: {
-    type: String
-  },
-  refreshToken: {
-    type: String
-  },
-  tokenExpiry: {
-    type: Date
-  },
-  isVerified: {
-    type: Boolean,
-    default: false
-  },
-  preferences: {
-    theme: {
-      type: String,
-      enum: ['light', 'dark'],
-      default: 'dark'
-    },
-    currency: {
-      type: String,
-      default: 'PEN'
-    },
-    notifications: {
-      email: { type: Boolean, default: true },
-      push: { type: Boolean, default: true }
+const FIELDS = [
+  'email', 'password', 'firstName', 'lastName', 'microsoftId',
+  'accessToken', 'refreshToken', 'tokenExpiry', 'isVerified',
+  'preferences', 'lastSync', 'lastReprocess', 'syncEnabled', 'isDemo',
+  'createdAt', 'updatedAt'
+];
+
+const DEFAULT_PREFERENCES = {
+  theme: 'dark',
+  currency: 'PEN',
+  notifications: { email: true, push: true }
+};
+
+const UserDocument = buildDocumentClass({
+  delegateName: 'user',
+  fields: FIELDS,
+  jsonHidden: ['password', 'accessToken', 'refreshToken'],
+  onBeforeSave: async (doc) => {
+    // Igual que el hook pre('save') de Mongoose: hashear solo si cambió
+    if (doc.password && doc.isModified('password')) {
+      const salt = await bcrypt.genSalt(10);
+      doc.password = await bcrypt.hash(doc.password, salt);
     }
-  },
-  lastSync: {
-    type: Date
-  },
-  syncEnabled: {
-    type: Boolean,
-    default: false
-  },
-  isDemo: {
-    type: Boolean,
-    default: false
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
+    if (doc.$isNew) {
+      if (doc.email) doc.email = String(doc.email).toLowerCase().trim();
+      if (doc.preferences === undefined) doc.preferences = DEFAULT_PREFERENCES;
+    }
   }
 });
 
-// Hash password before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Update timestamp on save
-userSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
-
-// Compare password method
-userSchema.methods.comparePassword = async function(candidatePassword) {
+UserDocument.prototype.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Remove sensitive data when converting to JSON
-userSchema.methods.toJSON = function() {
-  const user = this.toObject();
-  delete user.password;
-  delete user.accessToken;
-  delete user.refreshToken;
-  return user;
-};
+const User = buildModel({
+  delegateName: 'user',
+  fields: FIELDS,
+  DocumentClass: UserDocument
+});
 
-module.exports = mongoose.model('User', userSchema);
+// Permite `new User({...})` como con Mongoose
+const UserModel = function (data) {
+  return new UserDocument(data, { isNew: true });
+};
+Object.assign(UserModel, User);
+
+module.exports = UserModel;

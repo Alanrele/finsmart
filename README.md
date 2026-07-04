@@ -68,7 +68,7 @@ bash scripts/check-deployment.sh
 - 🤖 **IA Integrada**: Asistente financiero con OpenAI
 - 📊 **Análisis Automático**: Procesamiento de documentos con Azure OCR
 - 📱 **PWA**: Aplicación instalable y con soporte offline
-- ⚡ **Tecnología Moderna**: React 18, Node.js, MongoDB Atlas
+- ⚡ **Tecnología Moderna**: React 18, Node.js, PostgreSQL (Railway)
 - 🚀 **Producción Ready**: Desplegable en Railway.com
 
 ## 🚀 Características Principales
@@ -115,7 +115,7 @@ bash scripts/check-deployment.sh
 
 ### Backend
 - **Node.js** con Express para API REST
-- **MongoDB** con Mongoose para base de datos
+- **PostgreSQL** con Prisma para base de datos (ver [DOC/MIGRACION_POSTGRESQL.md](./DOC/MIGRACION_POSTGRESQL.md))
 - **Microsoft Graph SDK** para integración con Outlook
 - **Azure Computer Vision** para OCR de imágenes
 - **OpenAI API** para análisis e insights con IA
@@ -161,8 +161,8 @@ definidos como tokens en `frontend/tailwind.config.js` y variables en `frontend/
 
 ## 📋 Requisitos Previos
 
-- **Node.js** 16+ y npm
-- **MongoDB** (local o Atlas)
+- **Node.js** 20+ y npm
+- **PostgreSQL** (Railway, o local/Docker para desarrollo)
 - **Cuenta de Azure** con App Registration
 - **API Key de OpenAI**
 - **Cuenta de Microsoft** (para pruebas)
@@ -184,8 +184,8 @@ npm install
 
 Crea el archivo `.env` basado en `.env.example`:
 ```env
-# Database
-MONGODB_URI=mongodb://localhost:27017/finsmart
+# Database (PostgreSQL vía Prisma; en Railway copia el DATABASE_URL del servicio Postgres)
+DATABASE_URL=postgresql://user:password@host:5432/finsmart
 
 # JWT Secret
 JWT_SECRET=tu_clave_secreta_jwt_muy_larga_y_segura
@@ -347,21 +347,19 @@ VITE_ENABLE_NOTIFICATIONS=true
 
 ### Configuración de Base de Datos
 
-#### MongoDB Local
+#### PostgreSQL en Railway (producción)
+1. En tu proyecto de Railway: **New → Database → PostgreSQL**
+2. Copia el `DATABASE_URL` del servicio Postgres
+3. Agrégalo como variable del servicio backend
+4. `npm start` ejecuta `prisma migrate deploy` automáticamente al desplegar
+
+#### PostgreSQL local (desarrollo)
 ```bash
-# Instalar MongoDB
-brew install mongodb/brew/mongodb-community  # macOS
-# o seguir instrucciones para tu OS
-
-# Iniciar MongoDB
-brew services start mongodb/brew/mongodb-community
+docker run -d --name finsmart-pg-test -e POSTGRES_PASSWORD=finsmart_test -e POSTGRES_DB=finsmart -p 5433:5432 postgres:16-alpine
+# backend/.env → DATABASE_URL=postgresql://postgres:finsmart_test@localhost:5433/finsmart
+cd backend
+npm run prisma:migrate   # aplica migraciones en desarrollo
 ```
-
-#### MongoDB Atlas
-1. Crea una cuenta en [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Crea un cluster gratuito
-3. Obtén la cadena de conexión
-4. Actualiza `MONGODB_URI` en tu `.env`
 
 ## 📱 Instalación como PWA
 

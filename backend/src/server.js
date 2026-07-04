@@ -6,10 +6,13 @@
   Descripción: Servidor principal Express con Socket.IO, autenticación y rutas API
 */
 
+// Carga backend/.env en desarrollo local (en Railway/Azure las variables vienen de la plataforma)
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const mongoose = require('mongoose');
+const { connectDb, disconnectDb, isDbConnected, pingDb } = require('./config/prisma');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
@@ -50,25 +53,20 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 logger.info('Server configuration', { port: PORT, envPort: process.env.PORT || 'undefined' });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/finsmart')
+// Connect to PostgreSQL (Prisma)
+connectDb()
 .then(async () => {
-  logger.info('Connected to MongoDB successfully');
+  logger.info('Connected to PostgreSQL successfully');
 
-  // Only run token cleanup if MongoDB is connected
-  if (mongoose.connection.readyState === 1) {
-    logger.info('Performing token cleanup...');
-    const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
-    if (cleanedCount > 0) {
-      console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
-    }
-  } else {
-    console.log('🧹 Skipping token cleanup - MongoDB not connected');
+  logger.info('Performing token cleanup...');
+  const cleanedCount = await tokenCleanup.cleanupMalformedTokens();
+  if (cleanedCount > 0) {
+    console.log(`✅ Cleaned up ${cleanedCount} malformed token(s) on startup`);
   }
 })
 .catch(err => {
-  console.error('❌ MongoDB connection error:', err);
-  console.log('⚠️ Continuing without MongoDB connection for debugging purposes');
+  console.error('❌ PostgreSQL connection error:', err);
+  console.log('⚠️ Continuing without database connection for debugging purposes');
   // Don't exit the process, just log the error
 });
 
@@ -143,14 +141,12 @@ app.get('/health', async (req, res) => {
   const connectedSockets = io.engine.clientsCount || 0;
   const uptime = process.uptime();
 
-  // MongoDB latency check
-  let mongoLatency = null;
+  // Database latency check
+  let dbLatency = null;
   try {
-    const startTime = Date.now();
-    await mongoose.connection.db.admin().ping();
-    mongoLatency = Date.now() - startTime;
+    dbLatency = await pingDb();
   } catch (error) {
-    logger.error('Health check: MongoDB ping failed', { error: error.message });
+    logger.error('Health check: PostgreSQL ping failed', { error: error.message });
   }
 
   const healthData = {
@@ -159,9 +155,10 @@ app.get('/health', async (req, res) => {
     uptime: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
     port: PORT,
     env: process.env.NODE_ENV,
-    mongodb: {
-      configured: process.env.MONGODB_URI ? 'yes' : 'no',
-      latency_ms: mongoLatency
+    database: {
+      engine: 'postgresql',
+      configured: process.env.DATABASE_URL ? 'yes' : 'no',
+      latency_ms: dbLatency
     },
     openai: process.env.OPENAI_API_KEY ? 'configured' : 'missing',
     azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'missing',
@@ -199,7 +196,7 @@ app.get('/api/debug/env', (req, res) => {
     backend_vars: {
       NODE_ENV: process.env.NODE_ENV,
       PORT: process.env.PORT,
-      MONGODB_URI: process.env.MONGODB_URI ? 'configured' : 'missing',
+      DATABASE_URL: process.env.DATABASE_URL ? 'configured' : 'missing',
       JWT_SECRET: process.env.JWT_SECRET ? 'configured' : 'missing',
       OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'configured' : 'missing'
     }
@@ -428,7 +425,7 @@ server.listen(PORT, '0.0.0.0', () => {
   logger.info('Server started', {
     port: PORT,
     env: process.env.NODE_ENV,
-    mongodb: process.env.MONGODB_URI ? 'configured' : 'not configured',
+    database: process.env.DATABASE_URL ? 'configured' : 'not configured',
     openai: process.env.OPENAI_API_KEY ? 'configured' : 'not configured',
     azure_ocr: process.env.AZURE_OCR_KEY ? 'configured' : 'not configured'
   });
@@ -444,10 +441,10 @@ const shutdown = async (signal) => {
       logger.info('HTTP server closed');
     });
     try {
-      await mongoose.connection.close(false);
-      logger.info('MongoDB connection closed');
+      await disconnectDb();
+      logger.info('PostgreSQL connection closed');
     } catch (e) {
-      logger.warn('MongoDB close error', { error: e.message });
+      logger.warn('PostgreSQL close error', { error: e.message });
     }
   } catch (e) {
     logger.error('Error during shutdown', { error: e.message, stack: e.stack });

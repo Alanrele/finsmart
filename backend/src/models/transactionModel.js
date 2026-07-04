@@ -1,112 +1,39 @@
-const mongoose = require('mongoose');
+/*
+  Modelo Transaction respaldado por Prisma/PostgreSQL.
+  Mantiene la API Mongoose usada por rutas y servicios, incluidas las
+  estáticas getMonthlySummary/getSpendingTrends y aggregate() para los
+  pipelines de categoría que ejecutan financeRoutes y userService.
+*/
+const { buildDocumentClass, buildModel } = require('./compat');
 
-const transactionSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  messageId: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  amount: {
-    type: Number,
-    required: true
-  },
-  currency: {
-    type: String,
-    default: 'PEN'
-  },
-  type: {
-    type: String,
-    enum: ['debit', 'credit', 'transfer', 'payment', 'withdrawal', 'deposit'],
-    required: true
-  },
-  category: {
-    type: String,
-    enum: [
-      'food', 'transport', 'entertainment', 'shopping', 'healthcare',
-      'utilities', 'education', 'travel', 'investment', 'income',
-      'transfer', 'other'
-    ],
-    default: 'other'
-  },
-  subcategory: {
-    type: String
-  },
-  merchant: {
-    type: String
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  channel: {
-    type: String,
-    enum: ['online', 'atm', 'pos', 'mobile', 'branch', 'other'],
-    default: 'other'
-  },
-  operationNumber: {
-    type: String
-  },
-  cardNumber: {
-    type: String
-  },
-  date: {
-    type: Date,
-    required: true
-  },
-  balance: {
-    type: Number
-  },
-  location: {
-    type: String
-  },
-  rawText: {
-    type: String,
-    required: true
-  },
-  isProcessed: {
-    type: Boolean,
-    default: false
-  },
-  aiAnalysis: {
-    confidence: Number,
-    insights: [String],
-    recommendations: [String]
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  },
-  updatedAt: {
-    type: Date,
-    default: Date.now
-  }
+const FIELDS = [
+  'userId', 'messageId', 'amount', 'currency', 'type', 'category',
+  'subcategory', 'merchant', 'description', 'channel', 'operationNumber',
+  'cardNumber', 'date', 'balance', 'location', 'rawText', 'isProcessed',
+  'aiAnalysis', 'notes', 'reprocessCount', 'lastUpdated',
+  'createdAt', 'updatedAt'
+];
+
+const TransactionDocument = buildDocumentClass({
+  delegateName: 'transaction',
+  fields: FIELDS
 });
 
-// Indexes for better query performance
-transactionSchema.index({ userId: 1, date: -1 });
-transactionSchema.index({ userId: 1, category: 1 });
-transactionSchema.index({ userId: 1, type: 1 });
-
-// Update timestamp on save
-transactionSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
+const Transaction = buildModel({
+  delegateName: 'transaction',
+  fields: FIELDS,
+  DocumentClass: TransactionDocument
 });
 
-// Static method to get user's monthly summary
-transactionSchema.statics.getMonthlySummary = function(userId, year, month) {
+// Resumen mensual por categoría (misma salida que la estática de Mongoose)
+Transaction.getMonthlySummary = function (userId, year, month) {
   const startDate = new Date(year, month - 1, 1);
   const endDate = new Date(year, month, 0, 23, 59, 59);
 
   return this.aggregate([
     {
       $match: {
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: String(userId),
         date: { $gte: startDate, $lte: endDate }
       }
     },
@@ -124,15 +51,15 @@ transactionSchema.statics.getMonthlySummary = function(userId, year, month) {
   ]);
 };
 
-// Static method to get spending trends
-transactionSchema.statics.getSpendingTrends = function(userId, months = 6) {
+// Tendencias de gasto por mes/categoría (misma salida que la estática de Mongoose)
+Transaction.getSpendingTrends = function (userId, months = 6) {
   const startDate = new Date();
   startDate.setMonth(startDate.getMonth() - months);
 
   return this.aggregate([
     {
       $match: {
-        userId: new mongoose.Types.ObjectId(userId),
+        userId: String(userId),
         date: { $gte: startDate },
         type: { $in: ['debit', 'payment', 'withdrawal'] }
       }
@@ -154,4 +81,10 @@ transactionSchema.statics.getSpendingTrends = function(userId, months = 6) {
   ]);
 };
 
-module.exports = mongoose.model('Transaction', transactionSchema);
+// Permite `new Transaction({...})` como con Mongoose
+const TransactionModel = function (data) {
+  return new TransactionDocument(data, { isNew: true });
+};
+Object.assign(TransactionModel, Transaction);
+
+module.exports = TransactionModel;

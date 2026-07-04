@@ -2,7 +2,7 @@ const express = require('express');
 const { query, body, validationResult } = require('express-validator');
 const Transaction = require('../models/transactionModel');
 const User = require('../models/userModel');
-const mongoose = require('mongoose');
+const { isDbConnected } = require('../config/prisma');
 
 const router = express.Router();
 const ALLOW_DEMO_MODE = process.env.ALLOW_DEMO_MODE === 'true';
@@ -22,10 +22,10 @@ router.get('/dashboard', async (req, res) => {
     const userId = req.user._id;
     console.log('🆔 User ID:', userId);
 
-    // Check if MongoDB is connected
-    if (mongoose.connection.readyState !== 1) {
+    // Check if the database is connected
+    if (!isDbConnected()) {
       // If not connected, we can't proceed. Return an error.
-      console.error('❌ MongoDB not connected. Cannot fetch dashboard data.');
+      console.error('❌ Database not connected. Cannot fetch dashboard data.');
       return res.status(503).json({
         error: 'Servicio no disponible',
         message: 'La conexión con la base de datos no está disponible en este momento.'
@@ -266,9 +266,9 @@ router.get('/transactions', [
         }
         const userId = req.user._id;
 
-        // Check if MongoDB is connected
-        if (mongoose.connection.readyState !== 1) {
-            console.error('❌ MongoDB not connected. Cannot fetch transactions.');
+        // Check if the database is connected
+        if (!isDbConnected()) {
+            console.error('❌ Database not connected. Cannot fetch transactions.');
             return res.status(503).json({
                 error: 'Servicio no disponible',
                 message: 'La conexión con la base de datos no está disponible en este momento.'
