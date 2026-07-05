@@ -17,7 +17,7 @@ const SSLErrorNotification = () => {
         if (error.message.includes('CERT') ||
             error.message.includes('SSL') ||
             error.message.includes('TLS') ||
-            error.name === 'TypeError' && args[0]?.includes('railway.app')) {
+            error.name === 'TypeError' && String(args[0] ?? '').includes('railway.app')) {
 
           setSSLErrors(prev => prev + 1);
           setLastError(new Date());

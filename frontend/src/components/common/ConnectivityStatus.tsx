@@ -16,8 +16,9 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
 
         const response = await fetch(`${baseUrl}/health`, {
           method: 'GET',
-          timeout: 5000
-        });
+          // `timeout` no es una opción estándar de fetch (se ignora); se conserva por compatibilidad.
+          timeout: 5000,
+        } as any);
 
         setBackendStatus(response.ok ? 'online' : 'offline');
       } catch (error) {
@@ -30,7 +31,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
     const checkSocket = () => {
       // Intentar detectar errores de WebSocket desde los logs del navegador
       const hasWebSocketErrors = window.console &&
-        window.console.memory &&
+        (window.console as any).memory &&
         JSON.stringify(window.console).includes('WebSocket');
 
       if (hasWebSocketErrors) {

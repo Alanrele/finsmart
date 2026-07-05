@@ -4,7 +4,7 @@ import useAuthStore from '../../stores/authStore'
 import toast from 'react-hot-toast'
 
 const EmailSyncControl = () => {
-  const [syncStatus, setSyncStatus] = useState({
+  const [syncStatus, setSyncStatus] = useState<any>({ // TODO: tipar (estado de sync)
     syncEnabled: false,
     lastSync: null,
     hasConnection: false,
@@ -97,7 +97,7 @@ const EmailSyncControl = () => {
     const date = new Date(lastSync)
     if (isNaN(date.getTime())) return 'Nunca'
     const now = new Date()
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60))
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
 
     if (diffInMinutes < 1) return 'Hace unos segundos'
     if (diffInMinutes < 60) return `Hace ${diffInMinutes} minutos`

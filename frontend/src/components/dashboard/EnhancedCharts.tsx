@@ -50,15 +50,15 @@ const COLORS = [
 ];
 
 // Error Boundary para charts
-class ChartErrorBoundary extends React.Component {
-  constructor(props) {
+class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children?: React.ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
   static getDerivedStateFromError() {
     return { hasError: true };
   }
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('Chart error:', error, info);
   }
   render() {
@@ -74,7 +74,7 @@ class ChartErrorBoundary extends React.Component {
 }
 
 // Custom Tooltip mejorado
-const CustomTooltip = ({ active, payload, label }) => {
+const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700">
@@ -347,7 +347,7 @@ export const MonthOverMonthComparison = ({ currentMonth, previousMonth, title })
   ];
 
   const changePercentage = ((currentMonth.expenses - previousMonth.expenses) / previousMonth.expenses * 100).toFixed(1);
-  const isIncrease = changePercentage > 0;
+  const isIncrease = Number(changePercentage) > 0;
 
   return (
     <div className="relative">

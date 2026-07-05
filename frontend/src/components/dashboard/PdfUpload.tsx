@@ -17,7 +17,7 @@ import { processPdf, unlockPdf } from '../../services/api'
 const PdfUpload = ({ onImported }) => {
   const inputRef = useRef(null)
   const [dragOver, setDragOver] = useState(false)
-  const [queue, setQueue] = useState([]) // [{ file, status, summary, error }]
+  const [queue, setQueue] = useState<any[]>([]) // [{ file, status, summary, error }] // TODO: tipar
   const [pwdModal, setPwdModal] = useState(null) // { file, index, error }
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
@@ -59,7 +59,7 @@ const PdfUpload = ({ onImported }) => {
     }
   }, [onImported])
 
-  const enqueue = useCallback((fileList) => {
+  const enqueue = useCallback((fileList: FileList | File[]) => {
     const pdfs = Array.from(fileList).filter((f) => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'))
     if (pdfs.length === 0) {
       toast.error('Solo se aceptan archivos PDF')
