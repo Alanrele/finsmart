@@ -1,12 +1,13 @@
-import { io } from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
+
+type Listener = (data: unknown) => void
 
 class SocketService {
-  constructor() {
-    this.socket = null
-    this.listeners = new Map()
-  }
+  private socket: Socket | null = null
+  private listeners: Map<string, Listener[]> = new Map()
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null
 
-  connect(userId, token) {
+  connect(userId: string, token: string): Socket | null {
     // Basic token sanitation
     if (typeof token === 'string' && token.startsWith('Bearer ')) {
       token = token.replace(/^Bearer\s+/i, '')
@@ -28,68 +29,60 @@ class SocketService {
     }
 
     // Configurar URL del servidor Socket.IO
-    const getSocketUrl = () => {
-      const { protocol, hostname, port, origin } = window.location
+    const getSocketUrl = (): string => {
+      const { hostname, origin } = window.location
       const isLocal = hostname === 'localhost' || hostname === '127.0.0.1'
       if (isLocal) {
         console.log('🏠 Development Socket - Using localhost')
         return 'http://localhost:5000'
       }
-      // En producción, usar el mismo origen que sirve la app
       console.log('🚀 Production Socket - Using window.origin')
       return origin
     }
 
-  const serverUrl = getSocketUrl()
+    const serverUrl = getSocketUrl()
 
     console.log('🔌 Socket.IO connecting to:', serverUrl)
     console.log('🌐 Current hostname:', window.location.hostname)
 
     // Configuración específica para Railway (limita WebSockets en plan gratuito)
-  const isRailwayProduction = !serverUrl.includes('localhost')
+    const isRailwayProduction = !serverUrl.includes('localhost')
     const transportConfig = isRailwayProduction
-      ? ['polling'] // Railway: solo polling por estabilidad
-      : ['websocket', 'polling'] // Desarrollo: preferir WebSocket
+      ? ['polling']
+      : ['websocket', 'polling']
 
     this.socket = io(serverUrl, {
-      // Use backend-mounted Socket.IO path under /api to align with server and Railway proxy
-  path: '/api/socket.io',
+      path: '/api/socket.io',
       auth: {
         token,
-        userId
+        userId,
       },
       transports: transportConfig,
-      // Configuración para manejar problemas de conexión
       timeout: 20000,
       forceNew: true,
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 5,
-      maxReconnectionAttempts: 5,
-      // Configuración específica para Railway
-      upgrade: false, // Siempre deshabilitar upgrades
+      upgrade: false,
       rememberUpgrade: false,
       withCredentials: true,
-      // Configuración adicional para Railway
       autoConnect: true,
       forceBase64: isRailwayProduction,
-      // Query params para debugging
       query: {
-        transport: isRailwayProduction ? 'polling' : 'websocket'
-      }
-    })
+        transport: isRailwayProduction ? 'polling' : 'websocket',
+      },
+    } as Record<string, unknown>)
 
     this.socket.on('connect', () => {
-      console.log('✅ Connected to socket server via', this.socket.io.engine.transport.name)
+      console.log('✅ Connected to socket server via', this.socket?.io.engine.transport.name)
       console.log('🏠 Joining user room:', userId)
-      this.socket.emit('join-user-room', userId)
+      this.socket?.emit('join-user-room', userId)
     })
 
-    this.socket.on('disconnect', (reason) => {
+    this.socket.on('disconnect', (reason: string) => {
       console.log('❌ Disconnected from socket server:', reason)
 
-      // Auto-reconexión más agresiva para Railway
       if (isRailwayProduction && reason === 'transport close') {
         console.log('🔄 Railway transport closed, attempting reconnection...')
         setTimeout(() => {
@@ -100,28 +93,30 @@ class SocketService {
       }
     })
 
-    this.socket.on('connect_error', (error) => {
+    this.socket.on('connect_error', (error: Error) => {
       console.error('🔌 Socket connection error:', error.message)
 
-      // Manejo específico para Railway
       if (isRailwayProduction) {
         console.log('🚀 Railway connection issue - ensuring polling mode')
-        this.socket.io.opts.transports = ['polling']
-        this.socket.io.opts.upgrade = false
+        if (this.socket) {
+          this.socket.io.opts.transports = ['polling']
+          this.socket.io.opts.upgrade = false
+        }
       } else if (error.message.includes('websocket')) {
         console.log('🔄 WebSocket failed, falling back to polling...')
-        this.socket.io.opts.transports = ['polling']
+        if (this.socket) this.socket.io.opts.transports = ['polling']
       }
     })
 
     this.socket.on('reconnect_failed', () => {
       console.error('🚫 Socket reconnection failed completely')
-      // En Railway, intentar reiniciar con polling
       if (isRailwayProduction) {
         console.log('🔄 Attempting manual reconnection with polling...')
         setTimeout(() => {
-          this.socket.io.opts.transports = ['polling']
-          this.socket.connect()
+          if (this.socket) {
+            this.socket.io.opts.transports = ['polling']
+            this.socket.connect()
+          }
         }, 5000)
       }
     })
@@ -133,7 +128,7 @@ class SocketService {
           if (this.socket?.connected) {
             this.socket.emit('ping')
           }
-        }, 25000) // Ping cada 25 segundos
+        }, 25000)
       }
     })
 
@@ -144,13 +139,12 @@ class SocketService {
       }
     })
 
-    // Set up default listeners
     this.setupDefaultListeners()
 
     return this.socket
   }
 
-  disconnect() {
+  disconnect(): void {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval)
       this.heartbeatInterval = null
@@ -163,51 +157,46 @@ class SocketService {
     this.listeners.clear()
   }
 
-  setupDefaultListeners() {
+  setupDefaultListeners(): void {
     if (!this.socket) return
 
-    // New transaction received
-    this.socket.on('new-transaction', (transaction) => {
+    this.socket.on('new-transaction', (transaction: unknown) => {
       console.log('New transaction received:', transaction)
       this.emit('new-transaction', transaction)
     })
 
-    // Sync completed
-    this.socket.on('sync-completed', (data) => {
+    this.socket.on('sync-completed', (data: unknown) => {
       console.log('Sync completed:', data)
       this.emit('sync-completed', data)
     })
 
-    // Reprocess completed
-    this.socket.on('reprocess-completed', (data) => {
+    this.socket.on('reprocess-completed', (data: unknown) => {
       console.log('Reprocess completed:', data)
       this.emit('reprocess-completed', data)
     })
 
-    // AI analysis completed
-    this.socket.on('analysis-completed', (analysis) => {
+    this.socket.on('analysis-completed', (analysis: unknown) => {
       console.log('AI analysis completed:', analysis)
       this.emit('analysis-completed', analysis)
     })
 
-    // Real-time notifications
-    this.socket.on('notification', (notification) => {
+    this.socket.on('notification', (notification: unknown) => {
       console.log('New notification:', notification)
       this.emit('notification', notification)
     })
   }
 
   // Event listener management
-  on(event, callback) {
+  on(event: string, callback: Listener): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
-    this.listeners.get(event).push(callback)
+    this.listeners.get(event)!.push(callback)
   }
 
-  off(event, callback) {
+  off(event: string, callback: Listener): void {
     if (this.listeners.has(event)) {
-      const callbacks = this.listeners.get(event)
+      const callbacks = this.listeners.get(event)!
       const index = callbacks.indexOf(callback)
       if (index > -1) {
         callbacks.splice(index, 1)
@@ -215,9 +204,9 @@ class SocketService {
     }
   }
 
-  emit(event, data) {
+  emit(event: string, data: unknown): void {
     if (this.listeners.has(event)) {
-      this.listeners.get(event).forEach(callback => {
+      this.listeners.get(event)!.forEach((callback) => {
         try {
           callback(data)
         } catch (error) {
@@ -227,8 +216,7 @@ class SocketService {
     }
   }
 
-  // Send message to server
-  send(event, data) {
+  send(event: string, data: unknown): void {
     if (this.socket?.connected) {
       this.socket.emit(event, data)
     } else {
@@ -236,12 +224,11 @@ class SocketService {
     }
   }
 
-  isConnected() {
+  isConnected(): boolean {
     return this.socket?.connected || false
   }
 }
 
-// Create singleton instance
 const socketService = new SocketService()
 
 export default socketService
