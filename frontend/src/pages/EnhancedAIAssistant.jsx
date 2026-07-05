@@ -243,14 +243,14 @@ const EnhancedAIAssistant = () => {
                   key={action.id}
                   onClick={() => handleQuickAction(action.id)}
                   disabled={loading}
-                  className="group relative p-4 bg-white dark:bg-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-600 hover:shadow-lg transition-all overflow-hidden"
+                  className="group relative min-w-0 p-4 bg-white dark:bg-zinc-700 rounded-xl border border-zinc-200 dark:border-zinc-600 hover:shadow-lg transition-all overflow-hidden"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
                   <action.icon className={`w-6 h-6 mb-2 text-zinc-700 dark:text-zinc-300 group-hover:text-primary-600 transition-colors`} />
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white break-words">
                     {action.title}
                   </p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 break-words">
                     {action.description}
                   </p>
                 </button>
@@ -413,7 +413,7 @@ const EnhancedAIAssistant = () => {
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             disabled={loading}
             placeholder="Pregúntame sobre tus finanzas..."
-            className="flex-1 px-4 py-3 bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+            className="flex-1 min-w-0 px-4 py-3 bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
           />
 
           <button

@@ -22,8 +22,8 @@ const Layout = () => {
         </div>
 
         {/* Main content */}
-        <div className="lg:pl-64 flex flex-col min-h-screen">
-          <main className="flex-1 p-4 lg:p-6 pb-20 lg:pb-6">
+        <div className="lg:pl-64 flex flex-col min-h-screen flex-1 min-w-0 max-w-full">
+          <main className="flex-1 min-w-0 p-4 lg:p-6 pb-20 lg:pb-6">
             <Outlet />
           </main>
         </div>
