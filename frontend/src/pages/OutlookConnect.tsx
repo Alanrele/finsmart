@@ -23,6 +23,7 @@ import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 import ConfirmDialog from '../components/common/ConfirmDialog'
+import { PageHeader } from '../components/ui/kit'
 
 const OutlookConnect = () => {
   const { getAccessToken, getGraphMailToken } = useMicrosoftAuth()
@@ -221,14 +222,7 @@ const OutlookConnect = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-          Conexión con Outlook
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Conecta tu cuenta de Microsoft Outlook para analizar correos del BCP
-        </p>
-      </div>
+      <PageHeader title="Conexión con Outlook" subtitle="Conecta tu cuenta de Microsoft Outlook para analizar correos del BCP" />
 
       {/* Connection Status Card */}
       <motion.div

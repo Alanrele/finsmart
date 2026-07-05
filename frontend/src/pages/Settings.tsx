@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { PageHeader } from '../components/ui/kit'
 import { motion } from 'framer-motion'
 import { User, Mail, Bell, Moon, Sun, Shield, Download, Trash2 } from 'lucide-react'
 import useAuthStore from '../stores/authStore'
@@ -68,14 +69,7 @@ const Settings = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-          Configuración
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Personaliza tu experiencia en Kipu
-        </p>
-      </div>
+      <PageHeader title="Configuración" subtitle="Personaliza tu experiencia en Kipu" />
 
       {/* Profile Settings */}
       <motion.div

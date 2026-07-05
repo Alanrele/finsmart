@@ -5,6 +5,7 @@ import { analyzeFinancialData, getFinancialRecommendations, getFinancialInsights
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
 import LoadingCard from '../components/common/LoadingCard'
+import { PageHeader } from '../components/ui/kit'
 
 const Analysis = () => {
   const { aiAnalysis, setAiAnalysis, aiLoading, setAiLoading } = useAppStore()
@@ -65,14 +66,7 @@ const Analysis = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-          Análisis Financiero IA
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Insights inteligentes sobre tus hábitos financieros
-        </p>
-      </div>
+      <PageHeader title="Análisis Financiero IA" subtitle="Insights inteligentes sobre tus hábitos financieros" />
 
       {/* Start CTA - simplified content and clear spacing */}
       {!hasStarted && !aiAnalysis && (

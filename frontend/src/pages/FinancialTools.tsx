@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { formatCurrency } from '../utils/formatters';
 import toast from 'react-hot-toast';
+import { PageHeader } from '../components/ui/kit';
 
 const FinancialTools = () => {
   const [activeTab, setActiveTab] = useState('health');
@@ -175,14 +176,7 @@ const FinancialTools = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-          Herramientas Financieras
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Calculadoras y herramientas para mejorar tu salud financiera
-        </p>
-      </div>
+      <PageHeader title="Herramientas Financieras" subtitle="Calculadoras y herramientas para mejorar tu salud financiera" />
 
       {/* Tabs */}
       <div className="flex space-x-2 overflow-x-auto pb-2">

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { PageHeader } from '../components/ui/kit'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Send, Bot, User, Loader } from 'lucide-react'
 import { chatWithAI } from '../services/api'
@@ -154,12 +155,7 @@ const ChatIA = () => {
     <div className="flex flex-col h-full max-h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="mb-4">
-        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-          Chat con IA Financiera
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Pregunta sobre tus finanzas y recibe respuestas inteligentes
-        </p>
+        <PageHeader title="Chat con IA Financiera" subtitle="Pregunta sobre tus finanzas y recibe respuestas inteligentes" />
       </div>
 
       {/* Chat Container */}
