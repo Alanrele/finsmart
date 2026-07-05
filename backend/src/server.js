@@ -33,6 +33,8 @@ process.on('unhandledRejection', (reason, promise) => {
 const authRoutes = require('./routes/authRoutes');
 const graphRoutes = require('./routes/graphRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const pdfRoutes = require('./routes/pdfRoutes');
+const rulesRoutes = require('./routes/rulesRoutes');
 const financeRoutes = require('./routes/financeRoutes');
 
 // Import middleware
@@ -135,6 +137,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/graph', authMiddleware, graphRoutes);
 app.use('/api/ai', authMiddleware, aiRoutes);
 app.use('/api/finance', authMiddleware, financeRoutes);
+app.use('/api/pdf', authMiddleware, pdfRoutes);
+app.use('/api/rules', authMiddleware, rulesRoutes);
 
 // Health check endpoint with metrics (before static files)
 app.get('/health', async (req, res) => {
