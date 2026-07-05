@@ -63,7 +63,7 @@ const AuthCallback = () => {
                 email: response.account.username,
                 avatar: null
               }
-              login(userInfo, token)
+              login(userInfo as any, token)
               toast.success('✅ Autenticación exitosa con Microsoft (modo demo)')
               navigate('/dashboard')
             } else {

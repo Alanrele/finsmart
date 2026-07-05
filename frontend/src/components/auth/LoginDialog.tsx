@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { X, Mail, Lock, User, Eye, EyeOff, Loader } from 'lucide-react';
 import toast from 'react-hot-toast';
 import useAuthStore from '../../stores/authStore';
@@ -31,12 +32,12 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
   });
 
   // Kipu Upgrade: Animaciones del modal
-  const overlayVariants = {
+  const overlayVariants: Variants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1 }
   };
 
-  const modalVariants = {
+  const modalVariants: Variants = {
     hidden: { opacity: 0, scale: 0.9, y: 20 },
     visible: {
       opacity: 1,
