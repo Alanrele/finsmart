@@ -50,7 +50,7 @@ export const msalConfig = {
       },
       logLevel: railwayConfig.isDevelopment ? LogLevel.Verbose : LogLevel.Warning,
     },
-    allowNativeBroker: false, // Disable native broker for web
+    // (msal-browser v4 removió `allowNativeBroker`; el broker nativo no aplica en web)
     windowHashTimeout: 60000,
     iframeHashTimeout: 10000, // Increased timeout for iframe operations
     loadFrameTimeout: 10000, // Increased timeout
