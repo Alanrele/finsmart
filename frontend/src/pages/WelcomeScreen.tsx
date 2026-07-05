@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { TrendingUp, Shield, Mail, User } from 'lucide-react';
 import LoginDialog from '../components/auth/LoginDialog';
 import BrandLogo, { KipuIcon } from '../components/common/BrandLogo';
@@ -37,7 +38,7 @@ const WelcomeScreen = ({ onAuthenticated }) => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [loginMode, setLoginMode] = useState('login'); // 'login' | 'register'
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -45,7 +46,7 @@ const WelcomeScreen = ({ onAuthenticated }) => {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 24 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
   };

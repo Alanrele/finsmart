@@ -11,13 +11,13 @@ import {
   Las reglas se evalúan por prioridad; la primera que coincide gana.
 */
 const RulesManager = () => {
-  const [rules, setRules] = useState([])
-  const [categories, setCategories] = useState([])
+  const [rules, setRules] = useState<any[]>([]) // TODO: tipar (ClassificationRule[])
+  const [categories, setCategories] = useState<any[]>([]) // TODO: tipar (Category[])
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ category: '', matchType: 'keyword', field: 'all', pattern: '', priority: 100 })
+  const [form, setForm] = useState<{ category: string; matchType: string; field: string; pattern: string; priority: number | string }>({ category: '', matchType: 'keyword', field: 'all', pattern: '', priority: 100 })
   const [saving, setSaving] = useState(false)
   const [sample, setSample] = useState('')
-  const [testResult, setTestResult] = useState(null)
+  const [testResult, setTestResult] = useState<boolean | null>(null)
 
   const load = async () => {
     try {
