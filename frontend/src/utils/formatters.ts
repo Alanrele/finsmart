@@ -1,18 +1,17 @@
 /**
- * Utilidades para formateo de números y monedas
+ * Utilidades para formateo de números y monedas.
+ * Migrado a TypeScript (comportamiento en runtime idéntico).
  */
 
 // Configuración regional para Perú
 const LOCALE = 'es-PE'
 const CURRENCY = 'PEN'
 
-/**
- * Formatea un número como moneda peruana
- * @param {number} amount - Cantidad a formatear
- * @param {boolean} showSign - Si mostrar el signo + o -
- * @returns {string} Cantidad formateada
- */
-export const formatCurrency = (amount, showSign = false) => {
+type Numeric = number | null | undefined
+type DateInput = string | number | Date | null | undefined
+
+/** Formatea un número como moneda peruana. `showSign` antepone + / -. */
+export const formatCurrency = (amount: Numeric, showSign = false): string => {
   if (amount == null || isNaN(amount)) return 'S/ 0.00'
 
   const absAmount = Math.abs(amount)
@@ -20,7 +19,7 @@ export const formatCurrency = (amount, showSign = false) => {
     style: 'currency',
     currency: CURRENCY,
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(absAmount)
 
   if (showSign) {
@@ -30,12 +29,8 @@ export const formatCurrency = (amount, showSign = false) => {
   return formatted
 }
 
-/**
- * Formatea números grandes de manera legible (K, M, B)
- * @param {number} num - Número a formatear
- * @returns {string} Número formateado
- */
-export const formatNumber = (num) => {
+/** Formatea números grandes de manera legible (K, M, B). */
+export const formatNumber = (num: Numeric): string => {
   if (num == null || isNaN(num)) return '0'
 
   const absNum = Math.abs(num)
@@ -51,12 +46,8 @@ export const formatNumber = (num) => {
   return absNum.toLocaleString(LOCALE)
 }
 
-/**
- * Formatea moneda con abreviación para números grandes
- * @param {number} amount - Cantidad a formatear
- * @returns {string} Cantidad formateada con abreviación
- */
-export const formatCurrencyCompact = (amount) => {
+/** Formatea moneda con abreviación para números grandes. */
+export const formatCurrencyCompact = (amount: Numeric): string => {
   if (amount == null || isNaN(amount)) return 'S/ 0.00'
 
   const absAmount = Math.abs(amount)
@@ -75,24 +66,15 @@ export const formatCurrencyCompact = (amount) => {
   return formatCurrency(amount)
 }
 
-/**
- * Formatea porcentajes
- * @param {number} percent - Porcentaje a formatear
- * @param {number} decimals - Número de decimales
- * @returns {string} Porcentaje formateado
- */
-export const formatPercentage = (percent, decimals = 1) => {
+/** Formatea porcentajes. */
+export const formatPercentage = (percent: Numeric, decimals = 1): string => {
   if (percent == null || isNaN(percent)) return '0.0%'
 
   return `${Math.abs(percent).toFixed(decimals)}%`
 }
 
-/**
- * Formatea fechas en formato legible
- * @param {string|Date} date - Fecha a formatear
- * @returns {string} Fecha formateada
- */
-export const formatDate = (date) => {
+/** Formatea fechas en formato legible. */
+export const formatDate = (date: DateInput): string => {
   if (!date) return 'Sin fecha'
 
   const dateObj = new Date(date)
@@ -102,16 +84,12 @@ export const formatDate = (date) => {
   return dateObj.toLocaleDateString(LOCALE, {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
-/**
- * Formatea fecha y hora completa
- * @param {string|Date} date - Fecha a formatear
- * @returns {string} Fecha y hora formateada
- */
-export const formatDateTime = (date) => {
+/** Formatea fecha y hora completa. */
+export const formatDateTime = (date: DateInput): string => {
   if (!date) return 'Sin fecha'
 
   const dateObj = new Date(date)
@@ -124,53 +102,41 @@ export const formatDateTime = (date) => {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
-/**
- * Detecta si un número es demasiado grande para mostrarlo completo
- * @param {number} amount - Cantidad a verificar
- * @returns {boolean} True si es muy grande
- */
-export const isLargeNumber = (amount) => {
-  return Math.abs(amount) >= 10000 // 10K+ - Umbral más bajo para mejor legibilidad
+/** Detecta si un número es demasiado grande para mostrarlo completo. */
+export const isLargeNumber = (amount: number): boolean => {
+  return Math.abs(amount) >= 10000 // 10K+ - umbral bajo para mejor legibilidad
 }
 
-/**
- * Formatea automáticamente según el tamaño del número
- * @param {number} amount - Cantidad a formatear
- * @returns {string} Cantidad formateada apropiadamente
- */
-export const formatCurrencyAuto = (amount) => {
+/** Formatea automáticamente según el tamaño del número. */
+export const formatCurrencyAuto = (amount: Numeric): string => {
   if (amount == null || isNaN(amount)) return 'S/ 0.00'
-  
-  // Redondear números con muchos decimales para evitar problemas de precisión
+
+  // Redondear para evitar problemas de precisión
   const roundedAmount = Math.round(amount * 100) / 100
-  
+
   if (isLargeNumber(roundedAmount)) {
     return formatCurrencyCompact(roundedAmount)
   }
   return formatCurrency(roundedAmount)
 }
 
-/**
- * Formatea números extremadamente grandes de manera ultra-compacta
- * @param {number} amount - Cantidad a formatear
- * @returns {string} Cantidad formateada de manera ultra-compacta
- */
-export const formatCurrencyUltraCompact = (amount) => {
+/** Formatea números extremadamente grandes de manera ultra-compacta. */
+export const formatCurrencyUltraCompact = (amount: Numeric): string => {
   if (amount == null || isNaN(amount)) return 'S/ 0'
 
   const absAmount = Math.abs(amount)
 
-  if (absAmount >= 1000000000000) { // Trillones
+  if (absAmount >= 1000000000000) {
     return `S/ ${(absAmount / 1000000000000).toFixed(1)}T`
-  } else if (absAmount >= 1000000000) { // Miles de millones
+  } else if (absAmount >= 1000000000) {
     return `S/ ${(absAmount / 1000000000).toFixed(1)}B`
-  } else if (absAmount >= 1000000) { // Millones
+  } else if (absAmount >= 1000000) {
     return `S/ ${(absAmount / 1000000).toFixed(1)}M`
-  } else if (absAmount >= 1000) { // Miles
+  } else if (absAmount >= 1000) {
     return `S/ ${(absAmount / 1000).toFixed(0)}K`
   }
 
