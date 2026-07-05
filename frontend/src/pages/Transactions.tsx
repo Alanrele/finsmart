@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
-import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, X, SearchX } from 'lucide-react'
+import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, ChevronLeft, ChevronRight, X, SearchX, FileText, Tag } from 'lucide-react'
 import { getTransactions } from '../services/api' // Importar directamente la función
 import toast from 'react-hot-toast'
 import LoadingCard from '../components/common/LoadingCard'
-import EmptyState from '../components/common/EmptyState'
 import TransactionDetailModal from '../components/transactions/TransactionDetailModal'
 import { formatCurrency, formatCurrencyAuto } from '../utils/formatters'
+import { PageHeader, SectionCard, Segmented, TextInput, SelectInput, Chip, EmptyState, IconBadge } from '../components/ui/kit'
 
 const EMPTY_FILTERS = { search: '', category: '', type: '', startDate: '', endDate: '', page: 1, limit: 20 }
 
@@ -160,262 +160,195 @@ const Transactions = () => {
     )
   }
 
+  const isIncomeTx = (t: any) => t.type === 'credit' || t.type === 'deposit'
+  const signedAmount = (t: any) => formatCurrency(isIncomeTx(t) ? Math.abs(t.amount) : -Math.abs(t.amount), true)
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-            Transacciones
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-            {pagination.totalCount > 0
-              ? `${pagination.totalCount} movimiento${pagination.totalCount === 1 ? '' : 's'}${hasActiveFilters ? ' con los filtros aplicados' : ''}`
-              : 'Historial completo de tus movimientos financieros'}
-          </p>
-        </div>
-        {hasActiveFilters && (
+    <motion.div className="space-y-6" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
+      {/* PageHeader */}
+      <PageHeader
+        title="Transacciones"
+        subtitle={
+          pagination.totalCount > 0
+            ? `${pagination.totalCount} movimiento${pagination.totalCount === 1 ? '' : 's'}${hasActiveFilters ? ' con los filtros aplicados' : ''}`
+            : 'Registra, administra y audita todos tus movimientos financieros'
+        }
+        actions={hasActiveFilters ? (
           <button
             onClick={clearFilters}
-            className="min-h-[40px] px-3.5 inline-flex items-center gap-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-xs font-black text-primary dark:text-primary-300 transition"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-brand-primary/10 hover:bg-brand-primary/20 text-brand-primary text-xs font-bold uppercase tracking-wide border border-brand-primary/20 transition-all cursor-pointer"
           >
-            <X className="w-3.5 h-3.5" />
+            <X size={14} />
             Limpiar filtros
           </button>
+        ) : undefined}
+      />
+
+      {/* FilterBar inline (patrón Kipu) */}
+      <div className="bg-card p-5 rounded-[2rem] border border-subtle shadow-xl flex flex-col md:flex-row gap-4 md:items-center">
+        {/* Búsqueda */}
+        <div className="relative w-full md:flex-1">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            type="text"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            placeholder="Buscar por descripción o comercio..."
+            className="w-full pl-10 pr-4 py-2.5 bg-base/50 border border-subtle rounded-xl text-sm text-main placeholder-muted focus:outline-none focus:border-brand-primary focus:bg-base transition-all"
+          />
+        </div>
+
+        {/* Segmented de tipo */}
+        <Segmented
+          className="w-full md:w-auto"
+          value={filters.type}
+          onChange={(v) => setFilters({ ...filters, type: v, page: 1 })}
+          options={[
+            { value: '', label: 'Todos' },
+            { value: 'income', label: 'Ingresos' },
+            { value: 'expense', label: 'Gastos' },
+          ]}
+        />
+
+        {/* Categoría */}
+        <div className="relative w-full md:w-52">
+          <Filter size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted z-10" />
+          <SelectInput
+            value={filters.category}
+            onChange={(e) => setFilters({ ...filters, category: e.target.value, page: 1 })}
+            className="pl-9 py-2.5 text-xs font-bold"
+          >
+            <option value="">Categorías (Todas)</option>
+            {categories.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </SelectInput>
+        </div>
+
+        {/* Rango de fechas */}
+        <div className="flex gap-2 w-full md:w-auto">
+          <TextInput type="date" value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value, page: 1 })} className="py-2.5 text-xs" />
+          <TextInput type="date" value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value, page: 1 })} className="py-2.5 text-xs" />
+        </div>
+      </div>
+
+      {/* Card con tabla responsive (mobile: card-list / desktop: table) */}
+      <div className="bg-card rounded-[2.5rem] border border-subtle shadow-xl overflow-hidden">
+        {!transactions || transactions.length === 0 ? (
+          hasActiveFilters ? (
+            <EmptyState
+              icon={SearchX}
+              title="Sin resultados"
+              message="Ninguna transacción coincide con los filtros aplicados. Prueba a ampliar el rango o limpiar la búsqueda."
+              action={
+                <button onClick={clearFilters} className="flex items-center gap-1.5 bg-brand-primary hover:opacity-90 text-white dark:text-brand-dark px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-wide shadow-lg cursor-pointer transition-all">
+                  Limpiar filtros
+                </button>
+              }
+            />
+          ) : (
+            <EmptyState
+              icon={FileText}
+              title="Aún no hay movimientos"
+              message="Conecta tu correo de Outlook o sube un PDF para que Kipu registre las notificaciones del BCP."
+            />
+          )
+        ) : (
+          <>
+            {/* Móvil: lista de cards */}
+            <div className="block md:hidden divide-y divide-subtle">
+              {transactions.map((tx) => (
+                <div
+                  key={tx._id}
+                  onClick={() => handleTransactionClick(tx)}
+                  className="p-4 flex items-center justify-between hover:bg-base/20 transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <IconBadge icon={isIncomeTx(tx) ? ArrowUpRight : ArrowDownLeft} accent={isIncomeTx(tx) ? 'emerald' : 'rose'} size={14} className="rounded-xl p-2" />
+                    <div className="min-w-0">
+                      <span className="text-sm font-semibold text-main block truncate">{tx.description || tx.merchant || 'Transacción'}</span>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-[10px] text-muted font-mono">{new Date(tx.date).toLocaleDateString()}</span>
+                        {tx.category && <Chip>{translateCategory(tx.category)}</Chip>}
+                      </div>
+                    </div>
+                  </div>
+                  <span className={`text-sm font-extrabold font-display whitespace-nowrap pl-2 ${isIncomeTx(tx) ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {signedAmount(tx)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Escritorio: tabla estructurada */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-base/40 text-[10px] font-bold text-muted uppercase tracking-widest border-b border-subtle">
+                    <th className="py-4 px-6 font-mono">Detalle</th>
+                    <th className="py-4 px-6 font-mono">Fecha</th>
+                    <th className="py-4 px-6 font-mono">Categoría</th>
+                    <th className="py-4 px-6 font-mono">Canal</th>
+                    <th className="py-4 px-6 text-right font-mono">Monto</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-subtle">
+                  {transactions.map((tx) => (
+                    <tr key={tx._id} onClick={() => handleTransactionClick(tx)} className="hover:bg-base/40 transition-all group cursor-pointer">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <IconBadge icon={isIncomeTx(tx) ? ArrowUpRight : ArrowDownLeft} accent={isIncomeTx(tx) ? 'emerald' : 'rose'} size={16} className="rounded-xl p-2" />
+                          <span className="text-sm font-semibold text-main group-hover:text-brand-primary transition-colors truncate max-w-xs block">
+                            {tx.description || tx.merchant || 'Transacción'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-sm text-muted font-mono whitespace-nowrap">{new Date(tx.date).toLocaleDateString()}</td>
+                      <td className="py-4 px-6"><Chip icon={Tag}>{translateCategory(tx.category)}</Chip></td>
+                      <td className="py-4 px-6 text-xs text-muted capitalize">{tx.channel}</td>
+                      <td className="py-4 px-6 text-right font-extrabold font-display text-sm whitespace-nowrap">
+                        <span className={isIncomeTx(tx) ? 'text-emerald-500' : 'text-rose-500'}>{signedAmount(tx)}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="card"
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Buscar
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="input-field input-field--with-prefix-icon"
-                placeholder="Descripción, comercio..."
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Categoría
-            </label>
-            <select
-              value={filters.category}
-              onChange={(e) => setFilters({...filters, category: e.target.value, page: 1})}
-              className="input-field"
-            >
-              <option value="">Todas las categorías</option>
-              {categories.map(category => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Tipo
-            </label>
-            <select
-              value={filters.type}
-              onChange={(e) => setFilters({...filters, type: e.target.value, page: 1})}
-              className="input-field"
-            >
-              <option value="">Todos los tipos</option>
-              {types.map(type => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Fecha inicio
-            </label>
-            <input
-              type="date"
-              value={filters.startDate}
-              onChange={(e) => setFilters({...filters, startDate: e.target.value, page: 1})}
-              className="input-field"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-              Fecha fin
-            </label>
-            <input
-              type="date"
-              value={filters.endDate}
-              onChange={(e) => setFilters({...filters, endDate: e.target.value, page: 1})}
-              className="input-field"
-            />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Transactions List */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="card"
-      >
-        <div className="space-y-3">
-          {!transactions || transactions.length === 0 ? (
-            hasActiveFilters ? (
-              <EmptyState
-                icon={SearchX}
-                title="Sin resultados"
-                message="Ninguna transacción coincide con los filtros aplicados. Prueba a ampliar el rango o limpiar la búsqueda."
-                action={
-                  <button onClick={clearFilters} className="btn-secondary">
-                    Limpiar filtros
-                  </button>
-                }
-              />
-            ) : (
-              <EmptyState
-                icon={Calendar}
-                title="Aún no hay movimientos"
-                message="Conecta tu correo de Outlook para que Kipu empiece a registrar las notificaciones del BCP automáticamente."
-              />
-            )
-          ) : (
-            transactions.map((transaction, index) => (
-              <motion.div
-                key={transaction._id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                onClick={() => handleTransactionClick(transaction)}
-                className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-600 transition-colors cursor-pointer"
-              >
-                <div className="flex items-center space-x-4 flex-1 min-w-0">
-                  <div className={`p-2 rounded-lg ${
-                    transaction.type === 'credit' || transaction.type === 'deposit'
-                      ? 'bg-green-100 dark:bg-green-900/20'
-                      : 'bg-red-100 dark:bg-red-900/20'
-                  }`}>
-                    {transaction.type === 'credit' || transaction.type === 'deposit' ? (
-                      <TrendingUp className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <TrendingDown className="w-5 h-5 text-red-600" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-zinc-900 dark:text-white truncate text-base md:text-[1rem]">
-                      {transaction.description || transaction.merchant || 'Transacción'}
-                    </p>
-                    <div className="flex items-center space-x-3 text-sm md:text-[0.9rem] text-zinc-500 dark:text-zinc-400 flex-wrap">
-                      <span>{new Date(transaction.date).toLocaleDateString()}</span>
-                      <span className="capitalize">{translateCategory(transaction.category)}</span>
-                      <span className="capitalize">{transaction.channel}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="md:text-right whitespace-nowrap md:self-center self-end">
-                  <p className={`text-lg font-semibold ${
-                    transaction.type === 'credit' || transaction.type === 'deposit'
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}>
-                    {
-                      // Mostrar siempre el monto completo con signo, sin formato compactado (K/M/B)
-                      formatCurrency(
-                        transaction.type === 'credit' || transaction.type === 'deposit'
-                          ? Math.abs(transaction.amount)
-                          : -Math.abs(transaction.amount),
-                        true
-                      )
-                    }
-                  </p>
-                  {transaction.balance != null && (
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      Saldo: {formatCurrency(transaction.balance)}
-                    </p>
-                  )}
-                </div>
-              </motion.div>
-            ))
-          )}
-        </div>
-      </motion.div>
-
-      {/* Pagination */}
+      {/* Paginación */}
       {pagination.totalPages > 1 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex items-center justify-between"
-        >
-          <div className="text-sm text-zinc-500 dark:text-zinc-400">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-muted font-mono">
             Mostrando {transactions.length} de {pagination.totalCount} transacciones
           </div>
-
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={handlePrevPage}
               disabled={!pagination.hasPrev}
-              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="flex items-center gap-1 px-4 py-2 rounded-xl bg-base/60 border border-subtle text-xs font-bold text-main hover:bg-base disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
-              Anterior
+              <ChevronLeft size={14} /> Anterior
             </button>
-
-            <div className="flex items-center space-x-1">
-              {/* First page */}
-              {pagination.currentPage > 3 && (
-                <>
-                  <button
-                    onClick={() => handlePageChange(1)}
-                    className="px-3 py-2 text-sm rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                  >
-                    1
-                  </button>
-                  {pagination.currentPage > 4 && <span className="px-2">...</span>}
-                </>
-              )}
-
-              {/* Pages around current page (no duplicates) */}
+            <div className="flex items-center gap-1">
               {(() => {
                 const maxButtons = 5
                 const half = Math.floor(maxButtons / 2)
                 const total = pagination.totalPages
                 const current = pagination.currentPage
-                // Compute start and end ensuring a continuous range without clamping duplicates
                 let startPage = Math.max(1, current - half)
                 let endPage = Math.min(total, startPage + maxButtons - 1)
-                // If we don't have enough pages at the end, shift the window left
                 startPage = Math.max(1, Math.min(startPage, endPage - maxButtons + 1))
-
                 const buttons: React.ReactElement[] = []
                 for (let p = startPage; p <= endPage; p++) {
                   buttons.push(
                     <button
                       key={p}
                       onClick={() => handlePageChange(p)}
-                      className={`px-3 py-2 text-sm rounded-lg ${
-                        p === current ? 'bg-primary-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'
+                      className={`w-9 h-9 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                        p === current ? 'bg-brand-primary text-white dark:text-brand-dark shadow-sm' : 'text-muted hover:text-main hover:bg-base/60'
                       }`}
                     >
                       {p}
@@ -424,40 +357,25 @@ const Transactions = () => {
                 }
                 return buttons
               })()}
-
-              {/* Last page */}
-              {pagination.currentPage < pagination.totalPages - 2 && (
-                <>
-                  {pagination.currentPage < pagination.totalPages - 3 && <span className="px-2">...</span>}
-                  <button
-                    onClick={() => handlePageChange(pagination.totalPages)}
-                    className="px-3 py-2 text-sm rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700"
-                  >
-                    {pagination.totalPages}
-                  </button>
-                </>
-              )}
             </div>
-
             <button
               onClick={handleNextPage}
               disabled={!pagination.hasNext}
-              className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="flex items-center gap-1 px-4 py-2 rounded-xl bg-base/60 border border-subtle text-xs font-bold text-main hover:bg-base disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
-              Siguiente
-              <ChevronRight className="w-4 h-4" />
+              Siguiente <ChevronRight size={14} />
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
 
-      {/* Transaction Detail Modal */}
+      {/* Modal de detalle */}
       <TransactionDetailModal
         transaction={selectedTransaction}
         isOpen={isModalOpen}
-        onClose={handleCloseModal} // Ahora esta función existe
+        onClose={handleCloseModal}
       />
-    </div>
+    </motion.div>
   )
 }
 
