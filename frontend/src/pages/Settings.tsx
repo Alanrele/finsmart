@@ -178,7 +178,7 @@ const Settings = () => {
               value={preferences.theme}
               onChange={(e) => setPreferences({
                 ...preferences,
-                theme: e.target.value
+                theme: e.target.value as 'light' | 'dark'
               })}
               className="input-field w-32"
             >

@@ -43,7 +43,7 @@ const OutlookConnect = () => {
     let timeoutId
     const timeout = new Promise((_, reject) => {
       timeoutId = setTimeout(() => {
-        const err = new Error('timeout')
+        const err: any = new Error('timeout')
         err.code = 'TIMEOUT'
         reject(err)
       }, ms)

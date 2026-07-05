@@ -26,7 +26,7 @@ const FinancialTools = () => {
     debts: '',
     emergencyFund: ''
   });
-  const [healthScore, setHealthScore] = useState(null);
+  const [healthScore, setHealthScore] = useState<any>(null); // TODO: tipar (resultado salud financiera)
 
   // Budget Tracker
   const [budgets, setBudgets] = useState([
@@ -446,7 +446,7 @@ const FinancialTools = () => {
           </div>
 
           {savingsGoal.target && savingsGoal.current && (() => {
-            const progress = calculateSavingsProgress();
+            const progress: any = calculateSavingsProgress();
             return (
               <div className="p-6 bg-gradient-to-br from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 rounded-xl">
                 <div className="mb-4">

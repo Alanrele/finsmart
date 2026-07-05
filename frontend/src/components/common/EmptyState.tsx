@@ -1,10 +1,18 @@
 import React from 'react'
+import type { LucideIcon } from 'lucide-react'
+
+interface EmptyStateProps {
+  icon?: LucideIcon
+  title: React.ReactNode
+  message?: React.ReactNode
+  action?: React.ReactNode
+}
 
 /*
   Estado vacío con firma de marca (nudo de cordón) e invitación a actuar.
   Úsalo en lugar de textos sueltos cuando una lista o vista no tiene datos.
 */
-const EmptyState = ({ icon: Icon, title, message, action }) => (
+const EmptyState = ({ icon: Icon, title, message, action }: EmptyStateProps) => (
   <div className="flex flex-col items-center text-center py-12 px-4">
     <div className="relative mb-5">
       {/* Hebra anudada: firma visual del quipu */}

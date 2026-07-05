@@ -64,15 +64,15 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-class ChartErrorBoundary extends React.Component {
-  constructor(props) {
+class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children?: React.ReactNode }) {
     super(props)
     this.state = { hasError: false }
   }
   static getDerivedStateFromError() {
     return { hasError: true }
   }
-  componentDidCatch(error, info) {
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('Chart render error:', error, info)
   }
   render() {
@@ -544,8 +544,8 @@ const Dashboard = () => {
               <LineChart data={spendingTrend}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="day" />
-                <YAxis formatter={(value) => formatCurrency(value)} />
-                <Tooltip formatter={(value) => [formatCurrency(value), 'Gasto']} />
+                <YAxis {...({ formatter: (value: any) => formatCurrency(value) } as any)} />
+                <Tooltip formatter={(value: any) => [formatCurrency(value), 'Gasto']} />
                 <Line
                   isAnimationActive={false}
                   type="monotone"

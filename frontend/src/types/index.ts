@@ -54,10 +54,12 @@ export interface AppNotification {
 
 export interface ChatMessage {
   id?: string | number
-  type?: 'user' | 'assistant'
+  type?: string // 'user' | 'assistant' | 'ai' | 'kipu' según la vista
+  sender?: string
   content: string
   timestamp?: string | Date
   isError?: boolean
+  [key: string]: unknown
 }
 
 export type Theme = 'light' | 'dark'

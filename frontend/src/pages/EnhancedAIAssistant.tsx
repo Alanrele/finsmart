@@ -21,7 +21,7 @@ import { formatCurrency } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 const EnhancedAIAssistant = () => {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<any[]>([ // TODO: tipar (mensajes del asistente)
     {
       type: 'ai',
       content: '¡Hola! Soy tu asistente financiero inteligente. Puedo ayudarte con:',
@@ -48,7 +48,7 @@ const EnhancedAIAssistant = () => {
   // Web Speech API para voz
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
