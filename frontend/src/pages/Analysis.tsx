@@ -8,8 +8,8 @@ import LoadingCard from '../components/common/LoadingCard'
 
 const Analysis = () => {
   const { aiAnalysis, setAiAnalysis, aiLoading, setAiLoading } = useAppStore()
-  const [recommendations, setRecommendations] = useState([])
-  const [insights, setInsights] = useState([])
+  const [recommendations, setRecommendations] = useState<any[]>([])
+  const [insights, setInsights] = useState<any[]>([])
   const [hasStarted, setHasStarted] = useState(false)
 
   const loadAnalysis = async () => {

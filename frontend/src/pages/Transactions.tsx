@@ -12,9 +12,9 @@ import { formatCurrency, formatCurrencyAuto } from '../utils/formatters'
 const EMPTY_FILTERS = { search: '', category: '', type: '', startDate: '', endDate: '', page: 1, limit: 20 }
 
 const Transactions = () => {
-  const [transactions, setTransactions] = useState([])
+  const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [pagination, setPagination] = useState({
     currentPage: 1,
@@ -408,7 +408,7 @@ const Transactions = () => {
                 // If we don't have enough pages at the end, shift the window left
                 startPage = Math.max(1, Math.min(startPage, endPage - maxButtons + 1))
 
-                const buttons = []
+                const buttons: React.ReactElement[] = []
                 for (let p = startPage; p <= endPage; p++) {
                   buttons.push(
                     <button

@@ -31,8 +31,8 @@ const OutlookConnect = () => {
   const [syncLoading, setSyncLoading] = useState(false)
   const [reprocessLoading, setReprocessLoading] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
-  const [connectionStatus, setConnectionStatus] = useState(null)
-  const [confirm, setConfirm] = useState(null) // 'disconnect' | 'reset' | null
+  const [connectionStatus, setConnectionStatus] = useState<any>(null)
+  const [confirm, setConfirm] = useState<any>(null) // 'disconnect' | 'reset' | null
 
   useEffect(() => {
     checkConnectionStatus()

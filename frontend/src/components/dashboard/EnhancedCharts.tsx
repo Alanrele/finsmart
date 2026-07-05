@@ -99,7 +99,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 // Gráfico de dona 3D mejorado
 export const Enhanced3DDonutChart = ({ data, title }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
-  const chartRef = React.useRef(null);
+  const chartRef = React.useRef<any>(null);
 
   const onPieEnter = (_, index) => setActiveIndex(index);
   const onPieLeave = () => setActiveIndex(-1);
@@ -187,7 +187,7 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
 
 // Gráfico de barras con gradientes
 export const EnhancedBarChart = ({ data, title, dataKey = 'value' }) => {
-  const chartRef = React.useRef(null);
+  const chartRef = React.useRef<any>(null);
 
   return (
     <div ref={chartRef} className="relative">
@@ -233,7 +233,7 @@ export const EnhancedBarChart = ({ data, title, dataKey = 'value' }) => {
 
 // Gráfico de área para ingresos vs gastos
 export const IncomeExpenseAreaChart = ({ data, title }) => {
-  const chartRef = React.useRef(null);
+  const chartRef = React.useRef<any>(null);
 
   return (
     <div ref={chartRef} className="relative">

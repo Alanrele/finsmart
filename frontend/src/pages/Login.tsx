@@ -38,7 +38,7 @@ const Login = () => {
 
   const [isRegister, setIsRegister] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<any>({});
   const [formData, setFormData] = useState({
     email: '',
     password: '',

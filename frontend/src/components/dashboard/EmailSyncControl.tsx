@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { getSyncStatus, toggleSync as apiToggleSync, syncEmails } from '../../services/api'
 import useAuthStore from '../../stores/authStore'
 import toast from 'react-hot-toast'
+import type { SyncStatus } from '../../types'
 
 const EmailSyncControl = () => {
-  const [syncStatus, setSyncStatus] = useState<any>({ // TODO: tipar (estado de sync)
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     syncEnabled: false,
     lastSync: null,
     hasConnection: false,

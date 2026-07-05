@@ -3,7 +3,7 @@ import { Eye, Copy, RefreshCw } from 'lucide-react';
 
 const AuthStorageDebug = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [authData, setAuthData] = useState(null);
+  const [authData, setAuthData] = useState<any>(null);
   const [rawData, setRawData] = useState('');
 
   const refreshData = () => {

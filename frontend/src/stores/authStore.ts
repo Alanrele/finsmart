@@ -92,7 +92,7 @@ const useAuthStore = create<AuthState>()(
       },
 
       // Getters
-      getAuthHeader: () => {
+      getAuthHeader: (): Record<string, string> => {
         const token = get().token
         return token ? { Authorization: `Bearer ${token}` } : {}
       },

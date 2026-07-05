@@ -458,7 +458,7 @@ export const unlockPdf = async (
 ) => {
   const form = new FormData();
   form.append('file', file);
-  form.append('password', password);
+  form.append('password', password ?? '');
   form.append('remember', remember ? 'true' : 'false');
   if (label) form.append('label', label);
   if (year) form.append('year', String(year));

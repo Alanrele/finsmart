@@ -19,8 +19,14 @@
     "allowJs": true,
     "checkJs": false,
 
-    /* Endurecimiento progresivo: se activará strict:true al final de la fase */
-    "strict": false,
+    /* Endurecido a strict:true (fase de hardening).
+       Relajaciones estándar de migración gradual JS->TS:
+       - noImplicitAny:false  -> props/params sin anotar siguen permitidos
+       - useUnknownInCatchVariables:false -> catch(e) queda como any
+       El resto de checks fuertes (strictNullChecks, etc.) quedan ACTIVOS. */
+    "strict": true,
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,

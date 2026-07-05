@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 const EmailParserTester = () => {
   const [emailContent, setEmailContent] = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState<any>(null)
 
   const handleTest = async () => {
     if (!emailContent.trim()) {

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import {
   getRules, createRule, deleteRule, testRule, exportRules, importRules, getRuleCategories,
 } from '../../services/api'
+import type { ClassificationRule, Category } from '../../types'
 
 /*
   Reglas de clasificación (motor determinístico, sin IA).
@@ -11,8 +12,8 @@ import {
   Las reglas se evalúan por prioridad; la primera que coincide gana.
 */
 const RulesManager = () => {
-  const [rules, setRules] = useState<any[]>([]) // TODO: tipar (ClassificationRule[])
-  const [categories, setCategories] = useState<any[]>([]) // TODO: tipar (Category[])
+  const [rules, setRules] = useState<ClassificationRule[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState<{ category: string; matchType: string; field: string; pattern: string; priority: number | string }>({ category: '', matchType: 'keyword', field: 'all', pattern: '', priority: 100 })
   const [saving, setSaving] = useState(false)

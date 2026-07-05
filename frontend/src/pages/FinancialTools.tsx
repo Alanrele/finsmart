@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import type { HealthScore } from '../types';
 import {
   Calculator,
   TrendingUp,
@@ -26,7 +27,7 @@ const FinancialTools = () => {
     debts: '',
     emergencyFund: ''
   });
-  const [healthScore, setHealthScore] = useState<any>(null); // TODO: tipar (resultado salud financiera)
+  const [healthScore, setHealthScore] = useState<HealthScore | null>(null);
 
   // Budget Tracker
   const [budgets, setBudgets] = useState([
@@ -50,7 +51,7 @@ const FinancialTools = () => {
     interestRate: '',
     monthlyPayment: ''
   });
-  const [debtResults, setDebtResults] = useState(null);
+  const [debtResults, setDebtResults] = useState<any>(null);
 
   // Calculate Financial Health Score
   const calculateHealthScore = () => {

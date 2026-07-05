@@ -166,7 +166,7 @@ function App() {
 
     // Connect socket if authenticated
     if (isAuthenticated && user && token) {
-      socketService.connect(user._id, token)
+      socketService.connect(user._id || '', token)
 
       // Listen for real-time notifications
       const handleNotification = (notification) => {

@@ -4,7 +4,7 @@ import useAuthStore from '../../stores/authStore';
 
 const AuthDebugPanel = () => {
   const [isVisible, setIsVisible] = useState(false);
-  const [logs, setLogs] = useState([]);
+  const [logs, setLogs] = useState<any[]>([]);
 
   const msalAuthenticated = useIsAuthenticated();
   const { accounts } = useMsal();

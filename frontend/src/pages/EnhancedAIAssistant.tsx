@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { AssistantMessage } from '../types';
 import {
   Brain,
   MessageCircle,
@@ -21,7 +22,7 @@ import { formatCurrency } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 const EnhancedAIAssistant = () => {
-  const [messages, setMessages] = useState<any[]>([ // TODO: tipar (mensajes del asistente)
+  const [messages, setMessages] = useState<AssistantMessage[]>([
     {
       type: 'ai',
       content: '¡Hola! Soy tu asistente financiero inteligente. Puedo ayudarte con:',
@@ -37,8 +38,8 @@ const EnhancedAIAssistant = () => {
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
-  const messagesEndRef = useRef(null);
-  const recognitionRef = useRef(null);
+  const messagesEndRef = useRef<any>(null);
+  const recognitionRef = useRef<any>(null);
 
   // Scroll to bottom cuando hay nuevos mensajes
   useEffect(() => {
@@ -315,9 +316,9 @@ const EnhancedAIAssistant = () => {
                             className="p-3 bg-primary/10 dark:bg-primary/20 rounded-xl border border-primary/20 dark:border-primary/40"
                           >
                             <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                              {rec.title || rec}
+                              {typeof rec === 'string' ? rec : rec.title}
                             </p>
-                            {rec.description && (
+                            {typeof rec !== 'string' && rec.description && (
                               <p className="text-xs text-zinc-700 dark:text-zinc-300 mt-1">
                                 {rec.description}
                               </p>

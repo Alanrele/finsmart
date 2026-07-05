@@ -9,7 +9,7 @@ const ChatIA = () => {
   const { chatMessages, addChatMessage } = useAppStore()
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef(null)
+  const messagesEndRef = useRef<any>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })

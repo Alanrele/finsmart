@@ -291,7 +291,7 @@ const Dashboard = () => {
       </div>
 
       {/* Indicador de movimientos sin clasificar */}
-      {summary?.unclassifiedCount > 0 && (
+      {(summary?.unclassifiedCount ?? 0) > 0 && (
         <Link
           to="/transactions?category=unclassified"
           className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 transition"
@@ -328,13 +328,13 @@ const Dashboard = () => {
                 {formatCurrency(summary?.totalSpending || 0)}
               </p>
               <div className="flex items-center mt-2">
-                {summary?.spendingChangePercentage >= 0 ? (
+                {(summary?.spendingChangePercentage ?? 0) >= 0 ? (
                   <ArrowUpRight className="w-4 h-4 text-red-500" />
                 ) : (
                   <ArrowDownRight className="w-4 h-4 text-green-500" />
                 )}
                 <span className={`text-sm ml-1 ${
-                  summary?.spendingChangePercentage >= 0 ? 'text-red-500' : 'text-green-500'
+                  (summary?.spendingChangePercentage ?? 0) >= 0 ? 'text-red-500' : 'text-green-500'
                 }`}>
                   {formatPercentage(summary?.spendingChangePercentage || 0)}
                 </span>

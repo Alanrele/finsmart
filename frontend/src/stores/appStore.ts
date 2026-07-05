@@ -1,28 +1,28 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { AppNotification, ChatMessage, Theme, Transaction } from '../types'
+import type { AppNotification, ChatMessage, Theme, Transaction, DashboardData, AiAnalysis } from '../types'
 
 interface AppState {
   theme: Theme
   appReady: boolean
-  dashboardData: any // TODO: tipar (respuesta de /finance/dashboard)
+  dashboardData: DashboardData | null
   transactions: Transaction[]
   transactionsLoading: boolean
   isGraphConnected: boolean
   lastSync: string | null
-  aiAnalysis: any // TODO: tipar (respuesta de /ai/analyze)
+  aiAnalysis: AiAnalysis | null
   aiLoading: boolean
   notifications: AppNotification[]
   chatMessages: ChatMessage[]
 
   setTheme: (theme: Theme) => void
-  setDashboardData: (data: any) => void
+  setDashboardData: (data: DashboardData | null) => void
   setAppReady: (ready: boolean) => void
   setTransactions: (transactions: Transaction[]) => void
   addTransaction: (transaction: Transaction) => void
   setTransactionsLoading: (loading: boolean) => void
   setGraphConnection: (connected: boolean, lastSync?: string | Date | null) => void
-  setAiAnalysis: (analysis: any) => void
+  setAiAnalysis: (analysis: AiAnalysis | null) => void
   setAiLoading: (loading: boolean) => void
   addNotification: (notification: AppNotification) => void
   removeNotification: (id: string | number) => void

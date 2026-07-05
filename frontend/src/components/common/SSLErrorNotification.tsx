@@ -4,7 +4,7 @@ import { AlertTriangle, Wifi, WifiOff, Shield, RefreshCw } from 'lucide-react';
 const SSLErrorNotification = () => {
   const [sslErrors, setSSLErrors] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [lastError, setLastError] = useState(null);
+  const [lastError, setLastError] = useState<any>(null);
 
   useEffect(() => {
     // Interceptar errores de red para detectar problemas SSL

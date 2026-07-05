@@ -5,7 +5,7 @@ import useAuthStore from '../../stores/authStore'
 const SocketDebugPanel = () => {
   const [socketStatus, setSocketStatus] = useState('unknown')
   const [transportType, setTransportType] = useState('unknown')
-  const [connectionLogs, setConnectionLogs] = useState([])
+  const [connectionLogs, setConnectionLogs] = useState<any[]>([])
   const [isVisible, setIsVisible] = useState(false)
   const { isAuthenticated, user, token } = useAuthStore()
 
@@ -69,7 +69,7 @@ const SocketDebugPanel = () => {
       addLog('🔄 Manual reconnection attempt', 'info')
       socketService.disconnect()
       setTimeout(() => {
-        socketService.connect(user._id, token)
+        socketService.connect(user?._id || '', token)
       }, 1000)
     }
   }
@@ -80,7 +80,7 @@ const SocketDebugPanel = () => {
       socketService.socket.io.opts.transports = ['polling']
       socketService.socket.io.opts.upgrade = false
       socketService.socket.disconnect()
-      setTimeout(() => socketService.socket.connect(), 500)
+      setTimeout(() => socketService.socket?.connect(), 500)
     }
   }
 

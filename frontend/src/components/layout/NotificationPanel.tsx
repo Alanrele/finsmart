@@ -10,9 +10,9 @@ const NotificationPanel = () => {
   // Auto-close notifications after 5 seconds
   useEffect(() => {
     notifications.forEach(notification => {
-      if (notification.autoClose !== false) {
+      if (notification.autoClose !== false && notification.id != null) {
         setTimeout(() => {
-          removeNotification(notification.id)
+          removeNotification(notification.id!)
         }, 5000)
       }
     })
@@ -89,7 +89,7 @@ const NotificationPanel = () => {
                   )}
                 </div>
                 <button
-                  onClick={() => removeNotification(notification.id)}
+                  onClick={() => notification.id != null && removeNotification(notification.id)}
                   className="flex-shrink-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                 >
                   <X className="w-4 h-4" />
@@ -177,7 +177,7 @@ const NotificationPanel = () => {
                             )}
                           </div>
                           <button
-                            onClick={() => removeNotification(notification.id)}
+                            onClick={() => notification.id != null && removeNotification(notification.id)}
                             className="flex-shrink-0 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
                           >
                             <X className="w-4 h-4" />

@@ -10,9 +10,9 @@ import ConfirmDialog from '../common/ConfirmDialog'
   Puede borrarlas. Son SEPARADAS de las API keys de conexiones externas.
 */
 const SavedPdfCredentials = () => {
-  const [creds, setCreds] = useState([])
+  const [creds, setCreds] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [confirmId, setConfirmId] = useState(null)
+  const [confirmId, setConfirmId] = useState<any>(null)
   const [deleting, setDeleting] = useState(false)
 
   const load = async () => {

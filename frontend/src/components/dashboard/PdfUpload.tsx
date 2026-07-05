@@ -15,10 +15,11 @@ import { processPdf, unlockPdf } from '../../services/api'
    4. Resumen por archivo: nuevos / duplicados / sin clasificar / no procesable.
 */
 const PdfUpload = ({ onImported }) => {
-  const inputRef = useRef(null)
+  const inputRef = useRef<any>(null)
   const [dragOver, setDragOver] = useState(false)
-  const [queue, setQueue] = useState<any[]>([]) // [{ file, status, summary, error }] // TODO: tipar
-  const [pwdModal, setPwdModal] = useState(null) // { file, index, error }
+  const [queue, setQueue] = useState<any[]>([]) // [{ file, status, summary, error }]
+  // (forma dinámica por archivo; se mantiene any[] intencionalmente)
+  const [pwdModal, setPwdModal] = useState<any>(null) // { file, index, error }
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
   const [unlocking, setUnlocking] = useState(false)
@@ -140,7 +141,7 @@ const PdfUpload = ({ onImported }) => {
           accept="application/pdf"
           multiple
           className="hidden"
-          onChange={(e) => { enqueue(e.target.files); e.target.value = '' }}
+          onChange={(e) => { if (e.target.files) enqueue(e.target.files); e.target.value = '' }}
         />
       </div>
 
