@@ -63,8 +63,8 @@ const ProtectedRoute = ({ children }) => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-2 text-zinc-600">Verificando autenticación...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary mx-auto"></div>
+          <p className="mt-2 text-muted">Verificando autenticación...</p>
         </div>
       </div>
     );
@@ -196,7 +196,7 @@ function App() {
   }, [isAuthenticated, user, token, initializeTheme, addNotification])
 
   return (
-    <div className="App min-h-screen bg-page dark:bg-page-dark text-zinc-900 dark:text-zinc-50">
+    <div className="App min-h-screen bg-base text-main">
 
       {/* Debug panels - only render when debug mode enabled */}
       {debugEnabled && <DebugAuth />}

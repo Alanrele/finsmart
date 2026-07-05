@@ -56,15 +56,37 @@ export default {
           700: '#3D5348',
           DEFAULT: '#A6C0B4',
         },
-        // Fondo de página según la guía (claro/oscuro)
+        // Fondo de página según la guía (claro/oscuro) — ahora cálido (Kipu)
         page: {
-          DEFAULT: '#F2F2F7',
-          dark: '#09090C',
+          DEFAULT: '#F8F6F1',
+          dark: '#0F1314',
+        },
+        // Tokens semánticos de la plantilla Kipu (via variables CSS en index.css)
+        base: 'var(--bg-base)',
+        card: 'var(--bg-card)',
+        sidebar: 'var(--bg-sidebar)',
+        header: 'var(--bg-header)',
+        main: 'var(--text-main)',
+        muted: 'var(--text-muted)',
+        subtle: 'var(--border-subtle)',
+        brand: {
+          primary: 'var(--brand-primary)',
+          light: 'var(--brand-light)',
+          dark: 'var(--brand-dark)',
         },
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['"Bricolage Grotesque"', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      borderRadius: {
+        'ios': '20px',
+        'ios-lg': '28px',
+        'ios-xl': '32px',
+      },
+      transitionTimingFunction: {
+        'ios': 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

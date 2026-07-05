@@ -3,35 +3,60 @@
 @tailwind utilities;
 
 /*
-  Tokens de la paleta oficial (DOC/GUIA_DE_ESTILO.md)
-  - Arena   #D4CBB0  superficies suaves / fondos teñidos
-  - Taupe   #A79E82  texto secundario con tinte, bordes cálidos
-  - Salvia  #A6C0B4  éxito / positivo
-  - Petróleo #3F7079 primario / CTA (contraste AA sobre blanco)
+  Sistema de diseño adoptado de la plantilla Kipu (DOC/PLAN_MIGRACION_KIPU.md).
+  Base cálida arena-blanco, tarjetas glass/squircle, tipografía Outfit + Inter +
+  JetBrains Mono, primario petróleo (salvia en oscuro).
+
+  Se conservan los nombres --color-* que ya usaba el código (App Toaster,
+  loading-spinner) y se añaden los tokens semánticos de Kipu (--bg-*, --text-*,
+  --brand-*, --border-subtle) que consume tailwind.config.js.
 */
 :root {
-  --color-bg: #F2F2F7;
-  --color-surface: #FFFFFF;
-  --color-primary: #3F7079;
+  /* Tokens Kipu */
+  --bg-base: #F8F6F1;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #EBE6DA;
+  --bg-header: #EBE6DA;
+  --text-main: #2D2B24;
+  --text-muted: #6E6857;
+  --border-subtle: rgba(167, 158, 130, 0.25);
+  --brand-primary: #3F7079;
+  --brand-light: #F1ECE2;
+  --brand-dark: #2D2B24;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-header-bg: rgba(235, 230, 218, 0.85);
+  --scroll-thumb: rgba(45, 43, 36, 0.15);
+  --scroll-thumb-hover: rgba(45, 43, 36, 0.3);
+
+  /* Alias legado usados por el código existente */
+  --color-bg: var(--bg-base);
+  --color-surface: var(--bg-card);
+  --color-primary: var(--brand-primary);
   --color-sand: #D4CBB0;
   --color-taupe: #A79E82;
   --color-sage: #A6C0B4;
-  --color-text: #18181B;
-  --color-text-muted: #71717A;
-  --color-border: #F4F4F5;
+  --color-text: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border-subtle);
   color-scheme: light;
 }
 
+.dark,
 [data-theme="dark"] {
-  --color-bg: #09090C;
-  --color-surface: #18181B;
-  --color-primary: #63929B;
-  --color-sand: #D4CBB0;
-  --color-taupe: #C2BBA5;
-  --color-sage: #A6C0B4;
-  --color-text: #FAFAFA;
-  --color-text-muted: #A1A1AA;
-  --color-border: #27272A;
+  --bg-base: #0F1314;
+  --bg-card: #161B1C;
+  --bg-sidebar: #0B0E0E;
+  --bg-header: #0B0E0E;
+  --text-main: #F5F3ED;
+  --text-muted: #A79E82;
+  --border-subtle: rgba(212, 203, 176, 0.12);
+  --brand-primary: #A6C0B4;
+  --brand-light: #1C2325;
+  --brand-dark: #070909;
+  --glass-bg: rgba(22, 27, 28, 0.75);
+  --glass-header-bg: rgba(11, 14, 14, 0.85);
+  --scroll-thumb: rgba(245, 243, 237, 0.1);
+  --scroll-thumb-hover: rgba(245, 243, 237, 0.2);
   color-scheme: dark;
 }
 
@@ -40,32 +65,28 @@
   box-sizing: border-box;
 }
 
-/* Tipografía display (Bricolage Grotesque) para títulos: identidad Kipu */
+/* Tipografía display (Outfit) para títulos: identidad Kipu */
 @layer base {
   h1, h2 {
-    font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
 }
 
-/* Firma de marca: cejilla con nudo (etiqueta de sección precedida por un nudo del quipu) */
-.eyebrow {
-  @apply inline-flex items-center gap-2 text-[11px] font-extrabold uppercase tracking-wider text-taupe-500 dark:text-taupe-300;
-}
-
-.eyebrow::before {
-  content: '';
-  @apply inline-block h-2 w-2 rounded-full bg-primary;
-}
-
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg-base);
+  color: var(--text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+/* Transición suave global estilo Kipu (cubic-bezier ease-out) */
+a, button, input, select, textarea,
+.card, .btn-primary, .btn-secondary, .badge {
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* PWA specific styles */
@@ -78,213 +99,148 @@ body {
   }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
+/* Custom scrollbar (Kipu) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
 
-::-webkit-scrollbar-track {
-  background: transparent;
+/* ===== Utilidades Kipu (glassmorphism + squircle) ===== */
+.ios-glass {
+  backdrop-filter: blur(24px);
+  background-color: var(--glass-bg);
+  border: 1px solid var(--border-subtle);
 }
+.ios-glass-header {
+  backdrop-filter: blur(20px);
+  background-color: var(--glass-header-bg);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.ios-rounded { border-radius: 20px; }
+.ios-rounded-lg { border-radius: 28px; }
+.ios-rounded-xl { border-radius: 32px; }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-taupe);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
-}
-
-/* Components */
-.glass-effect {
-  @apply bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-100 dark:border-zinc-800;
-}
+/* Cristal / degradados heredados */
+.glass-effect { @apply ios-glass; }
 
 .gradient-bg {
-  background: linear-gradient(135deg, var(--color-sage) 0%, var(--color-primary) 100%);
+  background: linear-gradient(135deg, var(--color-sage) 0%, var(--brand-primary) 100%);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-sage) 100%);
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--color-sage) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Button styles (GUIA_DE_ESTILO §4) */
+/* ===== Botones (estilo Kipu: petróleo sólido, pill, mayúsculas) ===== */
 .btn-primary {
-  @apply py-3.5 px-6 rounded-2xl bg-primary hover:bg-primary-600 active:bg-primary-700
-         text-sm font-black text-white shadow-lg shadow-primary/15 transition
-         inline-flex items-center justify-center gap-2 disabled:opacity-50;
+  @apply py-3 px-6 rounded-full bg-brand-primary hover:opacity-90 active:opacity-100
+         text-sm font-bold text-white dark:text-brand-dark uppercase tracking-wide
+         shadow-lg shadow-black/10
+         inline-flex items-center justify-center gap-2 disabled:opacity-40 transition-all;
 }
 
 .btn-secondary {
-  @apply py-3.5 px-6 rounded-2xl bg-primary/10 hover:bg-primary/20
-         text-sm font-black text-primary dark:text-primary-300 transition
-         inline-flex items-center justify-center gap-2 disabled:opacity-50;
+  @apply py-3 px-6 rounded-full bg-primary/10 hover:bg-primary/20
+         text-sm font-bold text-primary dark:text-primary-300 uppercase tracking-wide
+         border border-primary/20
+         inline-flex items-center justify-center gap-2 disabled:opacity-40 transition-all;
 }
 
-/* Card styles (GUIA_DE_ESTILO §3) */
+/* ===== Tarjeta (glass/squircle Kipu) ===== */
 .card {
-  @apply bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm p-4 transition;
+  @apply bg-card rounded-[2rem] border border-subtle shadow-xl p-6 transition-all;
 }
 
 .card-hover {
-  @apply hover:shadow-md;
+  @apply hover:shadow-2xl hover:-translate-y-0.5;
 }
 
-/* Input styles (GUIA_DE_ESTILO §6) */
+/* ===== Inputs ===== */
 .input-field {
-  @apply w-full px-3.5 py-3 rounded-xl bg-zinc-50 dark:bg-zinc-950
-         border border-zinc-100 dark:border-zinc-800 text-sm font-semibold
-         text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400
-         focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/40 transition;
+  @apply w-full px-4 py-3 rounded-2xl bg-black/[0.03] dark:bg-white/5
+         border border-subtle text-sm font-medium
+         text-main placeholder:text-muted
+         focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/40 transition-all;
 }
 
-.input-field--with-prefix-icon {
-  @apply pl-10;
-}
+.input-field--with-prefix-icon { @apply pl-10; }
+.input-field--with-suffix-icon { @apply pr-10; }
 
-.input-field--with-suffix-icon {
-  @apply pr-10;
-}
-
-/* Micro-etiqueta (labels y cabeceras de dato) */
+/* ===== Micro-etiqueta (mono en mayúsculas, tracking ancho — firma Kipu) ===== */
 .micro-label {
-  @apply text-[10px] font-extrabold uppercase tracking-wider text-zinc-400;
+  @apply font-mono text-[10px] font-bold uppercase tracking-widest text-muted;
 }
 
-/* Badge pill (GUIA_DE_ESTILO §5) */
+/* Cejilla de sección con punto de marca */
+.eyebrow {
+  @apply inline-flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-widest text-muted;
+}
+.eyebrow::before {
+  content: '';
+  @apply inline-block h-1.5 w-1.5 rounded-full bg-primary;
+}
+
+/* ===== Badges (pill) ===== */
 .badge {
-  @apply px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase inline-flex items-center gap-1;
+  @apply px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider inline-flex items-center gap-1;
 }
+.badge-success { @apply badge bg-sage-600/10 text-sage-700 dark:text-sage-300 border border-sage-600/20; }
+.badge-info { @apply badge bg-primary/10 text-primary dark:text-primary-300 border border-primary/20; }
+.badge-warning { @apply badge bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20; }
+.badge-danger { @apply badge bg-rose-500/10 text-rose-500 border border-rose-500/20; }
 
-.badge-success {
-  @apply badge bg-sage-600/10 text-sage-700 dark:text-sage-300 border border-sage-600/20;
-}
-
-.badge-info {
-  @apply badge bg-primary/10 text-primary dark:text-primary-300 border border-primary/20;
-}
-
-.badge-warning {
-  @apply badge bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20;
-}
-
-.badge-danger {
-  @apply badge bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20;
-}
-
-/* Animation classes */
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* ===== Animaciones ===== */
+.animate-float { animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+.animate-fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
-  .container {
-    @apply px-4;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    @apply py-4 text-base min-h-[44px];
-  }
+  .container { @apply px-4; }
+  .btn-primary, .btn-secondary { @apply py-3.5 text-base min-h-[44px]; }
 }
 
-/* Touch optimizations */
 @media (pointer: coarse) {
-  .btn-primary:active,
-  .btn-secondary:active {
-    @apply scale-95;
-  }
+  .btn-primary:active, .btn-secondary:active { @apply scale-95; }
 }
 
 /* Chart customizations */
-.recharts-tooltip-wrapper {
-  @apply rounded-xl shadow-sm;
-}
-
+.recharts-tooltip-wrapper { @apply rounded-2xl shadow-xl; }
 .recharts-tooltip-content {
-  @apply bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-xl p-3;
+  @apply bg-card border border-subtle rounded-2xl p-3;
 }
 
-/* Loading animations */
-.loading-pulse {
-  @apply animate-pulse bg-zinc-200 dark:bg-zinc-700 rounded;
-}
-
+/* Loading */
+.loading-pulse { @apply animate-pulse bg-black/5 dark:bg-white/5 rounded; }
 .loading-spinner {
-  border: 2px solid var(--color-border);
-  border-top: 2px solid var(--color-primary);
+  border: 2px solid var(--border-subtle);
+  border-top: 2px solid var(--brand-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 /* Notification styles */
 .notification {
-  @apply fixed top-4 right-4 left-4 md:left-auto md:w-96 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl shadow-sm p-4 z-50 transition;
+  @apply fixed top-4 right-4 left-4 md:left-auto md:w-96 bg-card border border-subtle rounded-[2rem] shadow-xl p-4 z-50 transition-all;
 }
-
-.notification.success {
-  @apply border-sage-300 bg-sage-50 dark:bg-sage-700/20;
-}
-
-.notification.error {
-  @apply border-red-200 bg-red-50 dark:bg-red-950/30;
-}
-
-.notification.warning {
-  @apply border-amber-200 bg-amber-50 dark:bg-amber-950/30;
-}
+.notification.success { @apply border-sage-300 bg-sage-50 dark:bg-sage-700/20; }
+.notification.error { @apply border-rose-200 bg-rose-50 dark:bg-rose-950/30; }
+.notification.warning { @apply border-amber-200 bg-amber-50 dark:bg-amber-950/30; }
 
 /* Utilities */
-.text-balance {
-  text-wrap: balance;
-}
+.text-balance { text-wrap: balance; }
+.safe-area-top { padding-top: env(safe-area-inset-top); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
 
-.safe-area-top {
-  padding-top: env(safe-area-inset-top);
-}
-
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Focus styles for accessibility */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900;
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 focus:ring-offset-card;
 }
 
-/* Print styles */
 @media print {
-  .no-print {
-    display: none !important;
-  }
+  .no-print { display: none !important; }
 }

@@ -1,185 +1,198 @@
 import React, { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Home,
-  CreditCard,
-  TrendingUp,
+  LayoutDashboard,
+  Receipt,
+  Sparkles,
   MessageSquare,
+  PiggyBank,
+  Calculator,
   Mail,
-  Settings,
-  Menu,
-  X,
+  Settings as SettingsIcon,
+  LogOut,
   Sun,
   Moon,
+  X,
+  MoreHorizontal,
   FileText,
-  Brain,
-  Calculator
+  UserCheck,
 } from 'lucide-react'
 import useAppStore from '../../stores/appStore'
-import BrandLogo from '../common/BrandLogo'
+import useAuthStore from '../../stores/authStore'
+import { KipuIcon } from '../common/BrandLogo'
 
+/*
+  Navegación móvil con la identidad Kipu: header glass superior, barra inferior
+  flotante (squircle glass) y drawer lateral deslizante. Conserva router y auth.
+*/
 const Navbar = () => {
   const location = useLocation()
   const { theme, setTheme } = useAppStore()
+  const { user, logout } = useAuthStore()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const debugEnabled = (typeof window !== 'undefined' && window.localStorage.getItem('finsmart:debug') === '1') ||
     (typeof import.meta !== 'undefined' && String(import.meta.env.VITE_ENABLE_DEBUG || '').toLowerCase() === 'true')
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Transacciones', href: '/transactions', icon: CreditCard },
-    { name: 'Análisis', href: '/analysis', icon: TrendingUp },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Transacciones', href: '/transactions', icon: Receipt },
+    { name: 'Análisis', href: '/analysis', icon: Sparkles },
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
-    { name: 'Asistente IA+', href: '/ai-assistant', icon: Brain },
+    { name: 'Asistente IA+', href: '/ai-assistant', icon: PiggyBank },
     { name: 'Herramientas', href: '/tools', icon: Calculator },
     { name: 'Outlook', href: '/outlook', icon: Mail },
     ...(debugEnabled ? [{ name: 'Email Parser', href: '/email-parser', icon: FileText }] : []),
-    { name: 'Configuración', href: '/settings', icon: Settings },
+    { name: 'Configuración', href: '/settings', icon: SettingsIcon },
   ]
 
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
+  const bottomBar = [
+    { name: 'Dashboard', label: 'Inicio', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Transacciones', label: 'Historial', href: '/transactions', icon: Receipt },
+    { name: 'Chat IA', label: 'Kipu AI', href: '/chat', icon: MessageSquare },
+    { name: 'Asistente IA+', label: 'Metas', href: '/ai-assistant', icon: PiggyBank },
+  ]
+
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
   return (
     <>
-      {/* Top navigation bar */}
-      <nav className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800 safe-area-top">
-        <div className="px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <Link to="/dashboard" className="flex items-center">
-              <BrandLogo iconSize={32} />
-            </Link>
-
-            {/* Right side buttons */}
-            <div className="flex items-center space-x-2">
-              {/* Theme toggle */}
-              <button
-                onClick={toggleTheme}
-                className="h-10 w-10 flex items-center justify-center rounded-xl text-zinc-400 hover:text-primary hover:bg-primary/10 transition"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-              </button>
-
-              {/* Menu toggle */}
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="h-10 w-10 flex items-center justify-center rounded-xl text-zinc-400 hover:text-primary hover:bg-primary/10 transition"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+      {/* Header glass superior */}
+      <header className="lg:hidden h-16 ios-glass-header px-5 flex items-center justify-between sticky top-0 z-40 safe-area-top">
+        <Link to="/dashboard" className="flex items-center gap-3">
+          <KipuIcon size={36} className="rounded-xl shadow-md" />
+          <div>
+            <span className="font-extrabold text-main tracking-tight font-display text-base leading-none">Kipu</span>
+            <span className="text-[8px] text-brand-primary font-mono tracking-widest uppercase block mt-0.5 font-bold">Secure AI</span>
           </div>
-        </div>
-      </nav>
+        </Link>
+        <button
+          onClick={toggleTheme}
+          className="p-2 text-muted hover:text-main hover:bg-card/40 rounded-xl transition-all"
+          title="Cambiar tema"
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+      </header>
 
-      {/* Mobile menu overlay */}
-      {isMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsMenuOpen(false)}
-        />
-      )}
-
-      {/* Mobile menu */}
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: isMenuOpen ? 0 : '100%' }}
-        transition={{ type: 'tween', duration: 0.3 }}
-        className="fixed top-0 right-0 w-80 h-full bg-white dark:bg-zinc-900 border-l border-zinc-100 dark:border-zinc-800 z-50 lg:hidden safe-area-top"
-      >
-        <div className="p-4">
-          {/* Close button */}
-          <div className="flex justify-end mb-6">
-            <button
-              onClick={() => setIsMenuOpen(false)}
-              className="h-10 w-10 flex items-center justify-center rounded-xl text-zinc-400 hover:text-primary hover:bg-primary/10 transition"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Navigation links */}
-          <nav>
-            <ul className="space-y-2">
-              {navigation.map((item) => {
-                const isActive = location.pathname === item.href
-                const Icon = item.icon
-
-                return (
-                  <li key={item.name}>
-                    <Link
-                      to={item.href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`
-                        relative flex items-center px-4 py-3 min-h-[44px] rounded-xl transition
-                        ${isActive
-                          ? 'bg-primary text-white shadow-lg shadow-primary/15'
-                          : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                        }
-                      `}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="ml-3 font-bold text-sm">{item.name}</span>
-
-                      {isActive && (
-                        <motion.div
-                          layoutId="mobile-nav-active"
-                          className="absolute inset-0 bg-primary rounded-xl -z-10"
-                          initial={false}
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                        />
-                      )}
-                    </Link>
-                  </li>
-                )
-              })}
-            </ul>
-          </nav>
-        </div>
-      </motion.div>
-
-      {/* Bottom navigation for mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl border-t border-zinc-100 dark:border-zinc-800 safe-area-bottom lg:hidden z-30">
-        <div className="flex justify-around py-2">
-          {navigation.slice(0, 4).map((item) => {
+      {/* Barra inferior flotante */}
+      <div className="lg:hidden fixed bottom-5 left-4 right-4 z-40 safe-area-bottom">
+        <div className="ios-glass shadow-2xl rounded-3xl px-3 py-1.5 flex items-center justify-between max-w-lg mx-auto">
+          {bottomBar.map((item) => {
             const isActive = location.pathname === item.href
             const Icon = item.icon
-
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`
-                  flex flex-col items-center py-2 px-3 min-h-[44px] rounded-xl transition
-                  ${isActive
-                    ? 'text-primary dark:text-primary-300'
-                    : 'text-zinc-400 dark:text-zinc-500'
-                  }
-                `}
+                className="flex-1 flex flex-col items-center justify-center py-1 min-h-[44px] relative"
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-[10px] mt-1 font-extrabold uppercase tracking-wider">{item.name}</span>
-
-                {isActive && (
-                  <motion.div
-                    layoutId="bottom-nav-active"
-                    className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary rounded-full"
-                    initial={false}
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
+                <div className={`p-2 rounded-2xl transition-all duration-300 relative ${
+                  isActive ? 'text-brand-primary bg-brand-primary/15 scale-110' : 'text-main/65 dark:text-muted hover:text-main'
+                }`}>
+                  <Icon size={20} />
+                  {isActive && (
+                    <motion.div
+                      layoutId="bottom-nav-active"
+                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-primary"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </div>
+                <span className={`text-[9px] font-extrabold tracking-tight mt-0.5 ${isActive ? 'text-brand-primary' : 'text-main/75 dark:text-muted'}`}>
+                  {item.label}
+                </span>
               </Link>
             )
           })}
+          {/* Más */}
+          <button
+            onClick={() => setIsMenuOpen(true)}
+            className="flex-1 flex flex-col items-center justify-center py-1 min-h-[44px]"
+          >
+            <div className="p-2 rounded-2xl text-main/65 dark:text-muted hover:text-main transition-all">
+              <MoreHorizontal size={20} />
+            </div>
+            <span className="text-[9px] font-extrabold tracking-tight mt-0.5 text-main/75 dark:text-muted">Más</span>
+          </button>
         </div>
       </div>
+
+      {/* Drawer lateral */}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setIsMenuOpen(false)}
+              className="absolute inset-0 bg-black/45 backdrop-blur-[1.5px]"
+            />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative w-80 max-w-full bg-sidebar/95 backdrop-blur-xl border-l border-subtle h-full p-8 flex flex-col justify-between shadow-2xl z-10 safe-area-top"
+            >
+              <div>
+                <div className="flex justify-between items-center mb-8 pb-4 border-b border-subtle">
+                  <div className="flex items-center gap-3">
+                    <KipuIcon size={40} className="rounded-2xl shadow-md" />
+                    <span className="font-extrabold text-main tracking-tight font-display text-xl">Kipu</span>
+                  </div>
+                  <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-card/40 rounded-xl text-muted hover:text-main transition-all">
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <nav className="space-y-1.5">
+                  {navigation.map((item) => {
+                    const isActive = location.pathname === item.href
+                    const Icon = item.icon
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={() => setIsMenuOpen(false)}
+                        className={`w-full flex items-center gap-3.5 px-4 py-3 min-h-[44px] rounded-2xl text-xs font-bold transition-all ${
+                          isActive
+                            ? 'bg-brand-primary text-white dark:bg-brand-primary/20 dark:text-brand-primary border border-brand-primary/30 shadow-md'
+                            : 'text-main/85 hover:text-main hover:bg-white/60 dark:text-muted dark:hover:text-main dark:hover:bg-card/40'
+                        }`}
+                      >
+                        <Icon size={16} className={isActive ? 'text-white dark:text-brand-primary' : 'text-main/70 dark:text-muted'} />
+                        <span>{item.name}</span>
+                      </Link>
+                    )
+                  })}
+                </nav>
+              </div>
+
+              <div className="space-y-3">
+                <div className="ios-glass p-4 rounded-full flex items-center gap-3.5 shadow-lg">
+                  <div className="w-10 h-10 rounded-full bg-brand-primary/25 text-brand-primary border border-brand-primary/20 flex items-center justify-center shrink-0">
+                    <UserCheck size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-extrabold text-main block truncate">
+                      {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Kipu Platinum'}
+                    </span>
+                    <span className="text-[9px] text-muted font-mono tracking-widest uppercase block mt-0.5 truncate">
+                      {user?.email || 'MEMBER'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => { setIsMenuOpen(false); logout() }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                >
+                  <LogOut size={16} />
+                  <span>Cerrar sesión</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

@@ -1,138 +1,110 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
-  Home,
-  CreditCard,
-  TrendingUp,
+  LayoutDashboard,
+  Receipt,
+  Sparkles,
   MessageSquare,
+  PiggyBank,
+  Calculator,
   Mail,
-  Settings,
+  Settings as SettingsIcon,
   LogOut,
   Sun,
   Moon,
-  User,
-  Brain,
-  Calculator
+  UserCheck,
 } from 'lucide-react'
 import useAuthStore from '../../stores/authStore'
 import useAppStore from '../../stores/appStore'
-import BrandLogo, { KipuIcon } from '../common/BrandLogo'
+import { KipuIcon } from '../common/BrandLogo'
 
+/*
+  Sidebar de escritorio con la identidad Kipu: superficie beige, marca squircle,
+  navegación en pills redondeadas y tarjeta "Platinum" al pie. Conserva el
+  router (react-router) y el estado/auth existentes.
+*/
 const Sidebar = () => {
   const location = useLocation()
   const { user, logout } = useAuthStore()
   const { theme, setTheme } = useAppStore()
-  const [isCollapsed, setIsCollapsed] = useState(false)
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home },
-    { name: 'Transacciones', href: '/transactions', icon: CreditCard },
-    { name: 'Análisis', href: '/analysis', icon: TrendingUp },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Transacciones', href: '/transactions', icon: Receipt },
+    { name: 'Análisis', href: '/analysis', icon: Sparkles },
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
-    { name: 'Asistente IA+', href: '/ai-assistant', icon: Brain },
+    { name: 'Asistente IA+', href: '/ai-assistant', icon: PiggyBank },
     { name: 'Herramientas', href: '/tools', icon: Calculator },
     { name: 'Outlook', href: '/outlook', icon: Mail },
-    { name: 'Configuración', href: '/settings', icon: Settings },
+    { name: 'Configuración', href: '/settings', icon: SettingsIcon },
   ]
 
-  const handleLogout = () => {
-    logout()
-  }
-
-  const toggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark')
-  }
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-zinc-900 border-r border-zinc-100 dark:border-zinc-800">
-      {/* Logo */}
-      <div className="p-6">
-        <Link to="/dashboard" className="flex items-center">
-          {isCollapsed ? <KipuIcon size={32} /> : <BrandLogo iconSize={32} />}
+    <div className="flex flex-col h-full bg-sidebar border-r border-subtle">
+      {/* Marca */}
+      <div className="p-8 border-b border-subtle flex items-center justify-between">
+        <Link to="/dashboard" className="flex items-center gap-3">
+          <KipuIcon size={40} className="rounded-2xl shadow-lg" />
+          <div>
+            <span className="text-xl font-extrabold tracking-tight text-main font-display block leading-none">Kipu</span>
+            <span className="text-[10px] text-muted font-mono block tracking-widest mt-1">PLATINUM SECURE</span>
+          </div>
         </Link>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3">
-        <ul className="space-y-2">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href
-            const Icon = item.icon
-
-            return (
-              <li key={item.name}>
-                <Link
-                  to={item.href}
-                  className={`
-                    relative flex items-center px-3 py-3 min-h-[44px] rounded-xl transition
-                    ${isActive
-                      ? 'bg-primary text-white shadow-lg shadow-primary/15'
-                      : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                    }
-                  `}
-                >
-                  <Icon className="w-5 h-5" />
-                  {!isCollapsed && (
-                    <span className="ml-3 font-bold text-sm">{item.name}</span>
-                  )}
-
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebar-active"
-                      className="absolute inset-0 bg-primary rounded-xl -z-10"
-                      initial={false}
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      </nav>
-
-      {/* User section */}
-      <div className="p-4 border-t border-zinc-100 dark:border-zinc-800">
-        {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center px-3 py-2 mb-3 text-zinc-500 dark:text-zinc-400 hover:text-primary hover:bg-primary/10 rounded-xl transition"
+          className="p-2 hover:bg-card rounded-xl text-muted hover:text-main transition-all"
+          title="Cambiar tema"
         >
-          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          {!isCollapsed && (
-            <span className="ml-3 font-bold text-sm">
-              {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
-            </span>
-          )}
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
+      </div>
 
-        {/* User profile */}
-        <div className="flex items-center space-x-3 mb-3">
-          <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-            <User className="w-4 h-4 text-primary dark:text-primary-300" />
+      {/* Navegación */}
+      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+        {navigation.map((item) => {
+          const isActive = location.pathname === item.href
+          const Icon = item.icon
+          return (
+            <Link
+              key={item.name}
+              to={item.href}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 min-h-[44px] rounded-2xl text-xs font-bold transition-all ${
+                isActive
+                  ? 'bg-brand-primary text-white dark:bg-brand-primary/15 dark:text-brand-primary border border-brand-primary/25 shadow-sm'
+                  : 'text-main/85 hover:text-main hover:bg-white/60 dark:text-muted dark:hover:text-main dark:hover:bg-card/50 border border-transparent'
+              }`}
+            >
+              <Icon size={16} className={isActive ? 'text-white dark:text-brand-primary' : 'text-main/70 dark:text-muted'} />
+              <span>{item.name}</span>
+            </Link>
+          )
+        })}
+      </nav>
+
+      {/* Pie: tarjeta de cuenta + cerrar sesión */}
+      <div className="p-6 border-t border-subtle space-y-3">
+        <div className="ios-glass p-4 rounded-full flex items-center gap-3.5 shadow-lg">
+          <div className="w-10 h-10 rounded-full bg-brand-primary/25 text-brand-primary border border-brand-primary/20 flex items-center justify-center shrink-0">
+            <UserCheck size={18} />
           </div>
-          {!isCollapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50 truncate">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                {user?.email}
-              </p>
-            </div>
-          )}
+          <div className="min-w-0">
+            <span className="text-[11px] font-extrabold text-main block truncate">
+              {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'Kipu Platinum'}
+            </span>
+            <span className="text-[9px] text-muted font-mono tracking-widest uppercase block mt-0.5 truncate">
+              {user?.email || 'MEMBER'}
+            </span>
+          </div>
         </div>
 
-        {/* Logout button */}
         <button
-          onClick={handleLogout}
-          className="w-full flex items-center px-3 py-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition"
+          onClick={logout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-all"
         >
-          <LogOut className="w-5 h-5" />
-          {!isCollapsed && (
-            <span className="ml-3 font-bold text-sm">Cerrar Sesión</span>
-          )}
+          <LogOut size={16} />
+          <span>Cerrar sesión</span>
         </button>
       </div>
     </div>

@@ -14,7 +14,7 @@ export default defineConfig({
         short_name: 'Kipu',
         description: 'Tus movimientos del BCP, anudados y en orden',
         theme_color: '#3F7079',
-        background_color: '#F2F2F7',
+        background_color: '#F8F6F1',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',

@@ -26,7 +26,7 @@ export const KipuIcon = ({ size = 32, className = '' }) => (
 )
 
 /* Versión horizontal: símbolo + wordmark en la fuente display */
-const BrandLogo = ({ iconSize = 32, className = '', textClassName = 'text-xl text-zinc-900 dark:text-zinc-50' }) => (
+const BrandLogo = ({ iconSize = 32, className = '', textClassName = 'text-xl text-main' }) => (
   <span className={`inline-flex items-center gap-2.5 ${className}`}>
     <KipuIcon size={iconSize} />
     <span className={`font-display font-bold tracking-tight lowercase ${textClassName}`}>kipu</span>
