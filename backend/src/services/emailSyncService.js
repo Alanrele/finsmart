@@ -1,6 +1,5 @@
 const User = require('../models/userModel');
 const Transaction = require('../models/transactionModel');
-const mongoose = require('mongoose');
 const { Client } = require('@microsoft/microsoft-graph-client');
 // const TransactionExtractor = require('./transactionExtractor'); // TODO: Create if needed
 const GraphErrorHandler = require('../utils/graphErrorHandler');
@@ -114,11 +113,23 @@ class EmailSyncService {
       const hasExistingTransactions = await Transaction.exists({ userId: user._id });
       const regularLookbackHours = Number(process.env.SYNC_LOOKBACK_HOURS || 24);
       const initialLookbackHours = Number(process.env.SYNC_INITIAL_LOOKBACK_HOURS || (24 * 30));
+      const bufferHours = Number(process.env.SYNC_LOOKBACK_BUFFER_HOURS || 6);
+
       const lookbackHours = hasExistingTransactions ? regularLookbackHours : initialLookbackHours;
       const lookbackDate = new Date(Date.now() - lookbackHours * 60 * 60 * 1000);
-      const lookbackIso = lookbackDate.toISOString();
+      const lastSyncDate = user.lastSync ? new Date(user.lastSync) : null;
+      const bufferMs = bufferHours * 60 * 60 * 1000;
 
-      console.log(`🕒 Using ${lookbackHours}h lookback window for ${hasExistingTransactions ? 'incremental' : 'initial'} sync`);
+      let effectiveStartDate = lookbackDate;
+      if (lastSyncDate && lastSyncDate < effectiveStartDate) {
+        effectiveStartDate = new Date(Math.max(lastSyncDate.getTime() - bufferMs, BCP_HISTORICAL_START.getTime()));
+      } else if (effectiveStartDate < BCP_HISTORICAL_START) {
+        effectiveStartDate = new Date(BCP_HISTORICAL_START);
+      }
+
+      const lookbackIso = effectiveStartDate.toISOString();
+
+      console.log(`🕒 Using ${lookbackHours}h lookback window (effective start ${lookbackIso}) for ${hasExistingTransactions ? 'incremental' : 'initial'} sync`);
 
       const allowedSenders = BCP_ALLOWED_SENDERS;
       const bcpFilters = allowedSenders.map(a => `from/emailAddress/address eq '${a}'`);
@@ -177,7 +188,7 @@ class EmailSyncService {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
               const isBcp = allowedSenders.includes(fromAddress);
-              const isRecent = receivedDate >= lookbackDate;
+              const isRecent = receivedDate >= effectiveStartDate;
               return isBcp && isRecent;
             });
             console.log(`📧 Manually filtered to ${result.value.length} recent BCP emails`);
@@ -199,7 +210,7 @@ class EmailSyncService {
               const fromAddress = msg.from?.emailAddress?.address?.toLowerCase() || '';
               const receivedDate = new Date(msg.receivedDateTime);
               const isBcp = allowedSenders.includes(fromAddress);
-              const isRecent = receivedDate >= lookbackDate;
+              const isRecent = receivedDate >= effectiveStartDate;
               return isBcp && isRecent;
             });
             console.log(`📧 Manually filtered to ${result.value.length} recent BCP emails from minimal set`);

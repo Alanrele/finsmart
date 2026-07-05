@@ -30,8 +30,62 @@ model User {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   transactions  Transaction[]
+  rules         ClassificationRule[]
+  categories    Category[]
+  pdfCredentials PdfCredential[]
 
   @@map("users")
+}
+
+// Rubro/categoría del catálogo (editable por el usuario)
+model Category {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  key       String   // estable, se guarda en Transaction.category
+  label     String
+  kind      String   @default("expense") // income | expense | both
+  color     String   @default("#71717A")
+  sortOrder Int      @default(0)
+  isSystem  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@map("categories")
+}
+
+// Regla determinística de clasificación por rubro (motor SIN IA)
+model ClassificationRule {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category  String   // key del rubro destino
+  matchType String   @default("keyword") // keyword | regex
+  pattern   String
+  field     String   @default("all")     // description | merchant | all
+  priority  Int      @default(100)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, priority])
+  @@map("classification_rules")
+}
+
+// Credencial (contraseña) de PDF cifrada con AES-256-GCM. NUNCA en texto plano.
+model PdfCredential {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String   // nombre visible dado por el usuario (p. ej. "BCP marzo")
+  // { v, iv, tag, data } — blob cifrado; sin contraseña en claro
+  cipher    Json
+  lastUsedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("pdf_credentials")
 }
 
 model Transaction {
@@ -63,6 +117,12 @@ model Transaction {
   notes           String?
   reprocessCount  Int       @default(0)
   lastUpdated     DateTime?
+  // Origen del dato y deduplicación (bloques PDF + reglas)
+  origin          String    @default("email") // email | pdf
+  sourceFile      String?   // nombre del PDF de origen, si aplica
+  account         String?   // cuenta/tarjeta de origen
+  dedupeHash      String?   // huella fecha+monto+desc-normalizada+cuenta
+  ruleId          String?   // regla que clasificó el movimiento (audita el porqué)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -70,5 +130,6 @@ model Transaction {
   @@index([userId, category])
   @@index([userId, type])
   @@index([userId, operationNumber])
+  @@index([userId, dedupeHash])
   @@map("transactions")
 }
