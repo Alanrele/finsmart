@@ -6,6 +6,8 @@ import useAppStore from '../stores/appStore'
 import { updatePreferences } from '../services/api'
 import toast from 'react-hot-toast'
 import ConfirmDialog from '../components/common/ConfirmDialog'
+import RulesManager from '../components/settings/RulesManager'
+import SavedPdfCredentials from '../components/settings/SavedPdfCredentials'
 
 const Settings = () => {
   const { user, updateUser, logout } = useAuthStore()
@@ -270,6 +272,12 @@ const Settings = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* Reglas de clasificación (motor determinístico) */}
+      <RulesManager />
+
+      {/* Credenciales de PDF guardadas (cifradas) */}
+      <SavedPdfCredentials />
 
       {/* Data & Privacy */}
       <motion.div

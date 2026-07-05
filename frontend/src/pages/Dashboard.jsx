@@ -32,8 +32,11 @@ import {
 import useAppStore from '../stores/appStore';
 import { getDashboardData } from '../services/api'; // Importar directamente
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 import LoadingCard from '../components/common/LoadingCard';
 import EmailSyncControl from '../components/dashboard/EmailSyncControl';
+import PdfUpload from '../components/dashboard/PdfUpload';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
 
 // Import Enhanced Charts
@@ -287,6 +290,27 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Indicador de movimientos sin clasificar */}
+      {summary?.unclassifiedCount > 0 && (
+        <Link
+          to="/transactions?category=unclassified"
+          className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 transition"
+        >
+          <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" strokeWidth={2.25} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+              {summary.unclassifiedCount} movimiento{summary.unclassifiedCount === 1 ? '' : 's'} sin clasificar
+            </p>
+            <p className="text-xs text-amber-700 dark:text-amber-300/80">
+              Clasifícalos una vez y crea reglas para automatizar los futuros.
+            </p>
+          </div>
+          <span className="text-xs font-black text-amber-700 dark:text-amber-300 whitespace-nowrap">Resolver →</span>
+        </Link>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Spending */}
@@ -535,6 +559,32 @@ const Dashboard = () => {
           </ChartErrorBoundary>
         </motion.div>
       )}
+
+      {/* Top comercios del periodo */}
+      {Array.isArray(dashboardData?.topMerchants) && dashboardData.topMerchants.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="card"
+        >
+          <span className="eyebrow">Mayor gasto</span>
+          <h3 className="mt-2 text-[15px] font-bold text-zinc-900 dark:text-zinc-50 mb-4">Top comercios del periodo</h3>
+          <ul className="space-y-2">
+            {dashboardData.topMerchants.map((m, i) => (
+              <li key={i} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40">
+                <span className="flex items-center gap-3 min-w-0">
+                  <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary dark:text-primary-300 text-[11px] font-black flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">{m.name}</span>
+                </span>
+                <span className="text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-50 whitespace-nowrap">{formatCurrency(m.amount)}</span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
+
+      {/* Importar estados de cuenta PDF */}
+      <PdfUpload onImported={() => loadDashboardData(selectedPeriod)} />
 
       {/* Email Sync Control */}
       <EmailSyncControl />

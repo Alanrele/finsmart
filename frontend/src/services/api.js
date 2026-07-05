@@ -435,3 +435,50 @@ export const chatWithAI = async (message) => {
         throw error;
     }
 };
+
+// ===== Importación de PDF + reglas de clasificación (motor determinístico) =====
+
+// Sube un PDF; si requiere contraseña, el backend responde 401 password_required.
+export const processPdf = async (file, { year, account } = {}) => {
+  const form = new FormData();
+  form.append('file', file);
+  if (year) form.append('year', String(year));
+  if (account) form.append('account', account);
+  const response = await api.post('/pdf/process', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
+  });
+  return response.data;
+};
+
+// Reintenta con contraseña; remember=true guarda la credencial cifrada.
+export const unlockPdf = async (file, { password, remember, label, year, account } = {}) => {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('password', password);
+  form.append('remember', remember ? 'true' : 'false');
+  if (label) form.append('label', label);
+  if (year) form.append('year', String(year));
+  if (account) form.append('account', account);
+  const response = await api.post('/pdf/unlock', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60000,
+  });
+  return response.data;
+};
+
+export const getPdfCredentials = async () => (await api.get('/pdf/credentials')).data;
+export const deletePdfCredential = async (id) => (await api.delete(`/pdf/credentials/${id}`)).data;
+
+export const getRules = async () => (await api.get('/rules')).data;
+export const createRule = async (rule) => (await api.post('/rules', rule)).data;
+export const updateRule = async (id, patch) => (await api.patch(`/rules/${id}`, patch)).data;
+export const deleteRule = async (id) => (await api.delete(`/rules/${id}`)).data;
+export const testRule = async (rule, sampleText) => (await api.post('/rules/test', { rule, sampleText })).data;
+export const exportRules = async () => (await api.get('/rules/export')).data;
+export const importRules = async (rules, replace = false) => (await api.post('/rules/import', { rules, replace })).data;
+export const createRuleFromMovement = async (payload) => (await api.post('/rules/from-movement', payload)).data;
+
+export const getRuleCategories = async () => (await api.get('/rules/categories')).data;
+export const createRuleCategory = async (category) => (await api.post('/rules/categories', category)).data;
+export const deleteRuleCategory = async (id) => (await api.delete(`/rules/categories/${id}`)).data;

@@ -204,6 +204,26 @@ router.get('/dashboard', async (req, res) => {
       }];
     }
 
+    // Movimientos sin clasificar (indicador del dashboard; independiente del mes)
+    let unclassifiedCount = 0;
+    try {
+      unclassifiedCount = await Transaction.countDocuments({ userId, category: 'unclassified' });
+    } catch (e) {
+      unclassifiedCount = 0;
+    }
+
+    // Top comercios/descripciones por gasto del periodo seleccionado
+    const merchantTotals = {};
+    currentMonthTransactions.forEach((t) => {
+      if (t.type === 'credit' || t.type === 'deposit') return;
+      const key = (t.merchant || t.description || 'Otro').slice(0, 40);
+      merchantTotals[key] = (merchantTotals[key] || 0) + (Math.abs(Number(t.amount)) || 0);
+    });
+    const topMerchants = Object.entries(merchantTotals)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([name, amount]) => ({ name, amount: roundToTwo(amount) }));
+
     // Calculate balance
     const balance = totalIncome - totalSpending;
 
@@ -225,10 +245,12 @@ router.get('/dashboard', async (req, res) => {
         balance: roundToTwo(balance),
         transactionCount: currentMonthTransactions.length,
         spendingChange: roundToTwo(spendingChange),
-        spendingChangePercentage: roundToTwo(spendingChangePercentage)
+        spendingChangePercentage: roundToTwo(spendingChangePercentage),
+        unclassifiedCount
       },
       categorySpending: categorySpendingArray,
       topCategories,
+      topMerchants,
       recentTransactions,
       period: {
         month: selectedMonth,
@@ -724,6 +746,21 @@ router.patch('/preferences', [
   } catch (error) {
     console.error('Update preferences error:', error);
     res.status(500).json({ error: 'Failed to update preferences' });
+  }
+});
+
+// Lista de movimientos sin clasificar (para resolverlos desde el dashboard)
+router.get('/unclassified', async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 200);
+    const transactions = await Transaction.find({ userId, category: 'unclassified' })
+      .sort({ date: -1 })
+      .limit(limit);
+    res.json({ transactions, count: transactions.length });
+  } catch (error) {
+    console.error('Unclassified list error:', error);
+    res.status(500).json({ error: 'Failed to load unclassified transactions' });
   }
 });
 

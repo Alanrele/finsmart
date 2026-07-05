@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
+import { useSearchParams } from 'react-router-dom'
 import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, X, SearchX } from 'lucide-react'
 import { getTransactions } from '../services/api' // Importar directamente la función
 import toast from 'react-hot-toast'
@@ -24,7 +25,12 @@ const Transactions = () => {
   })
   const [extensionWarningShown, setExtensionWarningShown] = useState(false)
   const [searchInput, setSearchInput] = useState('')
-  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [searchParams] = useSearchParams()
+  // Filtro inicial desde la URL (p. ej. el enlace "Resolver" del dashboard: ?category=unclassified)
+  const [filters, setFilters] = useState(() => {
+    const category = searchParams.get('category')
+    return category ? { ...EMPTY_FILTERS, category } : EMPTY_FILTERS
+  })
 
   // Debounce: la búsqueda que se escribe solo dispara una consulta 400ms
   // después de dejar de teclear (antes: una petición por carácter).
@@ -89,7 +95,8 @@ const Transactions = () => {
     { value: 'investment', label: 'Inversiones' },
     { value: 'income', label: 'Ingresos' },
     { value: 'transfer', label: 'Transferencias' },
-    { value: 'other', label: 'Otros' }
+    { value: 'other', label: 'Otros' },
+    { value: 'unclassified', label: 'Sin clasificar' }
   ]
 
   const types = [
@@ -118,6 +125,7 @@ const Transactions = () => {
       'income': 'Ingresos',
       'transfer': 'Transferencias',
       'other': 'Otros',
+      'unclassified': 'Sin clasificar',
       'salary': 'Salario',
       'savings': 'Ahorros',
       'freelance': 'Freelance'
