@@ -152,7 +152,7 @@ const EmailParserTester = () => {
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </div>
                   <div className="text-zinc-600 dark:text-zinc-300 mt-1">
-                    {value || 'N/A'}
+                    {(value as React.ReactNode) || 'N/A'}
                   </div>
                 </div>
               ))}

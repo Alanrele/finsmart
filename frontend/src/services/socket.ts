@@ -3,7 +3,8 @@ import { io, Socket } from 'socket.io-client'
 type Listener = (data: unknown) => void
 
 class SocketService {
-  private socket: Socket | null = null
+  // público: el panel de debug lee el socket directamente
+  socket: Socket | null = null
   private listeners: Map<string, Listener[]> = new Map()
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null
 
