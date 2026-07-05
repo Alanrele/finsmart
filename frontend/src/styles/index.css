@@ -1,6 +1,11 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Puente de compatibilidad: reutiliza tailwind.config.js (colores/tokens,
+   darkMode:'class', plugins, content) durante la migración a v4 */
+@config "../../tailwind.config.js";
+
+/* v4 usa media-query para dark por defecto; forzamos modo por clase .dark */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /*
   Sistema de diseño adoptado de la plantilla Kipu (DOC/PLAN_MIGRACION_KIPU.md).
@@ -105,20 +110,21 @@ a, button, input, select, textarea,
 ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
 
-/* ===== Utilidades Kipu (glassmorphism + squircle) ===== */
-.ios-glass {
+/* ===== Utilidades Kipu (glassmorphism + squircle) — @utility para poder
+   usarlas como clase y con @apply en Tailwind v4 ===== */
+@utility ios-glass {
   backdrop-filter: blur(24px);
   background-color: var(--glass-bg);
   border: 1px solid var(--border-subtle);
 }
-.ios-glass-header {
+@utility ios-glass-header {
   backdrop-filter: blur(20px);
   background-color: var(--glass-header-bg);
   border-bottom: 1px solid var(--border-subtle);
 }
-.ios-rounded { border-radius: 20px; }
-.ios-rounded-lg { border-radius: 28px; }
-.ios-rounded-xl { border-radius: 32px; }
+@utility ios-rounded { border-radius: 20px; }
+@utility ios-rounded-lg { border-radius: 28px; }
+@utility ios-rounded-xl { border-radius: 32px; }
 
 /* Cristal / degradados heredados */
 .glass-effect { @apply ios-glass; }
@@ -183,8 +189,8 @@ a, button, input, select, textarea,
   @apply inline-block h-1.5 w-1.5 rounded-full bg-primary;
 }
 
-/* ===== Badges (pill) ===== */
-.badge {
+/* ===== Badges (pill) — @utility para @apply en badge-* ===== */
+@utility badge {
   @apply px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider inline-flex items-center gap-1;
 }
 .badge-success { @apply badge bg-sage-600/10 text-sage-700 dark:text-sage-300 border border-sage-600/20; }
