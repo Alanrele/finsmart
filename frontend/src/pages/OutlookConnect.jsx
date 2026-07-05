@@ -22,6 +22,7 @@ import {
 import socketService from '../services/socket'
 import useAppStore from '../stores/appStore'
 import toast from 'react-hot-toast'
+import ConfirmDialog from '../components/common/ConfirmDialog'
 
 const OutlookConnect = () => {
   const { getAccessToken, getGraphMailToken } = useMicrosoftAuth()
@@ -31,6 +32,7 @@ const OutlookConnect = () => {
   const [reprocessLoading, setReprocessLoading] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
   const [connectionStatus, setConnectionStatus] = useState(null)
+  const [confirm, setConfirm] = useState(null) // 'disconnect' | 'reset' | null
 
   useEffect(() => {
     checkConnectionStatus()
@@ -133,6 +135,7 @@ const OutlookConnect = () => {
       toast.error(error.message || 'Error al desconectar')
     } finally {
       setLoading(false)
+      setConfirm(null)
     }
   }
 
@@ -195,9 +198,6 @@ const OutlookConnect = () => {
       return
     }
 
-    const confirmed = window.confirm('Esto eliminará todas las transacciones importadas por correo y reprocesará tu historial. ¿Deseas continuar?')
-    if (!confirmed) return
-
     setResetLoading(true)
 
     try {
@@ -214,6 +214,7 @@ const OutlookConnect = () => {
       toast.error(error.message || 'Error al reiniciar y reprocesar')
     } finally {
       setResetLoading(false)
+      setConfirm(null)
     }
   }
 
@@ -339,7 +340,7 @@ const OutlookConnect = () => {
               </button>
 
               <button
-                onClick={handleResetAndReprocess}
+                onClick={() => setConfirm('reset')}
                 disabled={resetLoading}
                 className="btn-secondary flex items-center justify-center space-x-2 text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
@@ -352,7 +353,7 @@ const OutlookConnect = () => {
               </button>
 
               <button
-                onClick={handleDisconnect}
+                onClick={() => setConfirm('disconnect')}
                 disabled={loading}
                 className="btn-secondary flex items-center justify-center space-x-2"
               >
@@ -363,6 +364,28 @@ const OutlookConnect = () => {
           )}
         </div>
       </motion.div>
+
+      <ConfirmDialog
+        open={confirm === 'disconnect'}
+        title="¿Desconectar Outlook?"
+        message="Kipu dejará de sincronizar tus notificaciones del BCP. Tus transacciones ya registradas se conservan. Puedes reconectar cuando quieras."
+        confirmLabel="Desconectar"
+        tone="primary"
+        loading={loading}
+        onConfirm={handleDisconnect}
+        onCancel={() => setConfirm(null)}
+      />
+
+      <ConfirmDialog
+        open={confirm === 'reset'}
+        title="¿Eliminar y reprocesar?"
+        message="Se borrarán todas las transacciones importadas por correo y se volverá a leer tu historial desde cero. Útil si hubo errores de lectura, pero no se puede deshacer."
+        confirmLabel="Eliminar y reprocesar"
+        tone="danger"
+        loading={resetLoading}
+        onConfirm={handleResetAndReprocess}
+        onCancel={() => setConfirm(null)}
+      />
 
       {/* Instructions Card */}
       <motion.div

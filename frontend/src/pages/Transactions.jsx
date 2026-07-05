@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
-import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, Filter, Calendar, Download, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, X, SearchX } from 'lucide-react'
 import { getTransactions } from '../services/api' // Importar directamente la función
 import toast from 'react-hot-toast'
 import LoadingCard from '../components/common/LoadingCard'
+import EmptyState from '../components/common/EmptyState'
 import TransactionDetailModal from '../components/transactions/TransactionDetailModal'
 import { formatCurrency, formatCurrencyAuto } from '../utils/formatters'
+
+const EMPTY_FILTERS = { search: '', category: '', type: '', startDate: '', endDate: '', page: 1, limit: 20 }
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([])
@@ -20,15 +23,26 @@ const Transactions = () => {
     hasPrev: false
   })
   const [extensionWarningShown, setExtensionWarningShown] = useState(false)
-  const [filters, setFilters] = useState({
-    search: '',
-    category: '',
-    type: '',
-    startDate: '',
-    endDate: '',
-    page: 1,
-    limit: 20
-  })
+  const [searchInput, setSearchInput] = useState('')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+
+  // Debounce: la búsqueda que se escribe solo dispara una consulta 400ms
+  // después de dejar de teclear (antes: una petición por carácter).
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setFilters(prev => (prev.search === searchInput ? prev : { ...prev, search: searchInput, page: 1 }))
+    }, 400)
+    return () => clearTimeout(t)
+  }, [searchInput])
+
+  const hasActiveFilters = Boolean(
+    filters.search || filters.category || filters.type || filters.startDate || filters.endDate
+  )
+
+  const clearFilters = () => {
+    setSearchInput('')
+    setFilters(EMPTY_FILTERS)
+  }
 
   const loadTransactions = useCallback(async () => {
     try {
@@ -141,13 +155,26 @@ const Transactions = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-          Transacciones
-        </h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Historial completo de tus movimientos financieros
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
+            Transacciones
+          </h1>
+          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
+            {pagination.totalCount > 0
+              ? `${pagination.totalCount} movimiento${pagination.totalCount === 1 ? '' : 's'}${hasActiveFilters ? ' con los filtros aplicados' : ''}`
+              : 'Historial completo de tus movimientos financieros'}
+          </p>
+        </div>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="min-h-[40px] px-3.5 inline-flex items-center gap-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-xs font-black text-primary dark:text-primary-300 transition"
+          >
+            <X className="w-3.5 h-3.5" />
+            Limpiar filtros
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -165,8 +192,8 @@ const Transactions = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
               <input
                 type="text"
-                value={filters.search}
-                onChange={(e) => setFilters({...filters, search: e.target.value, page: 1})}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="input-field input-field--with-prefix-icon"
                 placeholder="Descripción, comercio..."
               />
@@ -244,12 +271,24 @@ const Transactions = () => {
       >
         <div className="space-y-3">
           {!transactions || transactions.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-              <p className="text-zinc-500 dark:text-zinc-400">
-                No se encontraron transacciones con los filtros aplicados
-              </p>
-            </div>
+            hasActiveFilters ? (
+              <EmptyState
+                icon={SearchX}
+                title="Sin resultados"
+                message="Ninguna transacción coincide con los filtros aplicados. Prueba a ampliar el rango o limpiar la búsqueda."
+                action={
+                  <button onClick={clearFilters} className="btn-secondary">
+                    Limpiar filtros
+                  </button>
+                }
+              />
+            ) : (
+              <EmptyState
+                icon={Calendar}
+                title="Aún no hay movimientos"
+                message="Conecta tu correo de Outlook para que Kipu empiece a registrar las notificaciones del BCP automáticamente."
+              />
+            )
           ) : (
             transactions.map((transaction, index) => (
               <motion.div

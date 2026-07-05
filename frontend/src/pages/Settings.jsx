@@ -5,11 +5,13 @@ import useAuthStore from '../stores/authStore'
 import useAppStore from '../stores/appStore'
 import { updatePreferences } from '../services/api'
 import toast from 'react-hot-toast'
+import ConfirmDialog from '../components/common/ConfirmDialog'
 
 const Settings = () => {
   const { user, updateUser, logout } = useAuthStore()
   const { theme, setTheme } = useAppStore()
   const [loading, setLoading] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [preferences, setPreferences] = useState({
     theme: theme,
     notifications: {
@@ -47,10 +49,6 @@ const Settings = () => {
   }
 
   const handleDeleteAccount = async () => {
-    if (!confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-      return
-    }
-
     setLoading(true)
 
     try {
@@ -61,6 +59,7 @@ const Settings = () => {
       toast.error('Error al eliminar la cuenta')
     } finally {
       setLoading(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -323,9 +322,9 @@ const Settings = () => {
               </div>
             </div>
             <button
-              onClick={handleDeleteAccount}
+              onClick={() => setConfirmDelete(true)}
               disabled={loading}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              className="min-h-[44px] px-4 bg-red-600 text-white text-sm font-black rounded-xl hover:bg-red-700 active:bg-red-800 transition disabled:opacity-50"
             >
               Eliminar
             </button>
@@ -344,6 +343,18 @@ const Settings = () => {
           </ul>
         </div>
       </motion.div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        title="¿Eliminar tu cuenta?"
+        message="Se borrarán permanentemente tu cuenta y todas tus transacciones. Esta acción no se puede deshacer."
+        confirmLabel="Sí, eliminar cuenta"
+        cancelLabel="Cancelar"
+        tone="danger"
+        loading={loading}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setConfirmDelete(false)}
+      />
     </div>
   )
 }
