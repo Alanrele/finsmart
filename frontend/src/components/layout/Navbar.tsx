@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -23,8 +23,10 @@ import useAuthStore from '../../stores/authStore'
 import { KipuIcon } from '../common/BrandLogo'
 
 /*
-  Navegación móvil con la identidad Kipu: header glass superior, barra inferior
-  flotante (squircle glass) y drawer lateral deslizante. Conserva router y auth.
+  Navegación principal estilo Kipu en TODOS los breakpoints (sin sidebar fijo):
+  header glass superior + barra inferior flotante (squircle glass, centrada y de
+  ancho contenido) + drawer lateral derecho con la navegación completa y la
+  tarjeta de usuario. Conserva router, rutas y auth.
 */
 const Navbar = () => {
   const location = useLocation()
@@ -56,29 +58,38 @@ const Navbar = () => {
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark')
 
+  // Bloquear scroll del fondo mientras el drawer está abierto
+  useEffect(() => {
+    if (isMenuOpen) {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = prev }
+    }
+  }, [isMenuOpen])
+
   return (
     <>
-      {/* Header glass superior */}
-      <header className="lg:hidden h-16 ios-glass-header px-5 flex items-center justify-between sticky top-0 z-40 safe-area-top">
+      {/* Header glass superior (todos los breakpoints) */}
+      <header className="h-16 ios-glass-header px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40 safe-area-top">
         <Link to="/dashboard" className="flex items-center gap-3">
           <KipuIcon size={36} className="rounded-xl shadow-md" />
           <div>
             <span className="font-extrabold text-main tracking-tight font-display text-base leading-none">Kipu</span>
-            <span className="text-[8px] text-brand-primary font-mono tracking-widest uppercase block mt-0.5 font-bold">Secure AI</span>
+            <span className="text-[8px] text-brand-primary font-mono tracking-widest uppercase block mt-0.5 font-bold">Platinum Secure</span>
           </div>
         </Link>
         <button
           onClick={toggleTheme}
-          className="p-2 text-muted hover:text-main hover:bg-card/40 rounded-xl transition-all"
+          className="p-2 text-muted hover:text-main hover:bg-card/40 rounded-xl transition-all cursor-pointer"
           title="Cambiar tema"
         >
           {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
         </button>
       </header>
 
-      {/* Barra inferior flotante */}
-      <div className="lg:hidden fixed bottom-5 left-4 right-4 z-40 safe-area-bottom">
-        <div className="ios-glass shadow-2xl rounded-3xl px-3 py-1.5 flex items-center justify-between max-w-lg mx-auto">
+      {/* Barra inferior flotante (centrada, ancho contenido, en todos los breakpoints) */}
+      <div className="fixed bottom-5 left-4 right-4 z-40 safe-area-bottom pointer-events-none">
+        <div className="ios-glass shadow-2xl rounded-3xl px-3 py-1.5 flex items-center justify-between max-w-lg mx-auto pointer-events-auto">
           {bottomBar.map((item) => {
             const isActive = location.pathname === item.href
             const Icon = item.icon
@@ -106,10 +117,10 @@ const Navbar = () => {
               </Link>
             )
           })}
-          {/* Más */}
+          {/* Más: abre el drawer con la navegación completa */}
           <button
             onClick={() => setIsMenuOpen(true)}
-            className="flex-1 flex flex-col items-center justify-center py-1 min-h-[44px]"
+            className="flex-1 flex flex-col items-center justify-center py-1 min-h-[44px] cursor-pointer"
           >
             <div className="p-2 rounded-2xl text-main/65 dark:text-muted hover:text-main transition-all">
               <MoreHorizontal size={20} />
@@ -119,10 +130,10 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Drawer lateral */}
+      {/* Drawer lateral derecho con la navegación completa */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+          <div className="fixed inset-0 z-50 flex justify-end">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setIsMenuOpen(false)}
@@ -131,7 +142,7 @@ const Navbar = () => {
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-80 max-w-full bg-sidebar/95 backdrop-blur-xl border-l border-subtle h-full p-8 flex flex-col justify-between shadow-2xl z-10 safe-area-top"
+              className="relative w-80 max-w-[85vw] bg-sidebar/95 backdrop-blur-xl border-l border-subtle h-full p-8 flex flex-col justify-between shadow-2xl z-10 safe-area-top overflow-y-auto"
             >
               <div>
                 <div className="flex justify-between items-center mb-8 pb-4 border-b border-subtle">
@@ -139,7 +150,7 @@ const Navbar = () => {
                     <KipuIcon size={40} className="rounded-2xl shadow-md" />
                     <span className="font-extrabold text-main tracking-tight font-display text-xl">Kipu</span>
                   </div>
-                  <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-card/40 rounded-xl text-muted hover:text-main transition-all">
+                  <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-card/40 rounded-xl text-muted hover:text-main transition-all cursor-pointer">
                     <X size={18} />
                   </button>
                 </div>
@@ -167,7 +178,7 @@ const Navbar = () => {
                 </nav>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 pt-6">
                 <div className="ios-glass p-4 rounded-full flex items-center gap-3.5 shadow-lg">
                   <div className="w-10 h-10 rounded-full bg-brand-primary/25 text-brand-primary border border-brand-primary/20 flex items-center justify-center shrink-0">
                     <UserCheck size={18} />
@@ -183,7 +194,7 @@ const Navbar = () => {
                 </div>
                 <button
                   onClick={() => { setIsMenuOpen(false); logout() }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-all"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-2xl text-xs font-bold text-muted hover:text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer"
                 >
                   <LogOut size={16} />
                   <span>Cerrar sesión</span>

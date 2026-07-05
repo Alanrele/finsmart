@@ -1,35 +1,28 @@
 import React from 'react'
 import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
-import Sidebar from './Sidebar'
 import NotificationPanel from './NotificationPanel'
 import useAppStore from '../../stores/appStore'
 
 /*
-  Frame base estilo Kipu: sidebar fija de 72 (18rem) en escritorio, contenido
-  centrado a max-w-7xl con respiro amplio, header + barra inferior en móvil.
+  Shell de la app con el patrón de navegación de Kipu (SIN sidebar fijo):
+  header glass superior + barra inferior flotante + drawer derecho (todo en
+  Navbar), en todos los breakpoints. El contenido ocupa el ancho completo,
+  centrado a max-w-7xl, con padding inferior suficiente para que la barra
+  flotante no tape nada.
 */
 const Layout = () => {
   const appReady = useAppStore(state => state.appReady)
 
   return (
     <div className="min-h-screen bg-base text-main overflow-x-hidden">
-      {/* Navegación móvil (header + bottom bar + drawer) */}
-      <div className="lg:hidden">
-        <Navbar />
-      </div>
+      {/* Header + barra flotante + drawer (todos los breakpoints) */}
+      <Navbar />
 
-      {/* Sidebar de escritorio */}
-      <aside className="hidden lg:block lg:w-72 lg:fixed lg:inset-y-0 lg:z-30">
-        <Sidebar />
-      </aside>
-
-      {/* Contenido principal */}
-      <div className="lg:pl-72 flex flex-col min-h-screen min-w-0">
-        <main className="flex-1 min-w-0 w-full max-w-7xl mx-auto p-4 sm:p-8 lg:p-10 pb-32 lg:pb-10">
-          <Outlet />
-        </main>
-      </div>
+      {/* Contenido: ancho completo, centrado, con respiro inferior para la barra */}
+      <main className="w-full max-w-7xl mx-auto min-w-0 px-4 sm:px-6 lg:px-8 pt-6 pb-32">
+        <Outlet />
+      </main>
 
       {appReady && <NotificationPanel />}
     </div>
