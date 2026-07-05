@@ -7,11 +7,15 @@ import {
   CreditCard,
   ArrowUpRight,
   ArrowDownRight,
+  ArrowDownLeft,
+  Activity,
   Calendar,
   Target,
+  Store,
   PieChart as PieChartIcon, // Renombrar para evitar conflicto
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronRight as ChevronRightIcon
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -37,6 +41,7 @@ import { AlertTriangle } from 'lucide-react';
 import LoadingCard from '../components/common/LoadingCard';
 import EmailSyncControl from '../components/dashboard/EmailSyncControl';
 import PdfUpload from '../components/dashboard/PdfUpload';
+import { PageHeader, StatCard, SectionCard, ListRow, IconBadge, Chip, EmptyState } from '../components/ui/kit';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
 
 // Import Enhanced Charts
@@ -247,348 +252,192 @@ const Dashboard = () => {
       }))
     : [];
 
+  const balancePositive = (summary?.balance || 0) >= 0
+  const spendingUp = (summary?.spendingChangePercentage ?? 0) >= 0
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-zinc-900 dark:text-white">
-            Panel Financiero
-          </h1>
-          <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-            Resumen completo de tus finanzas personales
-          </p>
-        </div>
-        <div className="mt-4 sm:mt-0 flex flex-col sm:items-end gap-3">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      {/* PageHeader con selector de mes + acción */}
+      <PageHeader
+        title="Panel Financiero"
+        subtitle="Resumen completo e inteligente de tus finanzas personales en Kipu"
+        actions={
           <div className="flex items-center gap-2">
-            <button
-              onClick={handlePrevPeriod}
-              className="btn-secondary p-2"
-              aria-label="Mes anterior"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-primary-50 dark:bg-primary-900/30 text-sm font-medium text-primary-700 dark:text-primary-200">
-              <Calendar className="w-4 h-4" />
-              <span className="capitalize">{formattedSelectedPeriod}</span>
+            <div className="flex items-center gap-1 bg-base/60 p-1 rounded-xl border border-subtle">
+              <button onClick={handlePrevPeriod} aria-label="Mes anterior" className="p-1.5 rounded-lg text-muted hover:text-main hover:bg-card transition-all cursor-pointer">
+                <ChevronLeft size={16} />
+              </button>
+              <span className="flex items-center gap-1.5 px-2 text-xs font-bold text-main capitalize">
+                <Calendar size={13} className="text-brand-primary" />
+                {formattedSelectedPeriod}
+              </span>
+              <button onClick={handleNextPeriod} disabled={isCurrentPeriod} aria-label="Mes siguiente" className="p-1.5 rounded-lg text-muted hover:text-main hover:bg-card transition-all disabled:opacity-40 cursor-pointer">
+                <ChevronRight size={16} />
+              </button>
             </div>
             <button
-              onClick={handleNextPeriod}
-              className="btn-secondary p-2"
-              aria-label="Mes siguiente"
-              disabled={isCurrentPeriod}
+              onClick={handleRefresh}
+              className="flex items-center gap-2 bg-brand-primary hover:opacity-90 text-white dark:text-brand-dark px-5 py-2.5 rounded-full font-bold text-xs tracking-wide uppercase shadow-lg transition-all active:scale-95 cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
+              Actualizar
             </button>
           </div>
-          <button
-            onClick={handleRefresh}
-            className="btn-primary"
-          >
-            Actualizar
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Indicador de movimientos sin clasificar */}
       {(summary?.unclassifiedCount ?? 0) > 0 && (
         <Link
           to="/transactions?category=unclassified"
-          className="flex items-center gap-3 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 transition"
+          className="flex items-center gap-3 p-4 rounded-[2rem] bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15 transition-all"
         >
-          <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center flex-shrink-0">
-            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" strokeWidth={2.25} />
-          </div>
+          <IconBadge icon={AlertTriangle} accent="amber" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+            <p className="text-sm font-bold text-main">
               {summary.unclassifiedCount} movimiento{summary.unclassifiedCount === 1 ? '' : 's'} sin clasificar
             </p>
-            <p className="text-xs text-amber-700 dark:text-amber-300/80">
-              Clasifícalos una vez y crea reglas para automatizar los futuros.
-            </p>
+            <p className="text-xs text-muted">Clasifícalos una vez y crea reglas para automatizar los futuros.</p>
           </div>
-          <span className="text-xs font-black text-amber-700 dark:text-amber-300 whitespace-nowrap">Resolver →</span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-500 whitespace-nowrap">Resolver →</span>
         </Link>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Total Spending */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card card-hover"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Gasto Total
-              </p>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {formatCurrency(summary?.totalSpending || 0)}
-              </p>
-              <div className="flex items-center mt-2">
-                {(summary?.spendingChangePercentage ?? 0) >= 0 ? (
-                  <ArrowUpRight className="w-4 h-4 text-red-500" />
-                ) : (
-                  <ArrowDownRight className="w-4 h-4 text-green-500" />
-                )}
-                <span className={`text-sm ml-1 ${
-                  (summary?.spendingChangePercentage ?? 0) >= 0 ? 'text-red-500' : 'text-green-500'
-                }`}>
-                  {formatPercentage(summary?.spendingChangePercentage || 0)}
-                </span>
-              </div>
-            </div>
-            <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Total Income */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="card card-hover"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Ingresos Totales
-              </p>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {formatCurrency(summary?.totalIncome || 0)}
-              </p>
-              <div className="flex items-center mt-2">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-green-500 ml-1">
-                  Este mes
-                </span>
-              </div>
-            </div>
-            <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Balance */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="card card-hover"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Balance Actual
-              </p>
-              <p className={`text-2xl font-bold ${
-                (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {(summary?.balance || 0) >= 0 ? '' : '-'}{formatCurrency(Math.abs(summary?.balance || 0))}
-              </p>
-              <div className="flex items-center mt-2">
-                <Target className="w-4 h-4 text-zinc-500" />
-                <span className="text-sm text-zinc-500 ml-1">
-                  Este mes
-                </span>
-              </div>
-            </div>
-            <div className={`p-3 rounded-lg ${
-              (summary?.balance || 0) >= 0
-                ? 'bg-green-100 dark:bg-green-900/20'
-                : 'bg-red-100 dark:bg-red-900/20'
-            }`}>
-              <CreditCard className={`w-6 h-6 ${
-                (summary?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-              }`} />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Transactions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="card card-hover"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-                Total de Transacciones
-              </p>
-              <p className="text-2xl font-bold text-zinc-900 dark:text-white">
-                {summary?.transactionCount || 0}
-              </p>
-              <div className="flex items-center mt-2">
-                <Calendar className="w-4 h-4 text-primary-500" />
-                <span className="text-sm text-primary-500 ml-1">
-                  Este mes
-                </span>
-              </div>
-            </div>
-            <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
-              <PieChartIcon className="w-6 h-6 text-primary-600" />
-            </div>
-          </div>
-        </motion.div>
+      {/* Fila de KPIs (StatCard con glow) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Gasto Total"
+          value={formatCurrency(summary?.totalSpending || 0)}
+          icon={TrendingDown}
+          accent="rose"
+          caption={`${formatPercentage(summary?.spendingChangePercentage || 0)} vs mes anterior`}
+          captionIcon={spendingUp ? ArrowUpRight : ArrowDownLeft}
+          captionAccent="rose"
+        />
+        <StatCard
+          label="Ingresos Totales"
+          value={formatCurrency(summary?.totalIncome || 0)}
+          icon={TrendingUp}
+          accent="emerald"
+          caption="ESTE MES"
+          captionIcon={ArrowUpRight}
+          captionAccent="emerald"
+        />
+        <StatCard
+          label="Balance Actual"
+          value={`${balancePositive ? '' : '-'}${formatCurrency(Math.abs(summary?.balance || 0))}`}
+          icon={CreditCard}
+          accent={balancePositive ? 'primary' : 'rose'}
+          caption={balancePositive ? 'BALANCE POSITIVO' : 'BALANCE NEGATIVO'}
+          captionIcon={Activity}
+          captionAccent={balancePositive ? 'primary' : 'rose'}
+        />
+        <StatCard
+          label="Transacciones"
+          value={summary?.transactionCount || 0}
+          icon={Calendar}
+          accent="primary"
+          caption="HISTORIAL COMPLETO"
+        />
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Spending Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="card"
-        >
+      {/* Grid principal 12 cols: dona (5) + recientes (7) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <SectionCard title="Gastos por Categoría" className="lg:col-span-5">
           {categoryData.length > 0 ? (
-            <Enhanced3DDonutChart
-              data={categoryData}
-              title="Gastos por Categoría"
-            />
+            <Enhanced3DDonutChart data={categoryData} title="" />
           ) : (
-            <>
-              <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-                Gastos por Categoría
-              </h3>
-              <div className="flex items-center justify-center h-64 text-zinc-500">
-                No hay datos de categorías disponibles
-              </div>
-            </>
+            <div className="flex items-center justify-center h-64 text-sm text-muted">
+              No hay datos de categorías disponibles
+            </div>
           )}
-        </motion.div>
+        </SectionCard>
 
-        {/* Recent Transactions */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.5 }}
-          className="card"
+        <SectionCard
+          title="Transacciones Recientes"
+          className="lg:col-span-7"
+          action={
+            <Link to="/transactions" className="flex items-center gap-1 text-xs font-semibold text-muted hover:text-main transition-colors cursor-pointer underline">
+              <span>Ver todas</span>
+              <ChevronRightIcon size={14} />
+            </Link>
+          }
         >
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-            Transacciones Recientes
-          </h3>
-          <div className="space-y-3">
-            {Array.isArray(recentTransactions) && recentTransactions.length > 0 ? (
-              recentTransactions.slice(0, 5).map((transaction, index) => (
-                <motion.div
-                  key={transaction._id || index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-zinc-50 dark:bg-zinc-700 rounded-lg"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-zinc-900 dark:text-white truncate">
-                      {transaction.description || transaction.merchant || 'Transacción'}
-                    </p>
-                    <div className="flex items-center space-x-3 text-sm text-zinc-500 dark:text-zinc-400 flex-wrap">
-                      <span>{new Date(transaction.date).toLocaleDateString()}</span>
-                      {transaction.category && (
-                        <span className="capitalize">{translateCategory(transaction.category)}</span>
-                      )}
+          {Array.isArray(recentTransactions) && recentTransactions.length > 0 ? (
+            <div className="divide-y divide-subtle">
+              {recentTransactions.slice(0, 5).map((transaction, index) => {
+                const isIncome = transaction.type === 'credit' || transaction.type === 'deposit'
+                return (
+                  <ListRow key={transaction._id || index}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <IconBadge icon={isIncome ? ArrowUpRight : ArrowDownLeft} accent={isIncome ? 'emerald' : 'rose'} size={16} className="rounded-xl" />
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-semibold text-main truncate">{transaction.description || transaction.merchant || 'Transacción'}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-muted font-mono">{new Date(transaction.date).toLocaleDateString()}</span>
+                          {transaction.category && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-brand-primary/20" />
+                              <Chip>{translateCategory(transaction.category)}</Chip>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="sm:text-right whitespace-nowrap sm:self-center self-end">
-                    <p className={`font-semibold ${
-                      transaction.type === 'credit' || transaction.type === 'deposit'
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                    }`}>
-                      {
-                        formatCurrency(
-                          (transaction.type === 'credit' || transaction.type === 'deposit')
-                            ? Math.abs(transaction.amount)
-                            : -Math.abs(transaction.amount),
-                          true
-                        )
-                      }
-                    </p>
-                    {transaction.category && (
-                      <p className="text-xs text-zinc-500 capitalize">
-                        {translateCategory(transaction.category)}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-center text-zinc-500 py-8">
-                No hay transacciones recientes
-              </div>
-            )}
-          </div>
-        </motion.div>
+                    <span className={`text-sm font-bold font-display whitespace-nowrap ${isIncome ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {formatCurrency(isIncome ? Math.abs(transaction.amount) : -Math.abs(transaction.amount), true)}
+                    </span>
+                  </ListRow>
+                )
+              })}
+            </div>
+          ) : (
+            <EmptyState icon={CreditCard} title="Sin transacciones" message="No hay movimientos recientes en este periodo." />
+          )}
+        </SectionCard>
       </div>
 
-      {/* Spending Trend */}
+      {/* Tendencia de gastos */}
       {spendingTrend.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="card"
-        >
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-            Tendencia de Gastos (Últimos 7 días)
-          </h3>
+        <SectionCard title="Tendencia de Gastos (últimos 7 días)">
           <ChartErrorBoundary>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={spendingTrend}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
                 <XAxis dataKey="day" />
                 <YAxis {...({ formatter: (value: any) => formatCurrency(value) } as any)} />
                 <Tooltip formatter={(value: any) => [formatCurrency(value), 'Gasto']} />
-                <Line
-                  isAnimationActive={false}
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#3F7079"
-                  strokeWidth={3}
-                  dot={{ fill: '#3F7079', strokeWidth: 2, r: 4 }}
-                />
+                <Line isAnimationActive={false} type="monotone" dataKey="amount" stroke="#3F7079" strokeWidth={3} dot={{ fill: '#3F7079', strokeWidth: 2, r: 4 }} />
               </LineChart>
             </ResponsiveContainer>
           </ChartErrorBoundary>
-        </motion.div>
+        </SectionCard>
       )}
 
-      {/* Top comercios del periodo */}
+      {/* Top comercios */}
       {Array.isArray(dashboardData?.topMerchants) && dashboardData.topMerchants.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="card"
-        >
-          <span className="eyebrow">Mayor gasto</span>
-          <h3 className="mt-2 text-[15px] font-bold text-zinc-900 dark:text-zinc-50 mb-4">Top comercios del periodo</h3>
-          <ul className="space-y-2">
+        <SectionCard title="Top comercios del periodo">
+          <div className="divide-y divide-subtle">
             {dashboardData.topMerchants.map((m, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40">
-                <span className="flex items-center gap-3 min-w-0">
-                  <span className="h-6 w-6 rounded-lg bg-primary/10 text-primary dark:text-primary-300 text-[11px] font-black flex items-center justify-center flex-shrink-0">{i + 1}</span>
-                  <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">{m.name}</span>
-                </span>
-                <span className="text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-50 whitespace-nowrap">{formatCurrency(m.amount)}</span>
-              </li>
+              <ListRow key={i}>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="h-8 w-8 rounded-xl bg-brand-primary/10 text-brand-primary border border-brand-primary/15 text-xs font-bold flex items-center justify-center shrink-0">{i + 1}</span>
+                  <span className="text-sm font-semibold text-main truncate">{m.name}</span>
+                </div>
+                <span className="text-sm font-bold font-display tabular-nums text-main whitespace-nowrap">{formatCurrency(m.amount)}</span>
+              </ListRow>
             ))}
-          </ul>
-        </motion.div>
+          </div>
+        </SectionCard>
       )}
 
-      {/* Importar estados de cuenta PDF */}
+      {/* Importar PDF + sincronización de correos */}
       <PdfUpload onImported={() => loadDashboardData(selectedPeriod)} />
-
-      {/* Email Sync Control */}
       <EmailSyncControl />
-    </div>
+    </motion.div>
   )
 }
 
