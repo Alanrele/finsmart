@@ -1,16 +1,17 @@
-import { LogLevel } from '@azure/msal-browser';
-import { getRailwayConfig } from './railway';
+import { LogLevel } from '@azure/msal-browser'
+import type { Configuration } from '@azure/msal-browser'
+import { getRailwayConfig } from './railway'
 
-const railwayConfig = getRailwayConfig();
+const railwayConfig = getRailwayConfig()
 
-console.log('� MSAL Config - Railway Environment:', {
+console.log('🔐 MSAL Config - Railway Environment:', {
   isDevelopment: railwayConfig.isDevelopment,
   isProduction: railwayConfig.isProduction,
   hostname: railwayConfig.hostname,
-  redirectUri: railwayConfig.redirectUri
-});
+  redirectUri: railwayConfig.redirectUri,
+})
 
-export const msalConfig = {
+export const msalConfig: Configuration = {
   auth: {
     // Configurable vía VITE_AZURE_CLIENT_ID; el fallback mantiene el valor actual
     clientId: import.meta.env.VITE_AZURE_CLIENT_ID || '29f56526-69dc-4e89-9955-060aa8292fd0',
@@ -27,52 +28,54 @@ export const msalConfig = {
   },
   system: {
     loggerOptions: {
-      loggerCallback: (level, message, containsPii) => {
-        if (containsPii) return;
+      loggerCallback: (level: LogLevel, message: string, containsPii: boolean) => {
+        if (containsPii) return
 
-        const timestamp = new Date().toISOString();
+        const timestamp = new Date().toISOString()
         switch (level) {
           case LogLevel.Error:
-            console.error(`[MSAL ${timestamp}] ${message}`);
-            break;
+            console.error(`[MSAL ${timestamp}] ${message}`)
+            break
           case LogLevel.Warning:
-            console.warn(`[MSAL ${timestamp}] ${message}`);
-            break;
+            console.warn(`[MSAL ${timestamp}] ${message}`)
+            break
           case LogLevel.Info:
-            console.info(`[MSAL ${timestamp}] ${message}`);
-            break;
+            console.info(`[MSAL ${timestamp}] ${message}`)
+            break
           case LogLevel.Verbose:
-            console.debug(`[MSAL ${timestamp}] ${message}`);
-            break;
+            console.debug(`[MSAL ${timestamp}] ${message}`)
+            break
           default:
-            console.log(`[MSAL ${timestamp}] ${message}`);
+            console.log(`[MSAL ${timestamp}] ${message}`)
         }
       },
       logLevel: railwayConfig.isDevelopment ? LogLevel.Verbose : LogLevel.Warning,
     },
     // (msal-browser v4 removió `allowNativeBroker`; el broker nativo no aplica en web)
     windowHashTimeout: 60000,
-    iframeHashTimeout: 10000, // Increased timeout for iframe operations
-    loadFrameTimeout: 10000, // Increased timeout
+    iframeHashTimeout: 10000,
+    loadFrameTimeout: 10000,
     asyncPopups: false,
-    allowRedirectInIframe: false // Prevent redirect attempts in iframes
-  }
-};
+    allowRedirectInIframe: false,
+  },
+}
 
+// Tipo inferido del literal (incluye forceRefresh, inofensivo para popup/redirect
+// y usado por acquireTokenSilent). Se pasa como variable, sin excess-property check.
 export const loginRequest = {
   scopes: ['User.Read', 'openid', 'profile', 'email'],
   forceRefresh: false,
   prompt: 'select_account',
-  redirectUri: railwayConfig.redirectUri // Explicit redirect for popup
-};
+  redirectUri: railwayConfig.redirectUri,
+}
 
 // Separate request for Microsoft Graph Mail access
 export const graphMailRequest = {
   scopes: ['User.Read', 'Mail.Read', 'Mail.ReadWrite', 'openid', 'profile', 'email'],
   forceRefresh: false,
-  redirectUri: railwayConfig.redirectUri // Explicit redirect for popup
-};
+  redirectUri: railwayConfig.redirectUri,
+}
 
 export const graphConfig = {
-  graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me'
-};
+  graphMeEndpoint: 'https://graph.microsoft.com/v1.0/me',
+}

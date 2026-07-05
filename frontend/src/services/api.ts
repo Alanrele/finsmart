@@ -439,7 +439,7 @@ export const chatWithAI = async (message) => {
 // ===== Importación de PDF + reglas de clasificación (motor determinístico) =====
 
 // Sube un PDF; si requiere contraseña, el backend responde 401 password_required.
-export const processPdf = async (file, { year, account } = {}) => {
+export const processPdf = async (file: File, { year, account }: { year?: number | string; account?: string } = {}) => {
   const form = new FormData();
   form.append('file', file);
   if (year) form.append('year', String(year));
@@ -452,7 +452,10 @@ export const processPdf = async (file, { year, account } = {}) => {
 };
 
 // Reintenta con contraseña; remember=true guarda la credencial cifrada.
-export const unlockPdf = async (file, { password, remember, label, year, account } = {}) => {
+export const unlockPdf = async (
+  file: File,
+  { password, remember, label, year, account }: { password?: string; remember?: boolean; label?: string; year?: number | string; account?: string } = {}
+) => {
   const form = new FormData();
   form.append('file', file);
   form.append('password', password);
