@@ -48,6 +48,8 @@ export interface AppNotification {
   priority?: 'low' | 'medium' | 'high'
   timestamp?: string | Date
   date?: string | Date
+  autoClose?: boolean
+  [key: string]: unknown
 }
 
 export interface ChatMessage {
