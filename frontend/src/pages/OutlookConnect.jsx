@@ -256,7 +256,7 @@ const OutlookConnect = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
-              <Mail className="w-4 h-4 text-blue-500" />
+              <Mail className="w-4 h-4 text-primary-500" />
               <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 Microsoft Graph
               </span>
@@ -377,8 +377,8 @@ const OutlookConnect = () => {
 
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+            <div className="w-6 h-6 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-primary-600 dark:text-primary-400">1</span>
             </div>
             <div>
               <h4 className="font-medium text-zinc-900 dark:text-white">
@@ -391,8 +391,8 @@ const OutlookConnect = () => {
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
+            <div className="w-6 h-6 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-primary-600 dark:text-primary-400">2</span>
             </div>
             <div>
               <h4 className="font-medium text-zinc-900 dark:text-white">
@@ -405,8 +405,8 @@ const OutlookConnect = () => {
           </div>
 
           <div className="flex items-start space-x-3">
-            <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
+            <div className="w-6 h-6 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <span className="text-xs font-bold text-primary-600 dark:text-primary-400">3</span>
             </div>
             <div>
               <h4 className="font-medium text-zinc-900 dark:text-white">
@@ -426,15 +426,15 @@ const OutlookConnect = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="card bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800"
+          className="card bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800"
         >
           <div className="flex items-start space-x-3">
-            <RefreshCw className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <RefreshCw className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-blue-800 dark:text-blue-200">
+              <h4 className="font-medium text-primary-800 dark:text-primary-200">
                 Reprocesamiento de Correos
               </h4>
-              <div className="text-sm text-blue-700 dark:text-blue-300 mt-1 space-y-1">
+              <div className="text-sm text-primary-700 dark:text-primary-300 mt-1 space-y-1">
                 <p>• Mejora la precisión de las transacciones ya procesadas</p>
                 <p>• Aplica algoritmos mejorados de extracción de datos</p>
                 <p>• Corrige errores de clasificación anteriores</p>

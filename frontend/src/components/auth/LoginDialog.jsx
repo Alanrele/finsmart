@@ -157,7 +157,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header del modal */}
-          <div className="relative p-6 bg-gradient-to-r from-blue-600 to-blue-800">
+          <div className="relative p-6 bg-gradient-to-r from-primary-600 to-primary-800">
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full p-2 transition-colors"
@@ -167,7 +167,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             <h2 className="text-2xl font-bold text-white">
               {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
             </h2>
-            <p className="text-blue-100 text-sm mt-1">
+            <p className="text-primary-100 text-sm mt-1">
               {mode === 'login'
                 ? 'Accede a tu cuenta Kipu'
                 : 'Únete a Kipu hoy'}
@@ -190,7 +190,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
                       value={formData.firstName}
                       onChange={handleInputChange}
                       required
-                      className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
+                      className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                       placeholder="Tu nombre"
                     />
                   </div>
@@ -208,7 +208,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
                       value={formData.lastName}
                       onChange={handleInputChange}
                       required
-                      className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
+                      className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                       placeholder="Tu apellido"
                     />
                   </div>
@@ -228,7 +228,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
                   value={formData.email}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
+                  className="w-full pl-12 pr-4 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                   placeholder="tu@email.com"
                 />
               </div>
@@ -246,7 +246,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
                   value={formData.password}
                   onChange={handleInputChange}
                   required
-                  className="w-full pl-12 pr-14 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
+                  className="w-full pl-12 pr-14 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                   placeholder="••••••••"
                 />
                 <button
@@ -272,7 +272,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     required
-                    className="w-full pl-12 pr-14 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
+                    className="w-full pl-12 pr-14 py-3 border-2 border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white placeholder-zinc-500 dark:placeholder-zinc-400"
                     placeholder="••••••••"
                   />
                   <button
@@ -290,7 +290,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
             <motion.button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-zinc-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="w-full py-3 bg-primary-600 hover:bg-primary-700 disabled:bg-zinc-400 text-white font-semibold rounded-lg transition-colors flex items-center justify-center space-x-2"
               whileHover={{ scale: isLoading ? 1 : 1.02 }}
               whileTap={{ scale: isLoading ? 1 : 0.98 }}
             >
@@ -337,7 +337,7 @@ const LoginDialog = ({ isOpen, onClose, initialMode = 'login', onAuthenticated }
               <button
                 type="button"
                 onClick={toggleMode}
-                className="text-sm text-blue-700 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-semibold underline"
+                className="text-sm text-primary-700 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-semibold underline"
               >
                 {mode === 'login'
                   ? '¿No tienes cuenta? Regístrate aquí'

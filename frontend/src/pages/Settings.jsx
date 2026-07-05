@@ -83,8 +83,8 @@ const Settings = () => {
         className="card"
       >
         <div className="flex items-center space-x-3 mb-6">
-          <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-            <User className="w-5 h-5 text-blue-600" />
+          <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
+            <User className="w-5 h-5 text-primary-600" />
           </div>
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
             Perfil de Usuario
@@ -132,8 +132,8 @@ const Settings = () => {
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <p className="text-sm text-blue-800 dark:text-blue-300">
+        <div className="mt-6 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+          <p className="text-sm text-primary-800 dark:text-primary-300">
             Para modificar tu información personal, por favor contacta al soporte.
           </p>
         </div>
@@ -291,7 +291,7 @@ const Settings = () => {
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
             <div className="flex items-center space-x-3">
-              <Download className="w-5 h-5 text-blue-600" />
+              <Download className="w-5 h-5 text-primary-600" />
               <div>
                 <h4 className="font-medium text-zinc-900 dark:text-white">
                   Exportar mis datos

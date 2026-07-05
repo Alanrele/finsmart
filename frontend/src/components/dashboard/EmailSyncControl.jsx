@@ -173,10 +173,10 @@ const EmailSyncControl = () => {
           </div>
 
           {syncStatus.recentTransactions > 0 && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+            <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3">
               <div className="flex items-center">
-                <div className="text-blue-500 text-lg mr-2">💳</div>
-                <span className="text-sm text-blue-700 dark:text-blue-300">
+                <div className="text-primary-500 text-lg mr-2">💳</div>
+                <span className="text-sm text-primary-700 dark:text-primary-300">
                   {syncStatus.recentTransactions} transacciones detectadas en los últimos 7 días
                 </span>
               </div>
@@ -209,11 +209,11 @@ const EmailSyncControl = () => {
             <button
               onClick={manualSync}
               disabled={isSyncing}
-              className="px-4 py-2 bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSyncing ? (
                 <span className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-700 mr-2"></div>
                   Sincronizando...
                 </span>
               ) : (

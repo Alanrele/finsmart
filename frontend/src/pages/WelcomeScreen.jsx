@@ -6,39 +6,48 @@
   Descripción: Pantalla de bienvenida con hero y acceso a login/registro
 */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, TrendingUp, Shield, Sparkles, Mail, Lock, User, X } from 'lucide-react';
+import { TrendingUp, Shield, Mail, User } from 'lucide-react';
 import LoginDialog from '../components/auth/LoginDialog';
+import BrandLogo, { KipuIcon } from '../components/common/BrandLogo';
 
-// Kipu Upgrade: Hero animado con transiciones suaves
+const features = [
+  {
+    icon: Mail,
+    tint: 'bg-primary/10 text-primary dark:text-primary-300',
+    title: 'Lee tus correos del BCP',
+    text: 'Cada notificación del banco se convierte sola en una transacción registrada.'
+  },
+  {
+    icon: TrendingUp,
+    tint: 'bg-sage-600/10 text-sage-700 dark:text-sage-300',
+    title: 'Entiende tus gastos',
+    text: 'Categorías, tendencias y consejos generados con IA sobre tus datos reales.'
+  },
+  {
+    icon: Shield,
+    tint: 'bg-taupe-400/10 text-taupe-600 dark:text-taupe-300',
+    title: 'Tuyo y privado',
+    text: 'Solo se procesan las notificaciones del BCP. Puedes desconectar y borrar todo cuando quieras.'
+  }
+];
+
 const WelcomeScreen = ({ onAuthenticated }) => {
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const [loginMode, setLoginMode] = useState('login'); // 'login' | 'register'
 
-  // Kipu Upgrade: Animación de entrada del hero (más lenta y apreciable)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        duration: 1.2,
-        staggerChildren: 0.4,
-        delayChildren: 0.2
-      }
+      transition: { duration: 0.6, staggerChildren: 0.15, delayChildren: 0.1 }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut"
-      }
-    }
+    hidden: { opacity: 0, y: 24 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } }
   };
 
   const handleOpenLogin = (mode = 'login') => {
@@ -52,194 +61,106 @@ const WelcomeScreen = ({ onAuthenticated }) => {
 
   return (
     <>
-      {/* Hero Section */}
       <motion.div
-        className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900"
+        className="min-h-screen bg-page dark:bg-page-dark flex flex-col"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Header con logo - mejorado para modo claro */}
+        {/* Header */}
         <motion.header
-          className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800"
-          initial={{ y: -100, opacity: 0 }}
+          className="px-4 sm:px-6 py-4 flex justify-between items-center bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-100 dark:border-zinc-800 safe-area-top"
+          initial={{ y: -24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.5 }}
         >
-          <div className="flex items-center space-x-3">
-            <Wallet className="w-9 h-9 text-blue-600 dark:text-blue-400" />
-            <span className="text-2xl font-bold text-zinc-900 dark:text-white">Kipu</span>
-          </div>
-          <div className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
+          <BrandLogo iconSize={32} />
+          <div className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400">
             © 2025 Alan Reyes Leandro
           </div>
         </motion.header>
 
-        {/* Contenido principal */}
-        <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-20 pb-16">
-          <motion.div
-            className="max-w-4xl mx-auto text-center"
-            variants={itemVariants}
-          >
-            {/* Logo principal con animación más lenta */}
-            <motion.div
-              className="mb-10 flex justify-center"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{
-                duration: 1,
-                delay: 0.3,
-                type: "spring",
-                stiffness: 200,
-                damping: 15
-              }}
-              whileHover={{ scale: 1.1, rotate: 5 }}
-            >
-              <div className="relative">
-                <div className="absolute inset-0 bg-blue-500 blur-3xl opacity-30 rounded-full animate-pulse"></div>
-                <Wallet className="w-28 h-28 text-blue-600 dark:text-blue-400 relative z-10" />
-              </div>
+        {/* Hero */}
+        <div className="flex-1 flex flex-col items-center justify-center px-4 py-14">
+          <div className="max-w-3xl mx-auto text-center">
+            <motion.div className="mb-8 flex justify-center" variants={itemVariants}>
+              <KipuIcon size={88} />
             </motion.div>
 
-            {/* Título y eslogan */}
+            <motion.span className="eyebrow" variants={itemVariants}>
+              Finanzas personales · BCP
+            </motion.span>
+
             <motion.h1
-              className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-400 dark:to-blue-600 bg-clip-text text-transparent"
+              className="mt-3 text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50 leading-[1.05]"
               variants={itemVariants}
             >
-              Bienvenido a Kipu
+              Cada sol,{' '}
+              <span className="text-primary dark:text-primary-300">anudado</span>
+              {' '}y en orden.
             </motion.h1>
 
             <motion.p
-              className="text-xl md:text-2xl text-zinc-600 dark:text-zinc-300 mb-4"
+              className="mt-5 text-base sm:text-lg text-zinc-500 dark:text-zinc-400 max-w-xl mx-auto leading-relaxed"
               variants={itemVariants}
             >
-              Tu asistente financiero inteligente
+              Como el quipu llevaba las cuentas del ande, Kipu convierte las
+              notificaciones del BCP en tu correo en un registro claro de gastos,
+              ingresos y tendencias.
             </motion.p>
 
-            <motion.p
-              className="text-base text-zinc-500 dark:text-zinc-400 mb-12 max-w-2xl mx-auto"
-              variants={itemVariants}
-            >
-              Gestiona tus finanzas de forma inteligente con análisis automático de transacciones,
-              integración con Outlook y asistente AI personalizado
-            </motion.p>
-
-            {/* Botones de acción con animaciones mejoradas */}
+            {/* Acciones */}
             <motion.div
-              className="flex flex-col sm:flex-row gap-5 justify-center mb-20"
+              className="mt-10 flex flex-col sm:flex-row gap-3 justify-center"
               variants={itemVariants}
             >
-              <motion.button
+              <button
                 onClick={() => handleOpenLogin('login')}
-                className="px-10 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 text-lg"
-                whileHover={{
-                  scale: 1.08,
-                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.4)",
-                  y: -3
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.3 }}
+                className="btn-primary min-h-[48px] px-8 active:scale-[0.99]"
               >
-                <Mail className="w-6 h-6" />
-                <span>Iniciar Sesión</span>
-              </motion.button>
-
-              <motion.button
+                <Mail className="w-4 h-4" />
+                Iniciar sesión
+              </button>
+              <button
                 onClick={() => handleOpenLogin('register')}
-                className="px-10 py-4 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white font-bold rounded-xl shadow-xl border-2 border-zinc-300 dark:border-zinc-700 transition-all duration-300 flex items-center justify-center space-x-2 text-lg"
-                whileHover={{
-                  scale: 1.08,
-                  boxShadow: "0 25px 30px -5px rgba(0, 0, 0, 0.15)",
-                  y: -3
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ duration: 0.3 }}
+                className="btn-secondary min-h-[48px] px-8 active:scale-[0.99]"
               >
-                <User className="w-6 h-6" />
-                <span>Crear Cuenta</span>
-              </motion.button>
+                <User className="w-4 h-4" />
+                Crear cuenta
+              </button>
             </motion.div>
 
-            {/* Features grid con animaciones individuales más lentas */}
+            {/* Features */}
             <motion.div
-              className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto"
+              className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-4 text-left"
               variants={itemVariants}
             >
-              <motion.div
-                className="p-8 bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-700"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.2 }}
-                whileHover={{
-                  y: -8,
-                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
-                  scale: 1.03
-                }}
-              >
-                <TrendingUp className="w-14 h-14 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-3 text-zinc-900 dark:text-white">
-                  Análisis Inteligente
-                </h3>
-                <p className="text-sm text-zinc-700 dark:text-zinc-400 leading-relaxed">
-                  AI que categoriza automáticamente tus transacciones
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="p-8 bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-700"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.4 }}
-                whileHover={{
-                  y: -8,
-                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
-                  scale: 1.03
-                }}
-              >
-                <Mail className="w-14 h-14 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-3 text-zinc-900 dark:text-white">
-                  Integración Outlook
-                </h3>
-                <p className="text-sm text-zinc-700 dark:text-zinc-400 leading-relaxed">
-                  Sincroniza notificaciones bancarias automáticamente
-                </p>
-              </motion.div>
-
-              <motion.div
-                className="p-8 bg-white dark:bg-zinc-800 rounded-2xl shadow-xl border border-zinc-200 dark:border-zinc-700"
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 1.6 }}
-                whileHover={{
-                  y: -8,
-                  boxShadow: "0 25px 30px -5px rgba(59, 130, 246, 0.2)",
-                  scale: 1.03
-                }}
-              >
-                <Shield className="w-14 h-14 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold mb-3 text-zinc-900 dark:text-white">
-                  Seguro y Privado
-                </h3>
-                <p className="text-sm text-zinc-700 dark:text-zinc-400 leading-relaxed">
-                  Tus datos están protegidos con encriptación de nivel bancario
-                </p>
-              </motion.div>
+              {features.map(({ icon: Icon, tint, title, text }) => (
+                <div key={title} className="card p-5">
+                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center mb-3 ${tint}`}>
+                    <Icon className="w-4 h-4" strokeWidth={2.25} />
+                  </div>
+                  <h3 className="text-[15px] font-bold leading-tight text-zinc-900 dark:text-zinc-50 mb-1.5">
+                    {title}
+                  </h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    {text}
+                  </p>
+                </div>
+              ))}
             </motion.div>
-          </motion.div>
+          </div>
         </div>
 
-        {/* Footer - mejorado para modo claro */}
+        {/* Footer */}
         <motion.footer
-          className="absolute bottom-0 left-0 right-0 p-6 text-center bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm border-t border-zinc-200 dark:border-zinc-800"
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
+          className="px-6 py-5 text-center border-t border-zinc-100 dark:border-zinc-800 safe-area-bottom"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">
-            Kipu © 2025 – Todos los derechos reservados
-          </p>
-          <p className="text-xs mt-1 text-zinc-600 dark:text-zinc-400">
-            Desarrollado por Alan Reyes Leandro | alanreyesleandro5@gmail.com
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+            Kipu © 2025 – Todos los derechos reservados · Desarrollado por Alan Reyes Leandro
           </p>
         </motion.footer>
       </motion.div>

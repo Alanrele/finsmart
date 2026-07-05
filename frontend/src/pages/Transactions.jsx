@@ -368,7 +368,7 @@ const Transactions = () => {
                       key={p}
                       onClick={() => handlePageChange(p)}
                       className={`px-3 py-2 text-sm rounded-lg ${
-                        p === current ? 'bg-blue-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'
+                        p === current ? 'bg-primary-600 text-white' : 'hover:bg-zinc-100 dark:hover:bg-zinc-700'
                       }`}
                     >
                       {p}

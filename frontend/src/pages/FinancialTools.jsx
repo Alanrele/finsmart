@@ -317,7 +317,7 @@ const FinancialTools = () => {
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">Tasa de Ahorro</p>
                   </div>
                   <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
-                    <p className="text-2xl font-bold text-blue-600">{healthScore.emergencyMonths}</p>
+                    <p className="text-2xl font-bold text-primary-600">{healthScore.emergencyMonths}</p>
                     <p className="text-sm text-zinc-600 dark:text-zinc-400">Meses de Emergencia</p>
                   </div>
                   <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
@@ -343,7 +343,7 @@ const FinancialTools = () => {
           className="card"
         >
           <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4 flex items-center">
-            <Calculator className="w-5 h-5 mr-2 text-blue-500" />
+            <Calculator className="w-5 h-5 mr-2 text-primary-500" />
             Seguimiento de Presupuesto
           </h3>
 
@@ -485,7 +485,7 @@ const FinancialTools = () => {
                         <p className="text-sm text-zinc-600 dark:text-zinc-400">
                           Fecha estimada de logro:
                         </p>
-                        <p className="text-lg font-bold text-blue-600">
+                        <p className="text-lg font-bold text-primary-600">
                           {progress.targetDate}
                         </p>
                       </div>
@@ -563,7 +563,7 @@ const FinancialTools = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-6 bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl"
+              className="p-6 bg-gradient-to-br from-green-50 to-primary-50 dark:from-green-900/20 dark:to-primary-900/20 rounded-xl"
             >
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
@@ -571,7 +571,7 @@ const FinancialTools = () => {
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">Meses para pagar</p>
                 </div>
                 <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">
-                  <p className="text-3xl font-bold text-blue-600">{debtResults.years}</p>
+                  <p className="text-3xl font-bold text-primary-600">{debtResults.years}</p>
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">Años</p>
                 </div>
                 <div className="text-center p-4 bg-white dark:bg-zinc-800 rounded-lg">

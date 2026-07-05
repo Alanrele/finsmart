@@ -34,7 +34,7 @@ const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
       case 'payment':
         return 'text-red-600 bg-red-100 dark:bg-red-900/20'
       case 'transfer':
-        return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'
+        return 'text-primary-600 bg-primary-100 dark:bg-primary-900/20'
       default:
         return 'text-zinc-600 bg-zinc-100 dark:bg-zinc-900/20'
     }

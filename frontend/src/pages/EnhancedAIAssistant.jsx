@@ -246,7 +246,7 @@ const EnhancedAIAssistant = () => {
                   className="group relative p-4 bg-white dark:bg-zinc-700 rounded-lg border border-zinc-200 dark:border-zinc-600 hover:shadow-lg transition-all overflow-hidden"
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                  <action.icon className={`w-6 h-6 mb-2 text-zinc-700 dark:text-zinc-300 group-hover:text-blue-600 transition-colors`} />
+                  <action.icon className={`w-6 h-6 mb-2 text-zinc-700 dark:text-zinc-300 group-hover:text-primary-600 transition-colors`} />
                   <p className="text-sm font-semibold text-zinc-900 dark:text-white">
                     {action.title}
                   </p>
@@ -361,7 +361,7 @@ const EnhancedAIAssistant = () => {
             className="flex justify-start"
           >
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full">
+              <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-500 rounded-full">
                 <Sparkles className="w-4 h-4 text-white animate-pulse" />
               </div>
               <div className="bg-white dark:bg-zinc-800 px-4 py-3 rounded-2xl shadow-md">

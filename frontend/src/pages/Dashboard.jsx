@@ -265,7 +265,7 @@ const Dashboard = () => {
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-sm font-medium text-blue-700 dark:text-blue-200">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-primary-50 dark:bg-primary-900/30 text-sm font-medium text-primary-700 dark:text-primary-200">
               <Calendar className="w-4 h-4" />
               <span className="capitalize">{formattedSelectedPeriod}</span>
             </div>
@@ -402,14 +402,14 @@ const Dashboard = () => {
                 {summary?.transactionCount || 0}
               </p>
               <div className="flex items-center mt-2">
-                <Calendar className="w-4 h-4 text-blue-500" />
-                <span className="text-sm text-blue-500 ml-1">
+                <Calendar className="w-4 h-4 text-primary-500" />
+                <span className="text-sm text-primary-500 ml-1">
                   Este mes
                 </span>
               </div>
             </div>
-            <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <PieChartIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
+              <PieChartIcon className="w-6 h-6 text-primary-600" />
             </div>
           </div>
         </motion.div>

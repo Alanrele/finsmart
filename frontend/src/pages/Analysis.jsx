@@ -100,8 +100,8 @@ const Analysis = () => {
           className="card"
         >
           <div className="flex items-center space-x-3 mb-4">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
+              <TrendingUp className="w-5 h-5 text-primary-600" />
             </div>
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
               Resumen del Análisis
@@ -170,7 +170,7 @@ const Analysis = () => {
             {aiAnalysis.insights.map((insight, index) => (
               <div
                 key={index}
-                className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/10 dark:to-blue-900/10 rounded-lg border border-purple-200 dark:border-purple-800"
+                className="p-4 bg-gradient-to-r from-purple-50 to-primary-50 dark:from-purple-900/10 dark:to-primary-900/10 rounded-lg border border-purple-200 dark:border-purple-800"
               >
                 <p className="text-zinc-700 dark:text-zinc-300">{insight}</p>
               </div>
@@ -253,9 +253,9 @@ const Analysis = () => {
             {aiAnalysis.trends.map((trend, index) => (
               <div
                 key={index}
-                className="p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-200 dark:border-blue-800"
+                className="p-3 bg-primary-50 dark:bg-primary-900/10 rounded-lg border border-primary-200 dark:border-primary-800"
               >
-                <p className="text-sm text-blue-800 dark:text-blue-300">{trend}</p>
+                <p className="text-sm text-primary-800 dark:text-primary-300">{trend}</p>
               </div>
             ))}
           </div>

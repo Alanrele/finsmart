@@ -87,7 +87,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
     return (
       <button
         onClick={() => setIsVisible(true)}
-        className="fixed top-4 right-4 bg-blue-500 text-white p-2 rounded-full shadow-lg z-50 text-xs"
+        className="fixed top-4 right-4 bg-primary-500 text-white p-2 rounded-full shadow-lg z-50 text-xs"
         title="Ver estado de conectividad"
       >
         📡
@@ -141,7 +141,7 @@ const ConnectivityStatus = ({ offlineMode = false }) => {
               <Monitor className="w-4 h-4" />
               <span>Modo Offline</span>
             </div>
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-primary-600">
               🎭 Demo Activo
             </span>
           </div>
