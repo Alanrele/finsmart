@@ -142,17 +142,27 @@ const Navbar = () => {
             <motion.div
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-80 max-w-[85vw] bg-sidebar/95 backdrop-blur-xl border-l border-subtle h-full p-8 flex flex-col justify-between shadow-2xl z-10 safe-area-top overflow-y-auto"
+              className="relative w-80 max-w-[85vw] bg-sidebar/50 backdrop-blur-xl border-l border-subtle h-full px-8 pb-8 pt-[max(2rem,env(safe-area-inset-top))] flex flex-col justify-between shadow-2xl z-10 overflow-y-auto"
             >
               <div>
-                <div className="flex justify-between items-center mb-8 pb-4 border-b border-subtle">
+                <div className="flex justify-between items-center mb-10 pb-4 border-b border-subtle">
                   <div className="flex items-center gap-3">
                     <KipuIcon size={40} className="rounded-2xl shadow-md" />
                     <span className="font-extrabold text-main tracking-tight font-display text-xl">Kipu</span>
                   </div>
-                  <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-card/40 rounded-xl text-muted hover:text-main transition-all cursor-pointer">
-                    <X size={18} />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Toggle de tema dentro del drawer (patrón de la plantilla) */}
+                    <button
+                      onClick={toggleTheme}
+                      className="p-2 hover:bg-card/40 rounded-xl text-muted hover:text-main transition-all cursor-pointer"
+                      title="Cambiar tema"
+                    >
+                      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                    </button>
+                    <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-card/40 rounded-xl text-muted hover:text-main transition-all cursor-pointer">
+                      <X size={18} />
+                    </button>
+                  </div>
                 </div>
 
                 <nav className="space-y-1.5">
@@ -179,7 +189,7 @@ const Navbar = () => {
               </div>
 
               <div className="space-y-3 pt-6">
-                <div className="ios-glass p-4 rounded-full flex items-center gap-3.5 shadow-lg">
+                <div className="bg-card/40 backdrop-blur-md p-4 rounded-full border border-subtle flex items-center gap-3.5 shadow-lg">
                   <div className="w-10 h-10 rounded-full bg-brand-primary/25 text-brand-primary border border-brand-primary/20 flex items-center justify-center shrink-0">
                     <UserCheck size={18} />
                   </div>

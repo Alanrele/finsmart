@@ -78,6 +78,12 @@
   }
 }
 
+html {
+  /* Reserva el hueco de la scrollbar: al abrir el drawer (scroll bloqueado)
+     el layout no se desplaza y la barra flotante queda siempre centrada */
+  scrollbar-gutter: stable;
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-base);

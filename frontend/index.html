@@ -65,24 +65,25 @@
         50% { opacity: 0.5; }
       }
 
-      /* PWA install prompt styles */
+      /* PWA install prompt: compacto, centrado y ENCIMA de la barra de
+         navegación flotante (no la tapa) */
       .pwa-install-prompt {
         position: fixed;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
+        bottom: 108px;
+        left: 50%;
+        width: min(420px, calc(100vw - 40px));
         background: #3F7079;
         color: #FFFFFF;
         padding: 16px;
         border-radius: 16px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-        transform: translateY(100px);
+        z-index: 30;
+        transform: translate(-50%, 160px);
         transition: transform 0.3s ease-out;
       }
 
       .pwa-install-prompt.show {
-        transform: translateY(0);
+        transform: translate(-50%, 0);
       }
     </style>
   </head>
