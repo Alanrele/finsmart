@@ -64,7 +64,7 @@ class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode },
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-64 text-zinc-500">
+        <div className="flex items-center justify-center h-64 text-muted">
           No se pudo renderizar el gráfico
         </div>
       );
@@ -77,15 +77,15 @@ class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode },
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-700">
-        <p className="font-semibold text-zinc-900 dark:text-white mb-2">{label}</p>
+      <div className="bg-card p-4 rounded-lg shadow-xl border border-subtle">
+        <p className="font-semibold text-main mb-2">{label}</p>
         {payload.map((entry, index) => (
           <div key={index} className="flex items-center space-x-2">
             <div
               className="w-3 h-3 rounded-full"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-sm text-zinc-700 dark:text-zinc-300">
+            <span className="text-sm text-main/80">
               {entry.name}: {formatCurrency(entry.value)}
             </span>
           </div>
@@ -124,7 +124,7 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
   return (
     <div ref={chartRef} className="relative">
       {title && (
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">{title}</h3>
+        <h3 className="text-lg font-serif italic text-main mb-4">{title}</h3>
       )}
       <ChartErrorBoundary>
         <ResponsiveContainer width="100%" height={350}>
@@ -193,7 +193,7 @@ export const EnhancedBarChart = ({ data, title, dataKey = 'value' }) => {
     <div ref={chartRef} className="relative">
       {title && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-serif italic text-main">{title}</h3>
         </div>
       )}
       <ChartErrorBoundary>
@@ -239,7 +239,7 @@ export const IncomeExpenseAreaChart = ({ data, title }) => {
     <div ref={chartRef} className="relative">
       {title && (
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-serif italic text-main">{title}</h3>
         </div>
       )}
       <ChartErrorBoundary>
@@ -299,7 +299,7 @@ export const FinancialHealthRadar = ({ data, title }) => {
   return (
     <div className="relative">
       {title && (
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">{title}</h3>
+        <h3 className="text-lg font-serif italic text-main mb-4">{title}</h3>
       )}
       <ChartErrorBoundary>
         <ResponsiveContainer width="100%" height={350}>
@@ -353,7 +353,7 @@ export const MonthOverMonthComparison = ({ currentMonth, previousMonth, title })
     <div className="relative">
       {title && (
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-serif italic text-main">{title}</h3>
           <div className="flex items-center space-x-2 mt-2">
             {isIncrease ? (
               <TrendingUp className="w-5 h-5 text-red-500" />

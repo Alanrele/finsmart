@@ -42,7 +42,7 @@ const ConfirmDialog = ({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 40, opacity: 0, scale: 0.98 }}
             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="relative w-full sm:max-w-sm bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl shadow-xl p-6 safe-area-bottom"
+            className="relative w-full sm:max-w-sm bg-card border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl shadow-xl p-6 safe-area-bottom"
           >
             <div className={`h-11 w-11 rounded-2xl flex items-center justify-center mb-4 ${
               tone === 'danger' ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-primary/10 text-primary dark:text-primary-300'
@@ -50,11 +50,11 @@ const ConfirmDialog = ({
               <AlertTriangle className="w-5 h-5" strokeWidth={2.25} />
             </div>
 
-            <h2 id="confirm-title" className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            <h2 id="confirm-title" className="text-lg font-bold tracking-tight text-main">
               {title}
             </h2>
             {message && (
-              <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              <p className="mt-1.5 text-sm text-muted leading-relaxed">
                 {message}
               </p>
             )}
@@ -63,7 +63,7 @@ const ConfirmDialog = ({
               <button
                 onClick={onCancel}
                 disabled={loading}
-                className="min-h-[44px] px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/50 dark:border-zinc-800 text-sm font-black text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
+                className="min-h-[44px] px-4 rounded-xl bg-base/60/60 border border-zinc-200/50 dark:border-zinc-800 text-sm font-black text-muted hover:bg-zinc-100 dark:hover:bg-zinc-800 transition disabled:opacity-50"
               >
                 {cancelLabel}
               </button>

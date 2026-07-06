@@ -59,9 +59,9 @@ const COLORS = ['#3F7079', '#A6C0B4', '#A79E82', '#D4CBB0', '#63929B', '#658876'
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-2 rounded shadow-lg">
-        <p className="text-sm font-medium text-zinc-900">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
-        <p className="text-xs text-zinc-500">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
+      <div className="bg-card p-2 rounded-lg border border-subtle shadow-lg">
+        <p className="text-sm font-medium text-main">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
+        <p className="text-xs text-muted">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
       </div>
     );
   }
@@ -82,7 +82,7 @@ class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode },
   }
   render() {
     if (this.state.hasError) {
-      return <div className="text-sm text-zinc-500 dark:text-zinc-400">No se pudo renderizar el gráfico.</div>
+      return <div className="text-sm text-muted">No se pudo renderizar el gráfico.</div>
     }
     return this.props.children
   }

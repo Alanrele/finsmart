@@ -164,11 +164,11 @@ const ChatIA = () => {
         <div className="flex-1 overflow-y-auto space-y-4 mb-4 max-h-96">
           {!chatMessages || chatMessages.length === 0 ? (
             <div className="text-center py-8">
-              <Bot className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-zinc-900 dark:text-white mb-2">
+              <Bot className="w-12 h-12 text-muted/40 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-main mb-2">
                 ¡Hola! Soy tu asistente financiero
               </h3>
-              <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+              <p className="text-muted mb-6">
                 Puedo ayudarte a entender tus gastos y darte consejos personalizados
               </p>
 
@@ -178,7 +178,7 @@ const ChatIA = () => {
                   <button
                     key={index}
                     onClick={() => setMessage(question)}
-                    className="text-left p-3 text-sm bg-zinc-100 dark:bg-zinc-700 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors"
+                    className="text-left p-3 text-sm bg-base/60 rounded-lg hover:bg-base transition-colors"
                   >
                     {question}
                   </button>
@@ -219,12 +219,12 @@ const ChatIA = () => {
                         ? 'bg-primary text-white'
                         : msg.isError
                         ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800'
-                        : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-900 dark:text-white'
+                        : 'bg-base/60 text-main'
                     }`}>
                       <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
                       {msg.timestamp && (
                         <p className={`text-xs mt-1 opacity-70 ${
-                          msg.type === 'user' ? 'text-white' : 'text-zinc-500'
+                          msg.type === 'user' ? 'text-white' : 'text-muted'
                         }`}>
                           {new Date(msg.timestamp).toLocaleTimeString()}
                         </p>
@@ -247,11 +247,11 @@ const ChatIA = () => {
                 <div className="w-8 h-8 bg-sage-600 rounded-full flex items-center justify-center">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
-                <div className="bg-zinc-100 dark:bg-zinc-700 px-4 py-3 rounded-2xl">
+                <div className="bg-base/60 px-4 py-3 rounded-2xl">
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                    <div className="w-2 h-2 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    <div className="w-2 h-2 bg-brand-primary/40 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-brand-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="w-2 h-2 bg-brand-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                   </div>
                 </div>
               </div>
@@ -287,7 +287,7 @@ const ChatIA = () => {
         </form>
 
         {/* Helper text */}
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-2">
+        <p className="text-xs text-muted mt-2">
           La IA analiza solo tus datos financieros personales para darte respuestas precisas
         </p>
       </div>

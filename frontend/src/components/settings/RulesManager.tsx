@@ -90,9 +90,8 @@ const RulesManager = () => {
     <div className="card">
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div>
-          <span className="eyebrow">Clasificación</span>
-          <h2 className="mt-2 text-lg font-bold text-zinc-900 dark:text-zinc-50">Reglas de clasificación</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Motor determinístico, sin IA. La primera regla que coincide (por prioridad) gana.</p>
+          <h2 className="text-lg font-serif italic text-main">Reglas de clasificación</h2>
+          <p className="text-xs text-muted mt-0.5">Motor determinístico, sin IA. La primera regla que coincide (por prioridad) gana.</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExport} className="btn-secondary text-xs px-3 py-2" title="Exportar reglas">
@@ -106,7 +105,7 @@ const RulesManager = () => {
       </div>
 
       {/* Formulario de nueva regla */}
-      <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800/40 space-y-3">
+      <div className="p-4 rounded-xl bg-base/60 space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="micro-label block mb-1.5">Rubro destino</label>
@@ -159,25 +158,25 @@ const RulesManager = () => {
       {/* Lista de reglas */}
       <div className="mt-4">
         {loading ? (
-          <p className="text-sm text-zinc-400 py-4 text-center">Cargando reglas…</p>
+          <p className="text-sm text-muted py-4 text-center">Cargando reglas…</p>
         ) : rules.length === 0 ? (
-          <p className="text-sm text-zinc-400 py-4 text-center">Aún no hay reglas.</p>
+          <p className="text-sm text-muted py-4 text-center">Aún no hay reglas.</p>
         ) : (
-          <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <ul className="divide-y divide-subtle">
             {rules.map((r) => (
               <li key={r.id} className="flex items-center gap-3 py-3">
                 <span className="badge-info shrink-0">{r.priority}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">
-                    <code className="text-xs bg-zinc-100 dark:bg-zinc-800 rounded px-1.5 py-0.5">{r.pattern}</code>
-                    <span className="text-zinc-400 mx-1.5">→</span>
+                  <p className="text-sm font-semibold text-main truncate">
+                    <code className="text-xs bg-base/60 rounded px-1.5 py-0.5">{r.pattern}</code>
+                    <span className="text-muted mx-1.5">→</span>
                     {labelOf(r.category)}
                   </p>
-                  <p className="text-[11px] text-zinc-400 mt-0.5 uppercase tracking-wider font-bold">
+                  <p className="text-[11px] text-muted mt-0.5 uppercase tracking-wider font-bold">
                     {r.matchType === 'regex' ? 'regex' : 'palabra'} · {r.field}
                   </p>
                 </div>
-                <button onClick={() => handleDelete(r.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
+                <button onClick={() => handleDelete(r.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </li>

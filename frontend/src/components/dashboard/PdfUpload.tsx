@@ -104,14 +104,13 @@ const PdfUpload = ({ onImported }) => {
     if (status === 'done') return <CheckCircle2 className="w-4 h-4 text-sage-600" />
     if (status === 'locked') return <Lock className="w-4 h-4 text-amber-500" />
     if (status === 'unprocessable' || status === 'error') return <AlertTriangle className="w-4 h-4 text-red-500" />
-    return <FileText className="w-4 h-4 text-zinc-400" />
+    return <FileText className="w-4 h-4 text-muted" />
   }
 
   return (
     <div className="card">
-      <span className="eyebrow">Importar</span>
-      <h3 className="mt-2 text-[15px] font-bold text-zinc-900 dark:text-zinc-50">Estados de cuenta en PDF</h3>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 mb-4">
+      <h3 className="text-lg font-serif italic text-main">Estados de cuenta en PDF</h3>
+      <p className="text-xs text-muted mt-1 mb-4">
         Arrastra tus PDFs del BCP o selecciónalos. Si están protegidos, te pediremos la credencial una sola vez.
       </p>
 
@@ -127,14 +126,14 @@ const PdfUpload = ({ onImported }) => {
         className={`cursor-pointer rounded-2xl border-2 border-dashed transition p-8 flex flex-col items-center justify-center text-center ${
           dragOver
             ? 'border-primary bg-primary/5'
-            : 'border-zinc-200 dark:border-zinc-700 hover:border-primary/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+            : 'border-subtle hover:border-primary/50 hover:bg-base/60'
         }`}
       >
         <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center mb-3">
           <FileUp className="w-5 h-5 text-primary dark:text-primary-300" strokeWidth={2.25} />
         </div>
-        <p className="text-sm font-bold text-zinc-900 dark:text-zinc-50">Suelta tus PDFs aquí</p>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">o haz clic para seleccionar · uno o varios</p>
+        <p className="text-sm font-bold text-main">Suelta tus PDFs aquí</p>
+        <p className="text-xs text-muted mt-0.5">o haz clic para seleccionar · uno o varios</p>
         <input
           ref={inputRef}
           type="file"
@@ -149,12 +148,12 @@ const PdfUpload = ({ onImported }) => {
       {queue.length > 0 && (
         <ul className="mt-4 space-y-2">
           {queue.map((item, i) => (
-            <li key={i} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-800/40">
+            <li key={i} className="flex items-center gap-3 p-3 rounded-xl bg-base/60">
               {statusIcon(item.status)}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">{item.file.name}</p>
+                <p className="text-sm font-semibold text-main truncate">{item.file.name}</p>
                 {item.message && (
-                  <p className={`text-xs mt-0.5 ${item.status === 'error' || item.status === 'unprocessable' ? 'text-red-500' : 'text-zinc-500 dark:text-zinc-400'}`}>
+                  <p className={`text-xs mt-0.5 ${item.status === 'error' || item.status === 'unprocessable' ? 'text-red-500' : 'text-muted'}`}>
                     {item.message}
                   </p>
                 )}
@@ -186,17 +185,17 @@ const PdfUpload = ({ onImported }) => {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 40, opacity: 0, scale: 0.98 }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="relative w-full sm:max-w-sm bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-t-3xl sm:rounded-3xl shadow-xl p-6 safe-area-bottom"
+              className="relative w-full sm:max-w-sm bg-card border border-subtle rounded-t-3xl sm:rounded-3xl shadow-xl p-6 safe-area-bottom"
             >
-              <button onClick={() => setPwdModal(null)} className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+              <button onClick={() => setPwdModal(null)} className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-lg text-muted hover:bg-base transition">
                 <X className="w-4 h-4" />
               </button>
               <div className="h-11 w-11 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-4">
                 <Lock className="w-5 h-5" strokeWidth={2.25} />
               </div>
-              <h2 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">PDF protegido</h2>
-              <p className="mt-1.5 text-sm text-zinc-500 dark:text-zinc-400">
-                Este PDF requiere una credencial. Ingrésala para continuar con <span className="font-semibold text-zinc-700 dark:text-zinc-300">{pwdModal.file.name}</span>.
+              <h2 className="text-lg font-bold tracking-tight text-main">PDF protegido</h2>
+              <p className="mt-1.5 text-sm text-muted">
+                Este PDF requiere una credencial. Ingrésala para continuar con <span className="font-semibold text-main/80">{pwdModal.file.name}</span>.
               </p>
 
               <label className="micro-label block mt-5 mb-2">Credencial del PDF</label>
@@ -213,9 +212,9 @@ const PdfUpload = ({ onImported }) => {
 
               <label className="mt-4 flex items-center gap-2.5 cursor-pointer">
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="rounded text-primary focus:ring-primary/40" />
-                <span className="text-sm text-zinc-700 dark:text-zinc-300">Recordar credencial para futuros PDFs</span>
+                <span className="text-sm text-main/80">Recordar credencial para futuros PDFs</span>
               </label>
-              <p className="mt-1 text-[11px] text-zinc-400 leading-relaxed">
+              <p className="mt-1 text-[11px] text-muted leading-relaxed">
                 Se guarda cifrada (AES-256) y separada de tus conexiones externas. Puedes borrarla en Configuración.
               </p>
 

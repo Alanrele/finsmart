@@ -37,30 +37,29 @@ const SavedPdfCredentials = () => {
 
   return (
     <div className="card">
-      <span className="eyebrow">Seguridad</span>
-      <h2 className="mt-2 text-lg font-bold text-zinc-900 dark:text-zinc-50">Credenciales de PDF guardadas</h2>
-      <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 mb-4">
+      <h2 className="text-lg font-serif italic text-main">Credenciales de PDF guardadas</h2>
+      <p className="text-xs text-muted mt-0.5 mb-4">
         Se guardan cifradas (AES-256) y solo se usan para abrir tus PDFs. No son tus conexiones externas.
       </p>
 
       {loading ? (
-        <p className="text-sm text-zinc-400 py-4 text-center">Cargando…</p>
+        <p className="text-sm text-muted py-4 text-center">Cargando…</p>
       ) : creds.length === 0 ? (
-        <p className="text-sm text-zinc-400 py-4 text-center">No tienes credenciales de PDF guardadas.</p>
+        <p className="text-sm text-muted py-4 text-center">No tienes credenciales de PDF guardadas.</p>
       ) : (
-        <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+        <ul className="divide-y divide-subtle">
           {creds.map((c) => (
             <li key={c.id} className="flex items-center gap-3 py-3">
               <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <KeyRound className="w-4 h-4 text-primary dark:text-primary-300" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50 truncate">{c.label}</p>
-                <p className="text-[11px] text-zinc-400 mt-0.5">
+                <p className="text-sm font-semibold text-main truncate">{c.label}</p>
+                <p className="text-[11px] text-muted mt-0.5">
                   {c.lastUsedAt ? `Usada el ${new Date(c.lastUsedAt).toLocaleDateString()}` : 'Sin usar aún'}
                 </p>
               </div>
-              <button onClick={() => setConfirmId(c.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
+              <button onClick={() => setConfirmId(c.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition">
                 <Trash2 className="w-4 h-4" />
               </button>
             </li>

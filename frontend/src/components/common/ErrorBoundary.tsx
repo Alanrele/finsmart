@@ -59,7 +59,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
             <h2 className="text-xl font-semibold text-white mb-2">
               Algo salió mal
             </h2>
-            <p className="text-zinc-400 mb-6">
+            <p className="text-muted mb-6">
               Ha ocurrido un error inesperado. Esto puede ser causado por una extensión del navegador.
             </p>
 
@@ -73,7 +73,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               </button>
 
               <details className="text-left">
-                <summary className="text-sm text-zinc-500 cursor-pointer hover:text-zinc-400">
+                <summary className="text-sm text-muted cursor-pointer hover:text-muted">
                   Detalles técnicos
                 </summary>
                 <pre className="mt-2 text-xs text-red-400 bg-zinc-900 p-2 rounded overflow-auto max-h-32">
@@ -87,7 +87,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
               </details>
             </div>
 
-            <div className="mt-6 text-xs text-zinc-500">
+            <div className="mt-6 text-xs text-muted">
               <p>💡 Si el problema persiste, intenta:</p>
               <ul className="mt-1 text-left list-disc list-inside">
                 <li>Desactivar extensiones del navegador</li>

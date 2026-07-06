@@ -231,7 +231,7 @@ const OutlookConnect = () => {
         className="card"
       >
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+          <h2 className="text-lg font-serif italic text-main">
             Estado de Conexión
           </h2>
           <div className="flex items-center space-x-2">
@@ -249,28 +249,28 @@ const OutlookConnect = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+          <div className="p-4 bg-base/60 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <Mail className="w-4 h-4 text-primary-500" />
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span className="text-sm font-medium text-main/80">
                 Microsoft Graph
               </span>
             </div>
             <p className={`text-lg font-bold ${
-              isGraphConnected ? 'text-green-600' : 'text-zinc-500'
+              isGraphConnected ? 'text-green-600' : 'text-muted'
             }`}>
               {isGraphConnected ? 'Activo' : 'Inactivo'}
             </p>
           </div>
 
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+          <div className="p-4 bg-base/60 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <Calendar className="w-4 h-4 text-purple-500" />
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span className="text-sm font-medium text-main/80">
                 Última Sincronización
               </span>
             </div>
-            <p className="text-lg font-bold text-zinc-900 dark:text-white">
+            <p className="text-lg font-serif italic text-main">
               {lastSync
                 ? new Date(lastSync).toLocaleDateString()
                 : 'Nunca'
@@ -278,14 +278,14 @@ const OutlookConnect = () => {
             </p>
           </div>
 
-          <div className="p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+          <div className="p-4 bg-base/60 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">
               <Download className="w-4 h-4 text-green-500" />
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span className="text-sm font-medium text-main/80">
                 Transacciones
               </span>
             </div>
-            <p className="text-lg font-bold text-zinc-900 dark:text-white">
+            <p className="text-lg font-serif italic text-main">
               {connectionStatus?.processedCount || 0}
             </p>
           </div>
@@ -388,7 +388,7 @@ const OutlookConnect = () => {
         transition={{ delay: 0.2 }}
         className="card"
       >
-        <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
+        <h3 className="text-lg font-serif italic text-main mb-4">
           Cómo Funciona
         </h3>
 
@@ -398,10 +398,10 @@ const OutlookConnect = () => {
               <span className="text-xs font-bold text-primary-600 dark:text-primary-400">1</span>
             </div>
             <div>
-              <h4 className="font-medium text-zinc-900 dark:text-white">
+              <h4 className="font-medium text-main">
                 Conecta tu cuenta de Microsoft
               </h4>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-muted">
                 Autoriza a Kipu para acceder a tus correos de Outlook de forma segura
               </p>
             </div>
@@ -412,10 +412,10 @@ const OutlookConnect = () => {
               <span className="text-xs font-bold text-primary-600 dark:text-primary-400">2</span>
             </div>
             <div>
-              <h4 className="font-medium text-zinc-900 dark:text-white">
+              <h4 className="font-medium text-main">
                 Sincronización automática
               </h4>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-muted">
                 Kipu lee los correos del BCP y extrae automáticamente la información de transacciones
               </p>
             </div>
@@ -426,10 +426,10 @@ const OutlookConnect = () => {
               <span className="text-xs font-bold text-primary-600 dark:text-primary-400">3</span>
             </div>
             <div>
-              <h4 className="font-medium text-zinc-900 dark:text-white">
+              <h4 className="font-medium text-main">
                 Análisis inteligente
               </h4>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-muted">
                 La IA analiza tus gastos y genera recomendaciones personalizadas
               </p>
             </div>

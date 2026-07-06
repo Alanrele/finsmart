@@ -81,14 +81,14 @@ const Settings = () => {
           <div className="p-2 bg-primary-100 dark:bg-primary-900/20 rounded-lg">
             <User className="w-5 h-5 text-primary-600" />
           </div>
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+          <h2 className="text-lg font-serif italic text-main">
             Perfil de Usuario
           </h2>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-main/80 mb-2">
               Nombre
             </label>
             <input
@@ -100,7 +100,7 @@ const Settings = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-main/80 mb-2">
               Apellido
             </label>
             <input
@@ -112,11 +112,11 @@ const Settings = () => {
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+            <label className="block text-sm font-medium text-main/80 mb-2">
               Correo Electrónico
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               <input
                 type="email"
                 value={user?.email || ''}
@@ -145,7 +145,7 @@ const Settings = () => {
           <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-lg">
             <Shield className="w-5 h-5 text-purple-600" />
           </div>
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+          <h2 className="text-lg font-serif italic text-main">
             Preferencias de la App
           </h2>
         </div>
@@ -155,15 +155,15 @@ const Settings = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {preferences.theme === 'dark' ? (
-                <Moon className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                <Moon className="w-5 h-5 text-muted" />
               ) : (
-                <Sun className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
+                <Sun className="w-5 h-5 text-muted" />
               )}
               <div>
-                <h4 className="font-medium text-zinc-900 dark:text-white">
+                <h4 className="font-medium text-main">
                   Tema de la Aplicación
                 </h4>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-sm text-muted">
                   Elige entre modo claro u oscuro
                 </p>
               </div>
@@ -184,10 +184,10 @@ const Settings = () => {
           {/* Currency */}
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-zinc-900 dark:text-white">
+              <h4 className="font-medium text-main">
                 Moneda
               </h4>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm text-muted">
                 Moneda para mostrar tus transacciones
               </p>
             </div>
@@ -207,14 +207,14 @@ const Settings = () => {
 
           {/* Notifications */}
           <div>
-            <h4 className="font-medium text-zinc-900 dark:text-white mb-3">
+            <h4 className="font-medium text-main mb-3">
               Notificaciones
             </h4>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Mail className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                  <span className="text-sm text-zinc-700 dark:text-zinc-300">
+                  <Mail className="w-4 h-4 text-muted" />
+                  <span className="text-sm text-main/80">
                     Notificaciones por email
                   </span>
                 </div>
@@ -234,8 +234,8 @@ const Settings = () => {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Bell className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                  <span className="text-sm text-zinc-700 dark:text-zinc-300">
+                  <Bell className="w-4 h-4 text-muted" />
+                  <span className="text-sm text-main/80">
                     Notificaciones push
                   </span>
                 </div>
@@ -255,7 +255,7 @@ const Settings = () => {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700">
+          <div className="pt-4 border-t border-subtle">
             <button
               onClick={handleSavePreferences}
               disabled={loading}
@@ -284,20 +284,20 @@ const Settings = () => {
           <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
             <Shield className="w-5 h-5 text-green-600" />
           </div>
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
+          <h2 className="text-lg font-serif italic text-main">
             Datos y Privacidad
           </h2>
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-700 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-base/60 rounded-lg">
             <div className="flex items-center space-x-3">
               <Download className="w-5 h-5 text-primary-600" />
               <div>
-                <h4 className="font-medium text-zinc-900 dark:text-white">
+                <h4 className="font-medium text-main">
                   Exportar mis datos
                 </h4>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-sm text-muted">
                   Descarga una copia de toda tu información
                 </p>
               </div>
