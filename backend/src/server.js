@@ -36,9 +36,11 @@ const aiRoutes = require('./routes/aiRoutes');
 const pdfRoutes = require('./routes/pdfRoutes');
 const rulesRoutes = require('./routes/rulesRoutes');
 const financeRoutes = require('./routes/financeRoutes');
+const membershipRoutes = require('./routes/membershipRoutes');
 
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
+const { requierePlatinum } = require('./middleware/membership');
 const errorHandler = require('./middleware/errorHandler');
 const httpLogger = require('./middleware/logger');
 
@@ -135,7 +137,13 @@ const io = socketIo(server, {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/graph', authMiddleware, graphRoutes);
-app.use('/api/ai', authMiddleware, aiRoutes);
+// Funciones premium (Chat IA+ / Asistente IA+): TODO /api/ai consume la API
+// externa de pago, así que requierePlatinum corre ANTES de cualquier handler.
+// Solo /health (diagnóstico, sin costo) queda fuera del gate.
+const premiumAiGate = (req, res, next) =>
+  req.path === '/health' ? next() : requierePlatinum(req, res, next);
+app.use('/api/ai', authMiddleware, premiumAiGate, aiRoutes);
+app.use('/api/membresia', authMiddleware, membershipRoutes);
 app.use('/api/finance', authMiddleware, financeRoutes);
 app.use('/api/pdf', authMiddleware, pdfRoutes);
 app.use('/api/rules', authMiddleware, rulesRoutes);
