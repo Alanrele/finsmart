@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileUp, Lock, Loader2, CheckCircle2, AlertTriangle, X, FileText } from 'lucide-react'
+import { FileUp, Lock, Loader2, CheckCircle2, AlertTriangle, X, FileText, Eye, EyeOff } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { processPdf, unlockPdf } from '../../services/api'
 
@@ -21,6 +21,7 @@ const PdfUpload = ({ onImported }) => {
   // (forma dinámica por archivo; se mantiene any[] intencionalmente)
   const [pwdModal, setPwdModal] = useState<any>(null) // { file, index, error }
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [remember, setRemember] = useState(true)
   const [unlocking, setUnlocking] = useState(false)
 
@@ -52,6 +53,7 @@ const PdfUpload = ({ onImported }) => {
         setQueue((q) => q.map((it, i) => (i === index ? { ...it, status: 'locked' } : it)))
         setPwdModal({ file, index, error: null })
         setPassword('')
+        setShowPassword(false)
       } else {
         const msg = err?.response?.data?.message || err.message || 'Error al procesar'
         setQueue((q) => q.map((it, i) => (i === index ? { ...it, status: 'error', message: msg } : it)))
@@ -84,6 +86,7 @@ const PdfUpload = ({ onImported }) => {
       setQueue((q) => q.map((it, i) => (i === pwdModal.index ? { ...it, ...result } : it)))
       if (result.summary?.new > 0) toast.success(`${pwdModal.file.name}: ${result.summary.new} movimientos importados`)
       if (resp.remembered) toast.success('Credencial guardada de forma segura')
+      if (resp.rememberWarning) toast(resp.rememberWarning, { icon: '⚠️' })
       setPwdModal(null)
       setPassword('')
       onImported?.()
@@ -159,7 +162,7 @@ const PdfUpload = ({ onImported }) => {
                 )}
                 {item.status === 'locked' && (
                   <button
-                    onClick={() => { setPwdModal({ file: item.file, index: i, error: null }); setPassword('') }}
+                    onClick={() => { setPwdModal({ file: item.file, index: i, error: null }); setPassword(''); setShowPassword(false) }}
                     className="text-xs font-bold text-primary dark:text-primary-300 mt-0.5"
                   >
                     Ingresar credencial
@@ -199,15 +202,25 @@ const PdfUpload = ({ onImported }) => {
               </p>
 
               <label className="micro-label block mt-5 mb-2">Credencial del PDF</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
-                autoFocus
-                className={`input-field ${pwdModal.error ? 'border-red-300 dark:border-red-800 focus:ring-red-500/20' : ''}`}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
+                  autoFocus
+                  className={`input-field pr-12 ${pwdModal.error ? 'border-red-300 dark:border-red-800 focus:ring-red-500/20' : ''}`}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 flex items-center justify-center rounded-lg text-muted hover:text-primary hover:bg-primary/10 transition"
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {pwdModal.error && <p className="mt-1.5 text-xs font-semibold text-red-500">{pwdModal.error}</p>}
 
               <label className="mt-4 flex items-center gap-2.5 cursor-pointer">

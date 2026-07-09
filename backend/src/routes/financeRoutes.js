@@ -56,8 +56,10 @@ router.get('/dashboard', async (req, res) => {
       selectedYear = currentYear;
     }
 
-    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
-    const endDate = new Date(selectedYear, selectedMonth, 1);
+    // range=all → sin filtro de fechas: el panel muestra el historial completo
+    const allTime = req.query.range === 'all';
+    const startDate = allTime ? new Date(0) : new Date(selectedYear, selectedMonth - 1, 1);
+    const endDate = allTime ? new Date(currentYear + 2, 0, 1) : new Date(selectedYear, selectedMonth, 1);
 
     // Redondear todos los valores para evitar problemas de precisión
     const roundToTwo = (num) => Math.round(num * 100) / 100;
@@ -104,23 +106,27 @@ router.get('/dashboard', async (req, res) => {
       .sort({ date: -1 })
       .limit(10);
 
-    // Get monthly comparison (current vs previous month)
-    const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
-    const previousYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+    // Get monthly comparison (current vs previous month) — no aplica en historial completo
+    let spendingChange = 0;
+    let spendingChangePercentage = null;
+    if (!allTime) {
+      const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+      const previousYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
 
-    const previousMonthTransactions = await Transaction.find({
-      userId,
-      date: {
-        $gte: new Date(previousYear, previousMonth - 1, 1),
-        $lt: new Date(previousYear, previousMonth, 1)
-      },
-      type: { $in: ['debit', 'payment', 'withdrawal'] },
-      amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
-    });
+      const previousMonthTransactions = await Transaction.find({
+        userId,
+        date: {
+          $gte: new Date(previousYear, previousMonth - 1, 1),
+          $lt: new Date(previousYear, previousMonth, 1)
+        },
+        type: { $in: ['debit', 'payment', 'withdrawal'] },
+        amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
+      });
 
-    const previousMonthSpending = previousMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const spendingChange = totalSpending - previousMonthSpending;
-    const spendingChangePercentage = previousMonthSpending > 0 ? (spendingChange / previousMonthSpending) * 100 : 0;
+      const previousMonthSpending = previousMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      spendingChange = totalSpending - previousMonthSpending;
+      spendingChangePercentage = previousMonthSpending > 0 ? (spendingChange / previousMonthSpending) * 100 : 0;
+    }
 
     // Get top spending categories with percentages
     let topCategories = [];
@@ -245,7 +251,7 @@ router.get('/dashboard', async (req, res) => {
         balance: roundToTwo(balance),
         transactionCount: currentMonthTransactions.length,
         spendingChange: roundToTwo(spendingChange),
-        spendingChangePercentage: roundToTwo(spendingChangePercentage),
+        spendingChangePercentage: spendingChangePercentage === null ? null : roundToTwo(spendingChangePercentage),
         unclassifiedCount
       },
       categorySpending: categorySpendingArray,
@@ -254,13 +260,209 @@ router.get('/dashboard', async (req, res) => {
       recentTransactions,
       period: {
         month: selectedMonth,
-        year: selectedYear
+        year: selectedYear,
+        all: allTime
       }
     });
 
   } catch (error) {
     console.error('Dashboard error:', error);
     res.status(500).json({ error: 'Failed to load dashboard data' });
+  }
+});
+
+/*
+  GET /api/finance/history
+  Historial financiero completo y comportamiento del usuario (todo el tiempo):
+  evolución mensual, promedios, tasa de ahorro, récords, comercios frecuentes,
+  patrón por día de la semana y gastos recurrentes (posibles suscripciones).
+*/
+router.get('/history', async (req, res) => {
+  try {
+    const userId = req.user._id;
+    if (!isDbConnected()) {
+      return res.status(503).json({ error: 'Servicio no disponible' });
+    }
+
+    const roundToTwo = (num) => Math.round(num * 100) / 100;
+    const INCOME_TYPES = ['credit', 'deposit'];
+    const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'];
+    const monthLabel = (key) => {
+      const [y, m] = key.split('-');
+      return `${MONTH_LABELS[parseInt(m, 10) - 1]} ${y.slice(2)}`;
+    };
+
+    const transactions = await Transaction.find({
+      userId,
+      amount: { $gt: 0, $lte: MAX_TX_AMOUNT }
+    });
+
+    if (transactions.length === 0) {
+      return res.json({ empty: true });
+    }
+
+    // ---- Totales y rango ----
+    let totalIncome = 0;
+    let totalSpending = 0;
+    let firstDate = null;
+    let lastDate = null;
+
+    // ---- Acumuladores ----
+    const byMonth = {};           // YYYY-MM -> { income, spending, count }
+    const byCategory = {};        // categoria -> { amount, count } (solo gastos)
+    const byMerchant = {};        // comercio -> { amount, count } (solo gastos)
+    const byWeekday = [0, 0, 0, 0, 0, 0, 0]; // gasto total por día (0=domingo)
+    const recurrenceMap = {};     // desc normalizada -> { name, months:Set, count, total }
+    let biggestExpense = null;
+
+    for (const t of transactions) {
+      const amount = Math.abs(Number(t.amount)) || 0;
+      const date = new Date(t.date);
+      if (Number.isNaN(date.getTime()) || amount === 0) continue;
+
+      if (!firstDate || date < firstDate) firstDate = date;
+      if (!lastDate || date > lastDate) lastDate = date;
+
+      const mk = monthKey(date);
+      if (!byMonth[mk]) byMonth[mk] = { income: 0, spending: 0, count: 0 };
+      byMonth[mk].count += 1;
+
+      if (INCOME_TYPES.includes(t.type)) {
+        totalIncome += amount;
+        byMonth[mk].income += amount;
+        continue;
+      }
+
+      // Gasto
+      totalSpending += amount;
+      byMonth[mk].spending += amount;
+      byWeekday[date.getDay()] += amount;
+
+      const category = t.category || 'unclassified';
+      if (!byCategory[category]) byCategory[category] = { amount: 0, count: 0 };
+      byCategory[category].amount += amount;
+      byCategory[category].count += 1;
+
+      const merchantName = (t.merchant || t.description || 'Otro').trim().slice(0, 40);
+      if (!byMerchant[merchantName]) byMerchant[merchantName] = { amount: 0, count: 0 };
+      byMerchant[merchantName].amount += amount;
+      byMerchant[merchantName].count += 1;
+
+      if (!biggestExpense || amount > biggestExpense.amount) {
+        biggestExpense = {
+          description: t.description || t.merchant || 'Gasto',
+          amount: roundToTwo(amount),
+          date: t.date,
+          category
+        };
+      }
+
+      const normalized = merchantName.toLowerCase().replace(/\s+/g, ' ');
+      if (!recurrenceMap[normalized]) {
+        recurrenceMap[normalized] = { name: merchantName, months: new Set(), count: 0, total: 0 };
+      }
+      recurrenceMap[normalized].months.add(mk);
+      recurrenceMap[normalized].count += 1;
+      recurrenceMap[normalized].total += amount;
+    }
+
+    // ---- Serie mensual ordenada ----
+    const monthly = Object.entries(byMonth)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, v]) => ({
+        month: key,
+        label: monthLabel(key),
+        income: roundToTwo(v.income),
+        spending: roundToTwo(v.spending),
+        net: roundToTwo(v.income - v.spending),
+        count: v.count
+      }));
+
+    const monthsActive = monthly.length;
+
+    // ---- Récords mensuales ----
+    const maxSpendingMonth = monthly.reduce((best, m) => (!best || m.spending > best.spending ? m : best), null);
+    const bestNetMonth = monthly.reduce((best, m) => (!best || m.net > best.net ? m : best), null);
+
+    // ---- Promedios y comportamiento ----
+    const expenseCount = transactions.filter((t) => !INCOME_TYPES.includes(t.type)).length;
+    const savingsRate = totalIncome > 0 ? ((totalIncome - totalSpending) / totalIncome) * 100 : null;
+
+    const WEEKDAYS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const topWeekdayIndex = byWeekday.indexOf(Math.max(...byWeekday));
+    const topWeekday = byWeekday[topWeekdayIndex] > 0
+      ? { day: WEEKDAYS[topWeekdayIndex], amount: roundToTwo(byWeekday[topWeekdayIndex]) }
+      : null;
+
+    const topCategories = Object.entries(byCategory)
+      .sort(([, a], [, b]) => b.amount - a.amount)
+      .slice(0, 6)
+      .map(([category, v]) => ({
+        category,
+        amount: roundToTwo(v.amount),
+        count: v.count,
+        percentage: totalSpending > 0 ? roundToTwo((v.amount / totalSpending) * 100) : 0
+      }));
+
+    const merchantEntries = Object.entries(byMerchant);
+    const topMerchants = merchantEntries
+      .sort(([, a], [, b]) => b.amount - a.amount)
+      .slice(0, 5)
+      .map(([name, v]) => ({ name, amount: roundToTwo(v.amount), count: v.count }));
+    const frequentMerchant = merchantEntries
+      .sort(([, a], [, b]) => b.count - a.count)
+      .slice(0, 1)
+      .map(([name, v]) => ({ name, count: v.count, amount: roundToTwo(v.amount) }))[0] || null;
+
+    // Recurrentes: mismo comercio en 3+ meses distintos (posible suscripción/hábito)
+    const recurring = Object.values(recurrenceMap)
+      .filter((r) => r.months.size >= 3)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 6)
+      .map((r) => ({
+        name: r.name,
+        monthsSeen: r.months.size,
+        count: r.count,
+        total: roundToTwo(r.total),
+        avgAmount: roundToTwo(r.total / r.count)
+      }));
+
+    res.json({
+      empty: false,
+      range: {
+        from: firstDate,
+        to: lastDate,
+        monthsActive
+      },
+      totals: {
+        income: roundToTwo(totalIncome),
+        spending: roundToTwo(totalSpending),
+        net: roundToTwo(totalIncome - totalSpending),
+        transactionCount: transactions.length,
+        expenseCount
+      },
+      averages: {
+        monthlyIncome: roundToTwo(totalIncome / monthsActive),
+        monthlySpending: roundToTwo(totalSpending / monthsActive),
+        expenseTicket: expenseCount > 0 ? roundToTwo(totalSpending / expenseCount) : 0,
+        savingsRate: savingsRate === null ? null : roundToTwo(savingsRate)
+      },
+      monthly,
+      behavior: {
+        biggestExpense,
+        maxSpendingMonth,
+        bestNetMonth,
+        topWeekday,
+        frequentMerchant,
+        recurring
+      },
+      topCategories,
+      topMerchants
+    });
+  } catch (error) {
+    console.error('History error:', error);
+    res.status(500).json({ error: 'No se pudo cargar el historial financiero' });
   }
 });
 

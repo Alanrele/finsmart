@@ -58,31 +58,43 @@ async function importStatement({ userId, text, year, fileName, account, columns 
     const { category, ruleId, matched } = classifyMovement(mv, rules);
     if (!matched) unclassifiedCount += 1;
 
-    // messageId único: derivado del hash para respaldar el dedup a nivel de BD.
-    const messageId = `pdf:${dedupeHash}`;
+    // messageId único: incluye el userId porque la columna es única GLOBAL;
+    // sin él, dos usuarios con el mismo movimiento (mismo hash) colisionan.
+    const messageId = `pdf:${userId}:${dedupeHash}`;
 
-    const row = await prisma.transaction.create({
-      data: {
-        userId,
-        messageId,
-        amount: mv.amount,
-        currency: mv.currency || 'PEN',
-        type: toTransactionType(mv.type),
-        category,
-        description: mv.description,
-        channel: 'other',
-        date: new Date(mv.date),
-        rawText: mv.description.slice(0, 1000),
-        isProcessed: matched,
-        origin: 'pdf',
-        sourceFile: fileName || null,
-        account: mv.account || account || null,
-        dedupeHash,
-        ruleId: ruleId || null,
-      },
-    });
-    created += 1;
-    createdMovements.push(row);
+    try {
+      const row = await prisma.transaction.create({
+        data: {
+          userId,
+          messageId,
+          amount: mv.amount,
+          currency: mv.currency || 'PEN',
+          type: toTransactionType(mv.type),
+          category,
+          description: mv.description,
+          channel: 'other',
+          date: new Date(mv.date),
+          rawText: mv.description.slice(0, 1000),
+          isProcessed: matched,
+          origin: 'pdf',
+          sourceFile: fileName || null,
+          account: mv.account || account || null,
+          dedupeHash,
+          ruleId: ruleId || null,
+        },
+      });
+      created += 1;
+      createdMovements.push(row);
+    } catch (err) {
+      // P2002 = violación de unicidad: el movimiento ya existe (respaldo del
+      // dedup a nivel de BD); se cuenta como duplicado en vez de fallar todo.
+      if (err && err.code === 'P2002') {
+        duplicates += 1;
+        if (!matched) unclassifiedCount -= 1;
+      } else {
+        throw err;
+      }
+    }
   }
 
   return {

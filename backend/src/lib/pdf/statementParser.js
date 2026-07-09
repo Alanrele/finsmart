@@ -24,6 +24,27 @@ const LIMA_OFFSET = '-05:00';
 // Fecha al inicio de línea: DD/MM, DD/MM/YY, DD/MM/YYYY, DD-MM-YYYY
 const LEADING_DATE = /^\s*(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?/;
 
+// Fecha con mes abreviado en español: 26Ene, 05 Feb (estados de tarjeta de crédito)
+const LEADING_DATE_ES = /^\s*(\d{1,2})\s?(Ene|Feb|Mar|Abr|May|Jun|Jul|Ago|Set|Sep|Oct|Nov|Dic)\b\.?/i;
+const MONTHS_ES = {
+  ene: 1, feb: 2, mar: 3, abr: 4, may: 5, jun: 6,
+  jul: 7, ago: 8, set: 9, sep: 9, oct: 10, nov: 11, dic: 12,
+};
+
+// Reconoce cualquiera de los dos formatos de fecha al inicio del texto dado.
+// Devuelve { day, month, rawYear, length } o null.
+function matchLeadingDate(text) {
+  const num = text.match(LEADING_DATE);
+  if (num) {
+    return { day: parseInt(num[1], 10), month: parseInt(num[2], 10), rawYear: num[3], length: num[0].length };
+  }
+  const es = text.match(LEADING_DATE_ES);
+  if (es) {
+    return { day: parseInt(es[1], 10), month: MONTHS_ES[es[2].toLowerCase()], rawYear: undefined, length: es[0].length };
+  }
+  return null;
+}
+
 // Token monetario: 1.234,56 | 1,234.56 | 55.50 | 55,50  (con opcional S/ US$)
 const MONEY_TOKEN = /(?:S\/\.?|US\$|USD|PEN|\$)?\s*-?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/g;
 
@@ -56,12 +77,22 @@ function parseStatementLine(line, { year, columns } = {}) {
   const trimmed = line.trim();
   if (!trimmed) return null;
 
-  const dateMatch = trimmed.match(LEADING_DATE);
+  let dateMatch = matchLeadingDate(trimmed);
   if (!dateMatch) return null;
+  let dateLength = dateMatch.length;
 
-  const day = parseInt(dateMatch[1], 10);
-  const month = parseInt(dateMatch[2], 10);
-  const yr = normalizeYear(dateMatch[3], year);
+  // Estados de tarjeta: "fecha de proceso  fecha de consumo  descripción...".
+  // Si hay una segunda fecha pegada a la primera, esa (la de consumo) es la
+  // que se usa como fecha del movimiento.
+  const afterFirst = trimmed.slice(dateLength);
+  const secondDate = matchLeadingDate(afterFirst);
+  if (secondDate) {
+    dateMatch = secondDate;
+    dateLength += secondDate.length;
+  }
+
+  const { day, month } = dateMatch;
+  const yr = normalizeYear(dateMatch.rawYear, year);
   if (!yr) return null;
   const iso = toIsoDay(day, month, yr);
   if (!iso) return null;
@@ -105,8 +136,8 @@ function parseStatementLine(line, { year, columns } = {}) {
   const amount = Math.abs(parseFloat(parsedMoney.value));
   if (!Number.isFinite(amount) || amount === 0) return null;
 
-  // Descripción = texto entre la fecha y el primer token monetario
-  const afterDate = trimmed.slice(dateMatch[0].length);
+  // Descripción = texto entre la(s) fecha(s) y el primer token monetario
+  const afterDate = trimmed.slice(dateLength);
   const firstMoneyIdx = afterDate.search(MONEY_TOKEN);
   const description = (firstMoneyIdx >= 0 ? afterDate.slice(0, firstMoneyIdx) : afterDate)
     .replace(/\s{2,}/g, ' ')
@@ -160,7 +191,7 @@ function parseStatementText(text, { year, source, account, columns } = {}) {
 
   for (const line of nonEmpty) {
     // Solo intentamos líneas que empiezan con fecha (filas de movimiento)
-    if (!LEADING_DATE.test(line)) continue;
+    if (!LEADING_DATE.test(line) && !LEADING_DATE_ES.test(line)) continue;
     const mv = parseStatementLine(line, { year, columns });
     if (mv) {
       movements.push({ ...mv, source: source || null, account: account || null });

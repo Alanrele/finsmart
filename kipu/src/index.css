@@ -1,0 +1,185 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-base: #F8F6F1; /* Warm elegant sand-white */
+  --bg-card: #FFFFFF; /* Pure white card */
+  --bg-sidebar: #EBE6DA; /* Warm, rich beige sidebar */
+  --bg-header: #EBE6DA;
+  
+  --text-main: #2D2B24; /* Deep earth charcoal */
+  --text-muted: #6E6857; /* Muted olive brown */
+  --border-subtle: rgba(167, 158, 130, 0.25); /* Organic subtle border */
+  
+  --brand-primary: #3F7079; /* Elegant Petrol blue-green */
+  --brand-light: #F1ECE2; /* Soft sand white */
+  --brand-dark: #2D2B24;
+  
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-header-bg: rgba(235, 230, 218, 0.85);
+  
+  --scroll-thumb: rgba(45, 43, 36, 0.15);
+  --scroll-thumb-hover: rgba(45, 43, 36, 0.3);
+}
+
+.dark {
+  --bg-base: #0F1314; /* Immersive dark moss/carbon background */
+  --bg-card: #161B1C; /* Sleek dark slate/moss card */
+  --bg-sidebar: #0B0E0E; /* Deep carbon black sidebar */
+  --bg-header: #0B0E0E;
+  
+  --text-main: #F5F3ED; /* Bright soft eggshell */
+  --text-muted: #A79E82; /* Muted warm taupe */
+  --border-subtle: rgba(212, 203, 176, 0.12); /* Delicate organic dark borders */
+  
+  --brand-primary: #A6C0B4; /* Luminous soft Sage Green */
+  --brand-light: #1C2325;
+  --brand-dark: #070909;
+  
+  --glass-bg: rgba(22, 27, 28, 0.75);
+  --glass-header-bg: rgba(11, 14, 14, 0.85);
+  
+  --scroll-thumb: rgba(245, 243, 237, 0.1);
+  --scroll-thumb-hover: rgba(245, 243, 237, 0.2);
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-bg-base: var(--bg-base);
+  --color-bg-card: var(--bg-card);
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-bg-header: var(--bg-header);
+  
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--border-subtle);
+  
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-light: var(--brand-light);
+  --color-brand-dark: var(--brand-dark);
+  
+  /* Hardcoded custom branding colors */
+  --color-sand: #D4CBB0;
+  --color-taupe: #A79E82;
+  --color-sage: #A6C0B4;
+  --color-petrol: #3F7079;
+}
+
+@layer utilities {
+  /* Sophisticated glassmorphism mode */
+  .ios-glass {
+    backdrop-filter: blur(24px);
+    background-color: var(--glass-bg);
+    border: 1px solid var(--border-subtle);
+  }
+  
+  .ios-glass-header {
+    backdrop-filter: blur(20px);
+    background-color: var(--glass-header-bg);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  /* Smooth elegant squircle curves */
+  .ios-rounded {
+    border-radius: 20px;
+  }
+  
+  .ios-rounded-lg {
+    border-radius: 28px;
+  }
+
+  .ios-rounded-xl {
+    border-radius: 32px;
+  }
+
+  /* Custom subtle scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border-radius: 999px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scroll-thumb-hover);
+  }
+}
+
+/* Base resets & theme styles */
+body {
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: "Inter", sans-serif;
+}
+
+* {
+  transition-property: background-color, border-color, text-color, fill, stroke, opacity;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transition-duration: 300ms;
+}
+
+/* Dark/Light mode Markdown styling for Kipu AI reports */
+.markdown-body {
+  font-family: "Inter", sans-serif;
+  line-height: 1.6;
+}
+
+.markdown-body h1 {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-main);
+}
+
+.markdown-body h2 {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 125rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+.markdown-body h3 {
+  font-family: "Outfit", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+.markdown-body p {
+  margin-bottom: 0.75rem;
+  color: var(--text-muted);
+}
+
+.markdown-body ul, .markdown-body ol {
+  margin-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  list-style-type: disc;
+}
+
+.markdown-body li {
+  margin-bottom: 0.25rem;
+  color: var(--text-muted);
+}
+
+.markdown-body strong {
+  font-weight: 600;
+  color: var(--text-main);
+}

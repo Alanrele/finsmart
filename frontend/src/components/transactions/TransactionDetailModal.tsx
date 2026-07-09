@@ -1,292 +1,242 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  X,
-  Calendar,
-  DollarSign,
-  Tag,
-  MapPin,
-  CreditCard,
-  Hash,
-  Clock,
-  TrendingUp,
-  TrendingDown,
-  Building,
-  User
-} from 'lucide-react'
+import { X, TrendingUp, TrendingDown, ArrowLeftRight } from 'lucide-react'
 import { formatCurrency, formatDateTime } from '../../utils/formatters'
 
+/*
+  Detalle de un movimiento, estilo Kipu: hoja inferior en móvil / tarjeta
+  centrada en escritorio, monto como héroe (Outfit), descripción en serif
+  itálica y ficha tipo registro con micro-etiquetas mono. La "cuerda con
+  nudo" del quipu separa el héroe de la ficha (un movimiento = un nudo).
+*/
+
+const INCOME_TYPES = ['credit', 'deposit', 'income']
+
+const TYPE_LABELS = {
+  credit: 'Abono',
+  deposit: 'Depósito',
+  income: 'Ingreso',
+  debit: 'Cargo',
+  withdrawal: 'Retiro',
+  payment: 'Pago',
+  transfer: 'Transferencia',
+}
+
+const CATEGORY_LABELS = {
+  food: 'Comida',
+  transport: 'Transporte',
+  entertainment: 'Entretenimiento',
+  shopping: 'Compras',
+  healthcare: 'Salud',
+  utilities: 'Servicios',
+  education: 'Educación',
+  travel: 'Viajes',
+  investment: 'Inversiones',
+  income: 'Ingresos',
+  transfer: 'Transferencias',
+  other: 'Otros',
+  unclassified: 'Sin clasificar',
+  salary: 'Salario',
+  savings: 'Ahorros',
+  freelance: 'Freelance',
+}
+
+const CATEGORY_ICONS = {
+  food: '🍽️',
+  transport: '🚗',
+  entertainment: '🎬',
+  shopping: '🛍️',
+  healthcare: '🏥',
+  utilities: '⚡',
+  education: '📚',
+  travel: '✈️',
+  investment: '📈',
+  income: '💰',
+  transfer: '🔄',
+  other: '📄',
+}
+
+const CHANNEL_LABELS = {
+  web: 'Banca por internet',
+  app: 'App móvil',
+  atm: 'Cajero automático',
+  pos: 'Punto de venta',
+  agent: 'Agente',
+  branch: 'Agencia',
+  yape: 'Yape',
+  plin: 'Plin',
+  other: 'Otro',
+}
+
+// Respeta la moneda del movimiento (formatCurrency siempre asume soles)
+const formatAmount = (amount, currency) => {
+  if (currency === 'USD') {
+    return new Intl.NumberFormat('es-PE', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0))
+  }
+  return formatCurrency(amount)
+}
+
+/* Cuerda del quipu con su nudo: divisor de firma del detalle */
+const QuipuDivider = ({ income }) => (
+  <svg viewBox="0 0 320 14" className="w-full h-3.5 my-5" aria-hidden="true" fill="none" preserveAspectRatio="none">
+    <line x1="0" y1="7" x2="320" y2="7" className="stroke-taupe-300 dark:stroke-taupe-600" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.6" />
+    <circle cx="160" cy="7" r="5" className={income ? 'fill-sage-400' : 'fill-sand-300'} />
+    <circle cx="160" cy="7" r="2" className="fill-card" />
+  </svg>
+)
+
+/* Fila de la ficha: micro-etiqueta a la izquierda, valor a la derecha */
+const DetailRow = ({ label, children }) => (
+  <div className="flex items-baseline justify-between gap-6 py-2.5">
+    <dt className="micro-label shrink-0">{label}</dt>
+    <dd className="text-sm font-medium text-main text-right min-w-0 break-words">{children}</dd>
+  </div>
+)
+
 const TransactionDetailModal = ({ transaction, isOpen, onClose }) => {
+  // Cerrar con Escape
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   if (!transaction) return null
 
-  const formatDate = (date) => {
-    return formatDateTime(date)
-  }
-
-  const getTransactionTypeColor = (type) => {
-    switch (type) {
-      case 'credit':
-      case 'deposit':
-      case 'income':
-        return 'text-green-600 bg-green-100 dark:bg-green-900/20'
-      case 'debit':
-      case 'withdrawal':
-      case 'payment':
-        return 'text-red-600 bg-red-100 dark:bg-red-900/20'
-      case 'transfer':
-        return 'text-primary-600 bg-primary-100 dark:bg-primary-900/20'
-      default:
-        return 'text-muted bg-base/60/20'
-    }
-  }
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      food: '🍽️',
-      transport: '🚗',
-      entertainment: '🎬',
-      shopping: '🛍️',
-      healthcare: '🏥',
-      utilities: '⚡',
-      education: '📚',
-      travel: '✈️',
-      investment: '📈',
-      income: '💰',
-      transfer: '🔄',
-      other: '📄'
-    }
-    return icons[category] || '📄'
-  }
+  const isIncome = INCOME_TYPES.includes(transaction.type)
+  const isTransfer = transaction.type === 'transfer'
+  const typeLabel = TYPE_LABELS[transaction.type] || transaction.type
+  const categoryKey = (transaction.category || '').toLowerCase()
+  const categoryLabel = CATEGORY_LABELS[categoryKey] || transaction.category || 'Otros'
+  const categoryIcon = CATEGORY_ICONS[categoryKey]
+  const channelLabel = transaction.channel ? (CHANNEL_LABELS[transaction.channel] || transaction.channel) : null
+  const txId = transaction.id || transaction._id
+  const TypeIcon = isTransfer ? ArrowLeftRight : isIncome ? TrendingUp : TrendingDown
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+          {/* Fondo */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           />
 
-          {/* Modal */}
+          {/* Hoja / tarjeta */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden"
+            initial={{ y: 40, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 40, opacity: 0, scale: 0.98 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tx-detail-title"
+            className="relative w-full sm:max-w-md bg-card border border-subtle rounded-t-3xl sm:rounded-[2rem] shadow-xl safe-area-bottom max-h-[88vh] flex flex-col"
           >
-            {/* Header */}
-            <div className="bg-primary px-6 py-4 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 rounded-lg bg-white/20`}>
-                    {transaction.type === 'credit' || transaction.type === 'deposit' || transaction.type === 'income' ? (
-                      <TrendingUp className="w-6 h-6" />
-                    ) : (
-                      <TrendingDown className="w-6 h-6" />
-                    )}
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold">Detalles de Transacción</h2>
-                    <p className="text-white/80">
-                      {transaction.description || transaction.merchant || 'Transacción bancaria'}
-                    </p>
-                  </div>
+            {/* Encabezado */}
+            <div className="flex items-start justify-between px-6 pt-6">
+              <div className="flex items-center gap-3">
+                <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${
+                  isTransfer
+                    ? 'bg-primary/10 text-primary dark:text-primary-300'
+                    : isIncome
+                      ? 'bg-sage-600/10 text-sage-700 dark:text-sage-300'
+                      : 'bg-rose-500/10 text-rose-500'
+                }`}>
+                  <TypeIcon className="w-5 h-5" strokeWidth={2.25} />
                 </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
+                <span className="eyebrow">Movimiento</span>
               </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
-              {/* Amount and Balance */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-base/60 rounded-xl p-4">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <DollarSign className="w-5 h-5 text-muted" />
-                    <span className="text-sm font-medium text-muted">
-                      Monto
-                    </span>
-                  </div>
-                  <p className={`text-2xl font-bold ${
-                    transaction.type === 'credit' || transaction.type === 'deposit' || transaction.type === 'income'
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                  }`}>
-                    {transaction.type === 'credit' || transaction.type === 'deposit' || transaction.type === 'income' ? '+' : '-'}
-                    {formatCurrency(transaction.amount)}
-                  </p>
-                </div>
-
-                {transaction.balance && (
-                  <div className="bg-base/60 rounded-xl p-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <CreditCard className="w-5 h-5 text-muted" />
-                      <span className="text-sm font-medium text-muted">
-                        Saldo después
-                      </span>
-                    </div>
-                    <p className="text-2xl font-bold tabular-nums text-primary dark:text-primary-300">
-                      {formatCurrency(transaction.balance)}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Transaction Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-serif italic text-main">
-                  Información de la transacción
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Date */}
-                  <div className="flex items-start space-x-3">
-                    <Calendar className="w-5 h-5 text-muted mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-muted">Fecha</p>
-                      <p className="text-main">{formatDate(transaction.date)}</p>
-                    </div>
-                  </div>
-
-                  {/* Category */}
-                  <div className="flex items-start space-x-3">
-                    <div className="text-lg mt-0.5">{getCategoryIcon(transaction.category)}</div>
-                    <div>
-                      <p className="text-sm font-medium text-muted">Categoría</p>
-                      <p className="text-main capitalize">
-                        {transaction.category}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Type */}
-                  <div className="flex items-start space-x-3">
-                    <Tag className="w-5 h-5 text-muted mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-muted">Tipo</p>
-                      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium capitalize ${getTransactionTypeColor(transaction.type)}`}>
-                        {transaction.type}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Channel */}
-                  {transaction.channel && (
-                    <div className="flex items-start space-x-3">
-                      <Building className="w-5 h-5 text-muted mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted">Canal</p>
-                        <p className="text-main capitalize">
-                          {transaction.channel}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Transaction ID */}
-                  {transaction._id && (
-                    <div className="flex items-start space-x-3 md:col-span-2">
-                      <Hash className="w-5 h-5 text-muted mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted">ID de Transacción</p>
-                        <p className="text-main font-mono text-sm break-all">
-                          {transaction._id}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Merchant */}
-                  {transaction.merchant && (
-                    <div className="flex items-start space-x-3">
-                      <Building className="w-5 h-5 text-muted mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted">Comercio</p>
-                        <p className="text-main">{transaction.merchant}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Location */}
-                  {transaction.location && (
-                    <div className="flex items-start space-x-3">
-                      <MapPin className="w-5 h-5 text-muted mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted">Ubicación</p>
-                        <p className="text-main">{transaction.location}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Reference */}
-                  {transaction.reference && (
-                    <div className="flex items-start space-x-3 md:col-span-2">
-                      <Hash className="w-5 h-5 text-muted mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted">Referencia</p>
-                        <p className="text-main">{transaction.reference}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {transaction.notes && (
-                    <div className="flex items-start space-x-3 md:col-span-2">
-                      <User className="w-5 h-5 text-muted mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-muted">Notas</p>
-                        <p className="text-main">{transaction.notes}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Created/Updated timestamps */}
-              {(transaction.createdAt || transaction.updatedAt) && (
-                <div className="border-t border-subtle pt-4">
-                  <h4 className="text-sm font-medium text-muted mb-3">
-                    Información del sistema
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    {transaction.createdAt && (
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-muted" />
-                        <span className="text-muted">Creado:</span>
-                        <span className="text-main">
-                          {new Date(transaction.createdAt).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                    {transaction.updatedAt && (
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-4 h-4 text-muted" />
-                        <span className="text-muted">Actualizado:</span>
-                        <span className="text-main">
-                          {new Date(transaction.updatedAt).toLocaleString()}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="bg-base/60 px-6 py-4 flex justify-end">
               <button
                 onClick={onClose}
-                className="btn-secondary"
+                autoFocus
+                aria-label="Cerrar detalle"
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-muted hover:bg-base transition focus-ring"
               >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="px-6 pb-6 overflow-y-auto">
+              {/* Héroe: monto + descripción */}
+              <div className="mt-5">
+                <p className={`font-display text-4xl font-bold tracking-tight tabular-nums ${
+                  isIncome ? 'text-sage-600 dark:text-sage-300' : 'text-main'
+                }`}>
+                  {isIncome ? '+' : '−'}{formatAmount(transaction.amount, transaction.currency)}
+                </p>
+                <h2 id="tx-detail-title" className="mt-2 text-lg font-serif italic text-main leading-snug">
+                  {transaction.description || transaction.merchant || 'Movimiento bancario'}
+                </h2>
+                <p className="mt-1 text-xs text-muted first-letter:uppercase">{formatDateTime(transaction.date)}</p>
+              </div>
+
+              <QuipuDivider income={isIncome} />
+
+              {/* Ficha del movimiento */}
+              <dl className="divide-y divide-subtle">
+                <DetailRow label="Tipo">
+                  <span className={isTransfer ? 'badge-info' : isIncome ? 'badge-success' : 'badge-danger'}>
+                    {typeLabel}
+                  </span>
+                </DetailRow>
+
+                <DetailRow label="Categoría">
+                  {categoryIcon && <span className="mr-1.5" aria-hidden="true">{categoryIcon}</span>}
+                  {categoryLabel}
+                </DetailRow>
+
+                {transaction.balance != null && (
+                  <DetailRow label="Saldo después">
+                    <span className="tabular-nums">{formatAmount(transaction.balance, transaction.currency)}</span>
+                  </DetailRow>
+                )}
+
+                {transaction.merchant && <DetailRow label="Comercio">{transaction.merchant}</DetailRow>}
+                {channelLabel && <DetailRow label="Canal">{channelLabel}</DetailRow>}
+                {transaction.location && <DetailRow label="Ubicación">{transaction.location}</DetailRow>}
+                {transaction.account && <DetailRow label="Cuenta">{transaction.account}</DetailRow>}
+                {transaction.cardNumber && <DetailRow label="Tarjeta">{transaction.cardNumber}</DetailRow>}
+                {transaction.operationNumber && (
+                  <DetailRow label="Nº de operación">
+                    <span className="font-mono text-xs">{transaction.operationNumber}</span>
+                  </DetailRow>
+                )}
+                {transaction.reference && <DetailRow label="Referencia">{transaction.reference}</DetailRow>}
+
+                {(transaction.origin === 'pdf' && transaction.sourceFile) ? (
+                  <DetailRow label="Origen">Estado de cuenta · {transaction.sourceFile}</DetailRow>
+                ) : transaction.origin === 'email' ? (
+                  <DetailRow label="Origen">Notificación del correo</DetailRow>
+                ) : null}
+
+                {transaction.notes && <DetailRow label="Notas">{transaction.notes}</DetailRow>}
+              </dl>
+
+              {/* Registro del sistema */}
+              {(txId || transaction.createdAt) && (
+                <div className="mt-5 pt-4 border-t border-subtle space-y-1">
+                  {transaction.createdAt && (
+                    <p className="font-mono text-[10px] tracking-wide text-muted">
+                      Registrado el {formatDateTime(transaction.createdAt)}
+                    </p>
+                  )}
+                  {txId && (
+                    <p className="font-mono text-[10px] tracking-wide text-muted break-all">ID {txId}</p>
+                  )}
+                </div>
+              )}
+
+              <button onClick={onClose} className="btn-secondary w-full mt-6">
                 Cerrar
               </button>
             </div>

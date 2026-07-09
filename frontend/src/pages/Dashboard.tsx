@@ -41,6 +41,7 @@ import { AlertTriangle } from 'lucide-react';
 import LoadingCard from '../components/common/LoadingCard';
 import EmailSyncControl from '../components/dashboard/EmailSyncControl';
 import PdfUpload from '../components/dashboard/PdfUpload';
+import HistoryInsights from '../components/dashboard/HistoryInsights';
 import { PageHeader, StatCard, SectionCard, ListRow, IconBadge, Chip, EmptyState } from '../components/ui/kit';
 import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
 
@@ -96,15 +97,17 @@ const Dashboard = () => {
     return { month: now.getMonth() + 1, year: now.getFullYear() };
   }, []);
   const [selectedPeriod, setSelectedPeriod] = useState(currentPeriod);
+  // "Todo": historial completo, sin filtro de mes
+  const [allTime, setAllTime] = useState(false);
 
-  const loadDashboardData = useCallback(async (period) => {
-    if (!period) return;
+  const loadDashboardData = useCallback(async (period, all = false) => {
+    if (!period && !all) return;
     try {
       setLoading(true);
-      const data = await getDashboardData({ month: period.month, year: period.year });
+      const data = await getDashboardData(all ? { range: 'all' } : { month: period.month, year: period.year });
       setDashboardData(data);
 
-      if (data?.period?.month && data?.period?.year) {
+      if (!all && data?.period?.month && data?.period?.year) {
         const normalized = {
           month: data.period.month,
           year: data.period.year,
@@ -128,8 +131,8 @@ const Dashboard = () => {
   }, [setDashboardData, setSelectedPeriod]);
 
   useEffect(() => {
-    loadDashboardData(selectedPeriod);
-  }, [selectedPeriod, loadDashboardData]);
+    loadDashboardData(selectedPeriod, allTime);
+  }, [selectedPeriod, allTime, loadDashboardData]);
 
   const [activeSlice, setActiveSlice] = useState(-1)
   const [pieKey, setPieKey] = useState(0)
@@ -144,6 +147,7 @@ const Dashboard = () => {
   }, [selectedPeriod])
 
   const handlePrevPeriod = () => {
+    if (allTime) { setAllTime(false); return }
     setSelectedPeriod((prev) => {
       const month = prev.month === 1 ? 12 : prev.month - 1
       const year = prev.month === 1 ? prev.year - 1 : prev.year
@@ -152,6 +156,7 @@ const Dashboard = () => {
   }
 
   const handleNextPeriod = () => {
+    if (allTime) { setAllTime(false); return }
     if (isCurrentPeriod) return
     setSelectedPeriod((prev) => {
       const month = prev.month === 12 ? 1 : prev.month + 1
@@ -167,7 +172,7 @@ const Dashboard = () => {
   }
 
   const handleRefresh = () => {
-    loadDashboardData(selectedPeriod)
+    loadDashboardData(selectedPeriod, allTime)
   }
 
   const {
@@ -273,10 +278,21 @@ const Dashboard = () => {
               </button>
               <span className="flex items-center gap-1.5 px-2 text-xs font-bold text-main capitalize">
                 <Calendar size={13} className="text-brand-primary" />
-                {formattedSelectedPeriod}
+                {allTime ? 'Todo el historial' : formattedSelectedPeriod}
               </span>
-              <button onClick={handleNextPeriod} disabled={isCurrentPeriod} aria-label="Mes siguiente" className="p-1.5 rounded-lg text-muted hover:text-main hover:bg-card transition-all disabled:opacity-40 cursor-pointer">
+              <button onClick={handleNextPeriod} disabled={!allTime && isCurrentPeriod} aria-label="Mes siguiente" className="p-1.5 rounded-lg text-muted hover:text-main hover:bg-card transition-all disabled:opacity-40 cursor-pointer">
                 <ChevronRight size={16} />
+              </button>
+              <button
+                onClick={() => setAllTime((v) => !v)}
+                aria-pressed={allTime}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  allTime
+                    ? 'bg-brand-primary text-white dark:text-brand-dark shadow'
+                    : 'text-muted hover:text-main hover:bg-card'
+                }`}
+              >
+                Todo
               </button>
             </div>
             <button
@@ -313,8 +329,8 @@ const Dashboard = () => {
           value={formatCurrency(summary?.totalSpending || 0)}
           icon={TrendingDown}
           accent="rose"
-          caption={`${formatPercentage(summary?.spendingChangePercentage || 0)} vs mes anterior`}
-          captionIcon={spendingUp ? ArrowUpRight : ArrowDownLeft}
+          caption={allTime ? 'TODO EL HISTORIAL' : `${formatPercentage(summary?.spendingChangePercentage || 0)} vs mes anterior`}
+          captionIcon={allTime ? undefined : (spendingUp ? ArrowUpRight : ArrowDownLeft)}
           captionAccent="rose"
         />
         <StatCard
@@ -322,7 +338,7 @@ const Dashboard = () => {
           value={formatCurrency(summary?.totalIncome || 0)}
           icon={TrendingUp}
           accent="emerald"
-          caption="ESTE MES"
+          caption={allTime ? 'TODO EL HISTORIAL' : 'ESTE MES'}
           captionIcon={ArrowUpRight}
           captionAccent="emerald"
         />
@@ -340,7 +356,7 @@ const Dashboard = () => {
           value={summary?.transactionCount || 0}
           icon={Calendar}
           accent="primary"
-          caption="HISTORIAL COMPLETO"
+          caption={allTime ? 'TODO EL HISTORIAL' : 'DEL PERIODO'}
         />
       </div>
 
@@ -419,7 +435,7 @@ const Dashboard = () => {
 
       {/* Top comercios */}
       {Array.isArray(dashboardData?.topMerchants) && dashboardData.topMerchants.length > 0 && (
-        <SectionCard title="Top comercios del periodo">
+        <SectionCard title={allTime ? 'Top comercios de todo el historial' : 'Top comercios del periodo'}>
           <div className="divide-y divide-subtle">
             {dashboardData.topMerchants.map((m, i) => (
               <ListRow key={i}>
@@ -434,8 +450,11 @@ const Dashboard = () => {
         </SectionCard>
       )}
 
+      {/* Historial completo y comportamiento financiero (vista "Todo") */}
+      {allTime && <HistoryInsights />}
+
       {/* Importar PDF + sincronización de correos */}
-      <PdfUpload onImported={() => loadDashboardData(selectedPeriod)} />
+      <PdfUpload onImported={() => loadDashboardData(selectedPeriod, allTime)} />
       <EmailSyncControl />
     </motion.div>
   )

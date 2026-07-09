@@ -132,11 +132,21 @@ router.post('/unlock', upload.single('file'), async (req, res) => {
       return res.status(422).json({ error: 'pdf_error', message: 'No se pudo leer el PDF.', fileName });
     }
 
-    // Contraseña correcta → si el usuario lo pidió, guardar cifrada
+    // Contraseña correcta → si el usuario lo pidió, guardar cifrada.
+    // Si el guardado falla (p. ej. falta PDF_CRED_SECRET), la importación
+    // continúa igual: solo se reporta remembered=false con una advertencia.
+    let remembered = false;
+    let rememberWarning = null;
     if (remember) {
-      await prisma.pdfCredential.create({
-        data: { userId, label, cipher: encryptCredential(password) },
-      });
+      try {
+        await prisma.pdfCredential.create({
+          data: { userId, label, cipher: encryptCredential(password) },
+        });
+        remembered = true;
+      } catch (credErr) {
+        console.error('⚠️ No se pudo guardar la credencial de PDF:', credErr.message);
+        rememberWarning = 'El PDF se importó, pero la credencial no pudo guardarse para futuros archivos.';
+      }
     }
 
     if (result.status === 'scanned') {
@@ -149,7 +159,7 @@ router.post('/unlock', upload.single('file'), async (req, res) => {
     }
 
     const summary = await importStatement({ userId, text: result.text, year, fileName, account });
-    return res.json({ status: 'ok', fileName, summary, remembered: remember });
+    return res.json({ status: 'ok', fileName, summary, remembered, rememberWarning });
   } catch (err) {
     console.error('❌ PDF unlock error:', err);
     return res.status(500).json({ error: 'Error al desbloquear el PDF', details: err.message });

@@ -84,6 +84,13 @@ api.interceptors.response.use(
   async (error) => {
     const { response } = error;
 
+    // Los endpoints de PDF usan 401 para "requiere contraseña" / "contraseña
+    // incorrecta"; no son problemas de sesión y los maneja el componente.
+    const pdfPasswordCodes = ['password_required', 'password_incorrect'];
+    if (response?.status === 401 && pdfPasswordCodes.includes(response?.data?.error)) {
+      return Promise.reject(error);
+    }
+
     // Handle 401 Unauthorized errors globally
     if (response?.status === 401) {
       console.error('🚨 401 Unauthorized Error Detected. Logging out.');
@@ -121,6 +128,9 @@ export const getDashboardData = async (filters) => {
         throw error;
     }
 };
+
+// Historial financiero completo y comportamiento (todo el tiempo)
+export const getFinancialHistory = async () => (await api.get('/finance/history')).data;
 
 export const getTransactions = async (filters) => {
     try {
