@@ -196,6 +196,7 @@ const Dashboard = () => {
       'income': 'Ingresos',
       'transfer': 'Transferencias',
       'other': 'Otros',
+      'unclassified': 'Sin clasificar',
       'salary': 'Salario',
       'savings': 'Ahorros',
       'freelance': 'Freelance'
@@ -250,12 +251,23 @@ const Dashboard = () => {
     ? activeSlice
     : undefined
 
-  const spendingTrend = Array.isArray(recentTransactions) && recentTransactions.length > 0
-    ? recentTransactions.slice(0, 7).reverse().map((transaction, index) => ({
-        day: `Día ${index + 1}`,
-        amount: Math.abs(transaction?.amount || 0)
+  // Suma por día real (antes: una transacción por punto etiquetada "Día N")
+  const spendingTrend = (() => {
+    if (!Array.isArray(recentTransactions) || recentTransactions.length === 0) return []
+    const byDay: Record<string, number> = {}
+    for (const t of recentTransactions) {
+      const d = new Date(t?.date)
+      if (Number.isNaN(d.getTime())) continue
+      byDay[d.toISOString().slice(0, 10)] = (byDay[d.toISOString().slice(0, 10)] || 0) + Math.abs(t?.amount || 0)
+    }
+    return Object.entries(byDay)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(-7)
+      .map(([key, amount]) => ({
+        day: new Date(`${key}T12:00:00`).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' }),
+        amount: Math.round(amount * 100) / 100,
       }))
-    : [];
+  })();
 
   const balancePositive = (summary?.balance || 0) >= 0
   const spendingUp = (summary?.spendingChangePercentage ?? 0) >= 0

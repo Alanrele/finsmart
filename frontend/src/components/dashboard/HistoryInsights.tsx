@@ -60,7 +60,7 @@ const HistoryTooltip = ({ active, payload, label }: any) => {
       {payload.map((p) => (
         <p key={p.dataKey} className="text-xs font-semibold text-main">
           <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{ backgroundColor: p.color }} />
-          {p.name}: {formatCurrency(p.value)}
+          {p.name}: {p.value < 0 ? '-' : ''}{formatCurrency(Math.abs(p.value))}
         </p>
       ))}
     </div>
@@ -185,7 +185,12 @@ const HistoryInsights = () => {
             <ComposedChart data={monthly} barGap={2}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--text-muted)" />
-              <YAxis tickFormatter={(v) => formatCurrencyAuto(v)} tick={{ fontSize: 11 }} stroke="var(--text-muted)" width={80} />
+              <YAxis
+                tickFormatter={(v) => `${v < 0 ? '-' : ''}${formatCurrencyAuto(Math.abs(v))}`}
+                tick={{ fontSize: 11 }}
+                stroke="var(--text-muted)"
+                width={80}
+              />
               <Tooltip content={<HistoryTooltip />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="income" name="Ingresos" fill="#A6C0B4" radius={[6, 6, 0, 0]} isAnimationActive={false} />

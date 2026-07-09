@@ -24,7 +24,7 @@ import {
   Sector
 } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { formatCurrency } from '../../utils/formatters';
+import { formatCurrency, formatCurrencyAuto } from '../../utils/formatters';
 
 // Paleta oficial centralizada (misma fuente que tailwind.config.js — DOC/GUIA_DE_ESTILO.md)
 const PALETTE = {
@@ -104,6 +104,14 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
   const onPieEnter = (_, index) => setActiveIndex(index);
   const onPieLeave = () => setActiveIndex(-1);
 
+  // Dato del centro: la porción activa o el total. Las etiquetas externas con
+  // líneas se eliminaron: en tarjetas angostas se superponían y se cortaban.
+  const total = data.reduce((a, b) => a + (b.value || 0), 0);
+  const active = activeIndex >= 0 && activeIndex < data.length ? data[activeIndex] : null;
+  const centerTitle = active ? active.name : 'Gasto total';
+  const centerValue = active ? active.value : total;
+  const centerPct = active && total > 0 ? `${((active.value / total) * 100).toFixed(1)}%` : null;
+
   const renderActiveShape = (props) => {
     const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
     return (
@@ -127,6 +135,7 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
         <h3 className="text-lg font-serif italic text-main mb-4">{title}</h3>
       )}
       <ChartErrorBoundary>
+        <div className="relative">
         <ResponsiveContainer width="100%" height={350}>
           <PieChart>
             <defs>
@@ -160,8 +169,8 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
               onMouseEnter={onPieEnter}
               onMouseLeave={onPieLeave}
               isAnimationActive={false}
-              label={(entry) => `${entry.name} ${((entry.value / data.reduce((a, b) => a + b.value, 0)) * 100).toFixed(1)}%`}
-              labelLine={true}
+              label={false}
+              labelLine={false}
             >
               {data.map((entry, index) => (
                 <Cell
@@ -180,6 +189,21 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
             />
           </PieChart>
         </ResponsiveContainer>
+        {/* Centro de la dona: total, o la categoría bajo el cursor */}
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-center justify-center text-center px-4"
+          style={{ height: 314 }}
+          aria-live="polite"
+        >
+          <p className="micro-label max-w-[130px] truncate">{centerTitle}</p>
+          <p className="font-display text-2xl font-bold tabular-nums text-main leading-tight">
+            {formatCurrencyAuto(centerValue)}
+          </p>
+          {centerPct && (
+            <p className="text-xs font-bold text-primary dark:text-primary-300">{centerPct}</p>
+          )}
+        </div>
+        </div>
       </ChartErrorBoundary>
     </div>
   );
