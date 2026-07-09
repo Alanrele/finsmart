@@ -12,6 +12,7 @@ const FIELDS = [
   'email', 'password', 'firstName', 'lastName', 'microsoftId',
   'accessToken', 'refreshToken', 'tokenExpiry', 'isVerified',
   'preferences', 'lastSync', 'lastReprocess', 'syncEnabled', 'isDemo',
+  'esPlatinum', 'trialUsado', 'trialIniciadoEn',
   'createdAt', 'updatedAt'
 ];
 

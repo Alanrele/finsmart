@@ -11,9 +11,28 @@ const prisma = new PrismaClient({
 
 let connected = false;
 
+/*
+  Garantiza las columnas de membresía Platinum. Espeja la migración
+  20260708210000_membresia_platinum (ambas usan IF NOT EXISTS): el flujo de
+  desarrollo local arranca con nodemon sin pasar por `prisma migrate deploy`,
+  así que el propio servidor asegura el esquema mínimo que necesita.
+*/
+const ensureMembershipColumns = async () => {
+  await prisma.$executeRawUnsafe(
+    'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "es_platinum" BOOLEAN NOT NULL DEFAULT false'
+  );
+  await prisma.$executeRawUnsafe(
+    'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "trial_usado" BOOLEAN NOT NULL DEFAULT false'
+  );
+  await prisma.$executeRawUnsafe(
+    'ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "trial_iniciado_en" TIMESTAMP(3)'
+  );
+};
+
 const connectDb = async () => {
   await prisma.$connect();
   await prisma.$queryRaw`SELECT 1`;
+  await ensureMembershipColumns();
   connected = true;
   return prisma;
 };

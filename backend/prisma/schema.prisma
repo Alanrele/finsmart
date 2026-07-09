@@ -27,6 +27,10 @@ model User {
   lastReprocess DateTime?
   syncEnabled   Boolean       @default(false)
   isDemo        Boolean       @default(false)
+  // Membresía Platinum + trial único de 7 días (gating validado en servidor)
+  esPlatinum      Boolean   @default(false) @map("es_platinum")
+  trialUsado      Boolean   @default(false) @map("trial_usado")
+  trialIniciadoEn DateTime? @map("trial_iniciado_en")
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   transactions  Transaction[]
