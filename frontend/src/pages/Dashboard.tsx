@@ -194,6 +194,7 @@ const Dashboard = () => {
       'travel': 'Viajes',
       'investment': 'Inversiones',
       'income': 'Ingresos',
+      'yape': 'Yape',
       'transfer': 'Transferencias',
       'other': 'Otros',
       'unclassified': 'Sin clasificar',

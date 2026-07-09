@@ -94,6 +94,7 @@ const Transactions = () => {
     { value: 'travel', label: 'Viajes' },
     { value: 'investment', label: 'Inversiones' },
     { value: 'income', label: 'Ingresos' },
+    { value: 'yape', label: 'Yape' },
     { value: 'transfer', label: 'Transferencias' },
     { value: 'other', label: 'Otros' },
     { value: 'unclassified', label: 'Sin clasificar' }
@@ -123,6 +124,7 @@ const Transactions = () => {
       'travel': 'Viajes',
       'investment': 'Inversiones',
       'income': 'Ingresos',
+      'yape': 'Yape',
       'transfer': 'Transferencias',
       'other': 'Otros',
       'unclassified': 'Sin clasificar',

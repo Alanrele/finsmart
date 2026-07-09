@@ -7,9 +7,50 @@ const { prisma } = require('../config/prisma');
 const { DEFAULT_CATEGORIES } = require('../lib/classification/categories');
 const { DEFAULT_RULES } = require('../lib/classification/rulesEngine');
 
+/*
+  Alta de la categoría "Yape" para usuarios sembrados ANTES de que existiera:
+  crea la categoría y su regla (prioridad 75, gana a la de transferencias) y
+  reclasifica retroactivamente todo movimiento que mencione yape. Idempotente:
+  si la categoría ya existe, no hace nada.
+*/
+async function ensureYapeUpgrade(userId) {
+  const existing = await prisma.category.findFirst({ where: { userId, key: 'yape' } });
+  if (existing) return;
+
+  await prisma.category.create({
+    data: {
+      userId, key: 'yape', label: 'Yape', kind: 'both',
+      color: '#84A595', sortOrder: 10, isSystem: true,
+    },
+  });
+
+  const rule = await prisma.classificationRule.create({
+    data: {
+      userId, category: 'yape', matchType: 'regex',
+      pattern: '\\byape\\b', field: 'all', priority: 75, enabled: true,
+    },
+  });
+
+  await prisma.transaction.updateMany({
+    where: {
+      userId,
+      OR: [
+        { description: { contains: 'yape', mode: 'insensitive' } },
+        { merchant: { contains: 'yape', mode: 'insensitive' } },
+        { rawText: { contains: 'yape', mode: 'insensitive' } },
+      ],
+    },
+    data: { category: 'yape', ruleId: rule.id, isProcessed: true },
+  });
+}
+
 async function ensureSeeded(userId) {
   const count = await prisma.category.count({ where: { userId } });
-  if (count > 0) return;
+  if (count > 0) {
+    // Ya sembrado: solo garantiza las altas incrementales del catálogo
+    await ensureYapeUpgrade(userId);
+    return;
+  }
 
   await prisma.category.createMany({
     data: DEFAULT_CATEGORIES.map((c) => ({

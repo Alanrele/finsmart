@@ -38,7 +38,7 @@ const CATEGORY_LABELS = {
   food: 'Comida', transport: 'Transporte', entertainment: 'Entretenimiento',
   shopping: 'Compras', healthcare: 'Salud', utilities: 'Servicios',
   education: 'Educación', travel: 'Viajes', investment: 'Inversiones',
-  income: 'Ingresos', transfer: 'Transferencias', other: 'Otros',
+  income: 'Ingresos', yape: 'Yape', transfer: 'Transferencias', other: 'Otros',
   unclassified: 'Sin clasificar', salary: 'Salario', savings: 'Ahorros',
   freelance: 'Freelance',
 }

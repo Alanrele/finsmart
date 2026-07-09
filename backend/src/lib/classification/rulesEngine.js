@@ -114,8 +114,10 @@ const DEFAULT_RULES = [
   { category: 'shopping', matchType: 'regex', field: 'all', pattern: '\\b(saga|falabella|ripley|oechsle|promart|sodimac|linio|mercado libre|aliexpress|amazon)\\b', priority: 60 },
   // Entretenimiento
   { category: 'entertainment', matchType: 'regex', field: 'all', pattern: '\\b(cineplanet|cinemark|steam|playstation|xbox|spotify|disney)\\b', priority: 70 },
-  // Transferencias (Yape/Plin/interbancarias)
-  { category: 'transfer', matchType: 'regex', field: 'all', pattern: '\\b(yape|plin|transferencia|interbancaria|cci|envio a|transferencia a)\\b', priority: 80 },
+  // Yape: categoría propia, gana antes que la regla genérica de transferencias
+  { category: 'yape', matchType: 'regex', field: 'all', pattern: '\\byape\\b', priority: 75 },
+  // Transferencias (Plin/interbancarias)
+  { category: 'transfer', matchType: 'regex', field: 'all', pattern: '\\b(plin|transferencia|interbancaria|cci|envio a|transferencia a)\\b', priority: 80 },
 ];
 
 module.exports = {

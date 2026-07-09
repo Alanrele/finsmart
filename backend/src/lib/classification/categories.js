@@ -17,8 +17,9 @@ const DEFAULT_CATEGORIES = [
   { key: 'education',     label: 'Educación',         kind: 'expense', color: '#2B4D54', sortOrder: 7 },
   { key: 'travel',        label: 'Viajes',            kind: 'expense', color: '#84A595', sortOrder: 8 },
   { key: 'investment',    label: 'Inversiones',       kind: 'both',    color: '#355F67', sortOrder: 9 },
-  { key: 'transfer',      label: 'Transferencias',    kind: 'both',    color: '#C2BBA5', sortOrder: 10 },
-  { key: 'other',         label: 'Otros',             kind: 'expense', color: '#71717A', sortOrder: 11 },
+  { key: 'yape',          label: 'Yape',              kind: 'both',    color: '#84A595', sortOrder: 10 },
+  { key: 'transfer',      label: 'Transferencias',    kind: 'both',    color: '#C2BBA5', sortOrder: 11 },
+  { key: 'other',         label: 'Otros',             kind: 'expense', color: '#71717A', sortOrder: 12 },
   { key: UNCLASSIFIED,    label: 'Sin clasificar',    kind: 'both',    color: '#F59E0B', sortOrder: 99 },
 ];
 

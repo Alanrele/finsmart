@@ -181,7 +181,8 @@ export const Enhanced3DDonutChart = ({ data, title }) => {
                 />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
+            {/* Sin tooltip flotante: se encimaba con el dato del centro,
+                que ya muestra categoría, monto y % al pasar el cursor */}
             <Legend
               verticalAlign="bottom"
               height={36}
