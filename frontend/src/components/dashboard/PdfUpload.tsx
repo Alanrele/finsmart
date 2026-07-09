@@ -209,7 +209,7 @@ const PdfUpload = ({ onImported }) => {
                   onChange={(e) => setPassword(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleUnlock()}
                   autoFocus
-                  className={`input-field pr-12 ${pwdModal.error ? 'border-red-300 dark:border-red-800 focus:ring-red-500/20' : ''}`}
+                  className={`input-field input-field--with-suffix-icon ${pwdModal.error ? 'border-red-300 dark:border-red-800 focus:ring-red-500/20' : ''}`}
                   placeholder="••••••••"
                 />
                 <button

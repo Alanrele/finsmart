@@ -51,7 +51,7 @@ export const NumberField = ({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && onEnter?.()}
         aria-invalid={Boolean(error)}
-        className={`input-field ${prefix ? 'pl-10' : ''} ${
+        className={`input-field ${prefix ? 'input-field--with-prefix-icon' : ''} ${
           error ? 'border-red-300 dark:border-red-800 focus:ring-red-500/20 focus:border-red-400' : ''
         }`}
         placeholder={placeholder}
