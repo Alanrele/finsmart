@@ -41,7 +41,15 @@ export const PlatinumBadge = ({ className = '' }: { className?: string }) => (
 )
 
 /* Modal de confirmación del trial: el usuario lo activa explícitamente */
-export const TrialConfirmModal = ({ open, onClose, onActivated }) => {
+export const TrialConfirmModal = ({
+  open,
+  onClose,
+  onActivated,
+}: {
+  open: boolean
+  onClose: () => void
+  onActivated?: () => void
+}) => {
   const [activating, setActivating] = useState(false)
   const { setMembresia } = useMembershipStore()
 

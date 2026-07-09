@@ -52,7 +52,7 @@ const formatLongDate = (date) => {
   return s
 }
 
-const HistoryTooltip = ({ active, payload, label }) => {
+const HistoryTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload || payload.length === 0) return null
   return (
     <div className="bg-card border border-subtle rounded-2xl p-3 shadow-xl">
@@ -84,7 +84,7 @@ const InsightRow = ({ icon, accent, title, detail, value }) => (
 )
 
 const HistoryInsights = () => {
-  const [data, setData] = useState(null)
+  const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
