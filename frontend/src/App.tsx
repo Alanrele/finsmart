@@ -32,6 +32,7 @@ import WelcomeScreen from './pages/WelcomeScreen'
 
 // Auth y comunes
 import AuthCallback from './components/auth/AuthCallback'
+import PremiumGate from './components/premium/PremiumGate'
 import LoadingScreen from './components/common/LoadingScreen'
 import ConnectivityStatus from './components/common/ConnectivityStatus'
 import SSLErrorNotification from './components/common/SSLErrorNotification'
@@ -257,9 +258,11 @@ function App() {
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="transactions" element={<Transactions />} />
-          <Route path="analysis" element={<Analysis />} />
-          <Route path="chat" element={<ChatIA />} />
-          <Route path="ai-assistant" element={<EnhancedAIAssistant />} />
+          {/* Funciones premium: el backend valida con 403; el gate pinta el bloqueo.
+              Análisis usa los mismos endpoints de IA de pago, así que también va tras el gate. */}
+          <Route path="analysis" element={<PremiumGate feature="Análisis IA"><Analysis /></PremiumGate>} />
+          <Route path="chat" element={<PremiumGate feature="Chat IA+"><ChatIA /></PremiumGate>} />
+          <Route path="ai-assistant" element={<PremiumGate feature="Asistente IA+"><EnhancedAIAssistant /></PremiumGate>} />
           <Route path="tools" element={<FinancialTools />} />
           <Route path="outlook" element={<OutlookConnect />} />
           <Route path="settings" element={<Settings />} />

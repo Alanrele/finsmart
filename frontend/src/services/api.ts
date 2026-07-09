@@ -91,6 +91,18 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // 403 de función premium: sincroniza el estado de membresía que reporta
+    // el servidor para que la UI muestre el bloqueo correcto (no un error
+    // genérico). Import dinámico para evitar dependencia circular.
+    if (response?.status === 403 && response?.data?.code === 'PLATINUM_REQUERIDO') {
+      if (response.data.membresia) {
+        import('../stores/membershipStore')
+          .then((m) => m.default.getState().setMembresia(response.data.membresia))
+          .catch(() => {});
+      }
+      return Promise.reject(error);
+    }
+
     // Handle 401 Unauthorized errors globally
     if (response?.status === 401) {
       console.error('🚨 401 Unauthorized Error Detected. Logging out.');
@@ -131,6 +143,10 @@ export const getDashboardData = async (filters) => {
 
 // Historial financiero completo y comportamiento (todo el tiempo)
 export const getFinancialHistory = async () => (await api.get('/finance/history')).data;
+
+// ===== Membresía Platinum (el backend calcula el estado con SU reloj) =====
+export const getMembershipStatus = async () => (await api.get('/membresia/estado')).data;
+export const activateTrial = async () => (await api.post('/membresia/trial')).data;
 
 export const getTransactions = async (filters) => {
     try {
