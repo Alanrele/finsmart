@@ -107,7 +107,7 @@ const Login = () => {
         });
 
         login(data.user, data.token);
-        toast.success('Cuenta creada exitosamente');
+        toast.success(`Tu cuenta está lista. Bienvenido a Kipu${data.user?.firstName ? `, ${data.user.firstName}` : ''}.`);
         navigate('/dashboard');
       } else {
         // Login
@@ -117,7 +117,7 @@ const Login = () => {
         });
 
         login(data.user, data.token);
-        toast.success('Inicio de sesión exitoso');
+        toast.success(data.user?.firstName ? `Hola de nuevo, ${data.user.firstName}.` : 'Hola de nuevo.');
         navigate('/dashboard');
       }
     } catch (error) {

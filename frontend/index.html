@@ -108,14 +108,21 @@
         }, 300);
       });
 
-      // PWA install prompt
+      // PWA install prompt: se autocierra a los 5 s y, si el usuario lo
+      // descarta con la ×, no vuelve a aparecer durante 7 días.
       let deferredPrompt;
+      const PWA_DISMISS_KEY = 'kipu:pwa-install-dismissed-at';
+      const PWA_DISMISS_COOLDOWN = 7 * 24 * 60 * 60 * 1000;
 
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
 
-        // Show custom install prompt
+        try {
+          const dismissedAt = Number(localStorage.getItem(PWA_DISMISS_KEY) || 0);
+          if (Date.now() - dismissedAt < PWA_DISMISS_COOLDOWN) return;
+        } catch (_) { /* sin localStorage: se muestra igual */ }
+
         const installPrompt = document.createElement('div');
         installPrompt.className = 'pwa-install-prompt';
         installPrompt.innerHTML = `
@@ -126,7 +133,7 @@
             </div>
             <div>
               <button id="install-btn" style="background: #FFFFFF; color: #3F7079; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; margin-right: 8px;">Instalar</button>
-              <button id="dismiss-btn" style="background: transparent; border: none; color: #FFFFFF; font-size: 18px;">×</button>
+              <button id="dismiss-btn" aria-label="Cerrar" style="background: transparent; border: none; color: #FFFFFF; font-size: 18px;">×</button>
             </div>
           </div>
         `;
@@ -134,16 +141,25 @@
         document.body.appendChild(installPrompt);
         setTimeout(() => installPrompt.classList.add('show'), 100);
 
+        const hide = () => {
+          installPrompt.classList.remove('show');
+          setTimeout(() => installPrompt.remove(), 350);
+        };
+        const autoHide = setTimeout(hide, 5000);
+
         document.getElementById('install-btn').addEventListener('click', () => {
+          clearTimeout(autoHide);
           deferredPrompt.prompt();
-          deferredPrompt.userChoice.then((choiceResult) => {
+          deferredPrompt.userChoice.then(() => {
             deferredPrompt = null;
             installPrompt.remove();
           });
         });
 
         document.getElementById('dismiss-btn').addEventListener('click', () => {
-          installPrompt.remove();
+          clearTimeout(autoHide);
+          try { localStorage.setItem(PWA_DISMISS_KEY, String(Date.now())); } catch (_) {}
+          hide();
         });
       });
     </script>

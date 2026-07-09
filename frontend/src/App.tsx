@@ -274,26 +274,24 @@ function App() {
         } />
       </Routes>
 
-      {/* Toast notifications */}
+      {/* Toast notifications — pastilla glass Kipu (.kipu-toast en index.css) */}
       <Toaster
         position="top-right"
+        gutter={10}
         toastOptions={{
-          duration: 4000,
-          style: {
-            background: 'var(--color-surface)',
-            color: 'var(--color-text)',
-            border: '1px solid var(--color-border)',
-          },
+          duration: 3500,
+          className: 'kipu-toast',
           success: {
             iconTheme: {
-              primary: 'var(--color-sage)',
-              secondary: 'var(--color-surface)',
+              primary: '#658876',
+              secondary: '#FFFFFF',
             },
           },
           error: {
+            duration: 5000,
             iconTheme: {
-              primary: '#ef4444',
-              secondary: 'var(--color-surface)',
+              primary: '#F43F5E',
+              secondary: '#FFFFFF',
             },
           },
         }}
