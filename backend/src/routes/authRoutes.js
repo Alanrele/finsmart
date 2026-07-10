@@ -361,4 +361,68 @@ router.post('/cleanup-all-corrupted-tokens', async (req, res) => {
   }
 });
 
+/*
+  Perfil y ciclo de vida de la cuenta (requieren sesión: authMiddleware por
+  ruta, porque /api/auth se monta sin middleware global).
+*/
+const authMiddleware = require('../middleware/authMiddleware');
+
+// Actualizar nombre y apellido del perfil
+router.patch(
+  '/profile',
+  authMiddleware,
+  [
+    body('firstName').optional().trim().isLength({ min: 1, max: 60 }),
+    body('lastName').optional().trim().isLength({ min: 1, max: 60 }),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
+    }
+    const updates = {};
+    if (req.body.firstName !== undefined) updates.firstName = req.body.firstName.trim();
+    if (req.body.lastName !== undefined) updates.lastName = req.body.lastName.trim();
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: 'Nada que actualizar' });
+    }
+    try {
+      const user = await User.findByIdAndUpdate(req.user._id, { $set: updates }, { new: true });
+      res.json({ message: 'Perfil actualizado', user: user.toJSON() });
+    } catch (error) {
+      console.error('❌ Error actualizando perfil:', error);
+      res.status(500).json({ error: 'No se pudo actualizar el perfil' });
+    }
+  },
+);
+
+// Eliminar la cuenta DE VERDAD: requiere la contraseña actual como
+// confirmación y borra al usuario (el cascade de la BD elimina
+// transacciones, reglas, categorías, credenciales de PDF y revisiones).
+router.delete('/account', authMiddleware, async (req, res) => {
+  try {
+    const { password } = req.body || {};
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    // Cuentas con contraseña local: exigirla. Cuentas Microsoft: sin password local.
+    if (user.password) {
+      if (!password) {
+        return res.status(400).json({ error: 'password_requerida', message: 'Confirma con tu contraseña.' });
+      }
+      const ok = await user.comparePassword(password);
+      if (!ok) {
+        return res.status(403).json({ error: 'password_incorrecta', message: 'La contraseña no es correcta.' });
+      }
+    }
+
+    await User.findByIdAndDelete(user._id);
+    console.warn(`🗑️ Cuenta eliminada definitivamente: ${user.email}`);
+    res.json({ message: 'Cuenta eliminada permanentemente' });
+  } catch (error) {
+    console.error('❌ Error eliminando cuenta:', error);
+    res.status(500).json({ error: 'No se pudo eliminar la cuenta' });
+  }
+});
+
 module.exports = router;

@@ -144,6 +144,12 @@ export const getDashboardData = async (filters) => {
 // Historial financiero completo y comportamiento (todo el tiempo)
 export const getFinancialHistory = async () => (await api.get('/finance/history')).data;
 
+// ===== Perfil y cuenta =====
+export const updateProfile = async (data: { firstName?: string; lastName?: string }) =>
+  (await api.patch('/auth/profile', data)).data;
+export const deleteAccount = async (password?: string) =>
+  (await api.delete('/auth/account', { data: { password } })).data;
+
 // ===== Conexión Gmail (reemplaza Outlook) =====
 export const getGmailStatus = async () => (await api.get('/gmail/status')).data;
 export const getGmailAuthUrl = async () => (await api.get('/gmail/auth-url')).data;

@@ -1,9 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AssistantMessage } from '../types';
 import {
   Brain,
-  MessageCircle,
   Send,
   Mic,
   MicOff,
@@ -11,331 +10,277 @@ import {
   TrendingUp,
   Target,
   Lightbulb,
-  AlertTriangle,
-  PiggyBank,
   Calculator,
-  Calendar,
-  DollarSign
+  RotateCcw,
+  AlertTriangle,
 } from 'lucide-react';
 import { chatWithAI, getFinancialRecommendations, getFinancialInsights, analyzeFinancialData } from '../services/api';
-import { formatCurrency } from '../utils/formatters';
+import { PageHeader } from '../components/ui/kit';
+import { PlatinumBadge } from '../components/premium/PremiumGate';
 import toast from 'react-hot-toast';
 
+/*
+  Asistente IA+ (Platinum) — estilo Kipu y robustez:
+  - cada error deja un mensaje claro con botón "Reintentar" (se recuerda la
+    última acción fallida); un 403 explica que el acceso Platinum terminó
+  - las acciones rápidas y el chat comparten los mismos estados de carga
+  - entrada por voz opcional (Web Speech API) con degradación limpia
+*/
+
+const QUICK_ACTIONS = [
+  { id: 'analyze', icon: Brain, title: 'Analizar finanzas', description: 'Análisis completo del mes' },
+  { id: 'recommendations', icon: Lightbulb, title: 'Recomendaciones', description: 'Consejos personalizados' },
+  { id: 'insights', icon: TrendingUp, title: 'Tendencias', description: 'Patrones de tus últimos 3 meses' },
+  { id: 'predict', icon: Calculator, title: 'Predicción', description: 'Estima tu gasto del próximo mes' },
+];
+
+const WELCOME: AssistantMessage = {
+  type: 'ai',
+  content: 'Hola, soy tu asistente financiero. Analizo tus movimientos reales para responderte. ¿Qué quieres saber?',
+  suggestions: [
+    '¿Cuál es mi balance este mes?',
+    '¿En qué gasté más esta semana?',
+    'Dame recomendaciones de ahorro',
+  ],
+};
+
 const EnhancedAIAssistant = () => {
-  const [messages, setMessages] = useState<AssistantMessage[]>([
-    {
-      type: 'ai',
-      content: '¡Hola! Soy tu asistente financiero inteligente. Puedo ayudarte con:',
-      suggestions: [
-        '¿Cuál es mi balance este mes?',
-        'Analiza mis gastos',
-        'Dame recomendaciones',
-        'Predice mi gasto del próximo mes'
-      ]
-    }
-  ]);
+  const [messages, setMessages] = useState<AssistantMessage[]>([WELCOME]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
+  // Última acción fallida, para el botón Reintentar
+  const lastActionRef = useRef<null | (() => void)>(null);
   const messagesEndRef = useRef<any>(null);
   const recognitionRef = useRef<any>(null);
 
-  // Scroll to bottom cuando hay nuevos mensajes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, loading]);
 
-  // Web Speech API para voz
+  // Entrada por voz (opcional; si el navegador no la soporta, se degrada)
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'es-ES';
-
-      recognitionRef.current.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = () => {
-        setIsListening(false);
-        toast.error('Error al reconocer voz');
-      };
-
-      recognitionRef.current.onend = () => {
-        setIsListening(false);
-      };
-    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const rec = new SpeechRecognition();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = 'es-PE';
+    rec.onresult = (event) => {
+      setInput(event.results[0][0].transcript);
+      setIsListening(false);
+    };
+    rec.onerror = () => setIsListening(false);
+    rec.onend = () => setIsListening(false);
+    recognitionRef.current = rec;
+    return () => rec.abort?.();
   }, []);
 
   const toggleVoiceInput = () => {
     if (!recognitionRef.current) {
-      toast.error('Tu navegador no soporta reconocimiento de voz');
+      toast.error('Tu navegador no soporta dictado por voz');
       return;
     }
-
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
       recognitionRef.current.start();
       setIsListening(true);
-      toast.success('Escuchando... Habla ahora');
     }
   };
 
-  const sendMessage = async (messageText = input) => {
-    if (!messageText.trim()) return;
+  const pushError = useCallback((err: any, retry: () => void) => {
+    lastActionRef.current = retry;
+    const is403 = err?.response?.status === 403;
+    setMessages((prev) => [
+      ...prev,
+      {
+        type: 'ai',
+        isError: true,
+        content: is403
+          ? 'Tu acceso Platinum terminó, así que no puedo consultar la IA. Revisa tu membresía para continuar.'
+          : 'No pude procesar tu solicitud. Puede ser un problema momentáneo de conexión o del servicio de IA.',
+        canRetry: !is403,
+      } as any,
+    ]);
+  }, []);
 
-    const userMessage = { type: 'user', content: messageText };
-    setMessages((prev) => [...prev, userMessage]);
+  const sendMessage = async (messageText = input) => {
+    const text = messageText.trim();
+    if (!text || loading) return;
+
+    setMessages((prev) => [...prev, { type: 'user', content: text }]);
     setInput('');
     setLoading(true);
     setShowQuickActions(false);
 
     try {
-      const response = await chatWithAI({ message: messageText });
-
-      const aiMessage = {
-        type: 'ai',
-        content: response.response,
-        timestamp: new Date()
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // Si hay sugerencias de seguimiento
-      if (response.suggestions && response.suggestions.length > 0) {
-        const suggestionsMessage = {
-          type: 'ai',
-          suggestions: response.suggestions
-        };
-        setMessages((prev) => [...prev, suggestionsMessage]);
-      }
+      const response = await chatWithAI({ message: text });
+      setMessages((prev) => [
+        ...prev,
+        { type: 'ai', content: response.response, timestamp: new Date() },
+        ...(response.suggestions?.length ? [{ type: 'ai', suggestions: response.suggestions } as any] : []),
+      ]);
+      lastActionRef.current = null;
     } catch (error) {
-      const errorMessage = {
-        type: 'ai',
-        content: 'Lo siento, hubo un error al procesar tu pregunta. Por favor intenta de nuevo.',
-        isError: true
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-      toast.error('Error al comunicarse con el asistente');
+      pushError(error, () => sendMessage(text));
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickAction = async (action) => {
+  const handleQuickAction = async (action: string) => {
+    if (loading) return;
+    if (action === 'predict') {
+      sendMessage('¿Cuánto gastaré el próximo mes según mis hábitos?');
+      return;
+    }
+
     setLoading(true);
     setShowQuickActions(false);
-
     try {
-      let response;
-      let aiMessage;
-
-      switch (action) {
-        case 'analyze':
-          response = await analyzeFinancialData({ period: 'month' });
-          aiMessage = {
-            type: 'ai',
-            content: response.analysis.summary,
-            insights: response.analysis.insights,
-            recommendations: response.analysis.recommendations
-          };
-          break;
-
-        case 'recommendations':
-          response = await getFinancialRecommendations();
-          aiMessage = {
-            type: 'ai',
-            content: 'Aquí están tus recomendaciones personalizadas:',
-            recommendations: response.recommendations
-          };
-          break;
-
-        case 'insights':
-          response = await getFinancialInsights({ months: 3 });
-          aiMessage = {
-            type: 'ai',
-            content: 'Insights de tus últimos 3 meses:',
-            insights: response.insights.trends || []
-          };
-          break;
-
-        case 'predict':
-          sendMessage('¿Cuánto gastaré el próximo mes?');
-          return;
-
-        default:
-          return;
+      let aiMessage: any;
+      if (action === 'analyze') {
+        const r = await analyzeFinancialData({ period: 'month' });
+        aiMessage = {
+          type: 'ai',
+          content: r.analysis?.summary || 'Análisis de tu mes:',
+          insights: r.analysis?.insights || [],
+          recommendations: r.analysis?.recommendations || [],
+        };
+      } else if (action === 'recommendations') {
+        const r = await getFinancialRecommendations();
+        aiMessage = { type: 'ai', content: 'Tus recomendaciones personalizadas:', recommendations: r.recommendations || [] };
+      } else {
+        const r = await getFinancialInsights({ months: 3 });
+        aiMessage = { type: 'ai', content: 'Tendencias de tus últimos 3 meses:', insights: r.insights?.trends || [] };
       }
-
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, { ...aiMessage, timestamp: new Date() }]);
+      lastActionRef.current = null;
     } catch (error) {
-      toast.error('Error al cargar la información');
+      pushError(error, () => handleQuickAction(action));
     } finally {
       setLoading(false);
     }
   };
 
-  const quickActions = [
-    {
-      id: 'analyze',
-      icon: Brain,
-      title: 'Analizar Finanzas',
-      description: 'Análisis completo de tu situación financiera',
-      color: 'from-primary to-primary-700'
-    },
-    {
-      id: 'recommendations',
-      icon: Lightbulb,
-      title: 'Recomendaciones',
-      description: 'Consejos personalizados para mejorar',
-      color: 'from-sage-600 to-primary'
-    },
-    {
-      id: 'insights',
-      icon: TrendingUp,
-      title: 'Insights',
-      description: 'Patrones y tendencias en tus gastos',
-      color: 'from-primary to-primary-700'
-    },
-    {
-      id: 'predict',
-      icon: Calculator,
-      title: 'Predicción',
-      description: 'Estima tus gastos futuros',
-      color: 'from-sage-600 to-primary'
-    }
-  ];
+  const handleRetry = () => {
+    const retry = lastActionRef.current;
+    if (!retry) return;
+    // Quita el mensaje de error antes de reintentar
+    setMessages((prev) => prev.filter((m: any) => !m.isError));
+    retry();
+  };
+
+  const formatTime = (t: any) =>
+    new Date(t).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="bg-primary text-white p-6 rounded-t-2xl">
-        <div className="flex items-center space-x-3">
-          <div className="p-3 bg-white/20 rounded-lg backdrop-blur-sm">
-            <Brain className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">Asistente Financiero IA</h2>
-            <p className="text-white/80 text-sm">Powered by OpenAI GPT-4</p>
-          </div>
-        </div>
-      </div>
+    <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+      <PageHeader
+        title={<span className="flex items-center gap-3">Asistente IA+ <PlatinumBadge /></span>}
+        subtitle="Conversa con la IA sobre tus movimientos reales del BCP"
+      />
 
-      {/* Quick Actions */}
-      <AnimatePresence>
-        {showQuickActions && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="p-4 bg-base/60 border-b border-subtle"
-          >
-            <p className="text-sm text-muted mb-3">Acciones rápidas:</p>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {quickActions.map((action) => (
-                <button
-                  key={action.id}
-                  onClick={() => handleQuickAction(action.id)}
-                  disabled={loading}
-                  className="group relative min-w-0 p-4 bg-card rounded-xl border border-subtle hover:shadow-lg transition-all overflow-hidden"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.color} opacity-0 group-hover:opacity-10 transition-opacity`} />
-                  <action.icon className={`w-6 h-6 mb-2 text-main/80 group-hover:text-primary-600 transition-colors`} />
-                  <p className="text-sm font-semibold text-main break-words">
-                    {action.title}
-                  </p>
-                  <p className="text-xs text-muted mt-1 break-words">
-                    {action.description}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-base/60">
-        {messages.map((message, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.type === 'user' ? (
-              <div className="max-w-[70%] bg-primary text-white px-4 py-3 rounded-2xl rounded-tr-none">
-                <p>{message.content}</p>
+      <div className="bg-card rounded-[2rem] border border-subtle shadow-xl overflow-hidden flex flex-col" style={{ height: 'min(72vh, 760px)' }}>
+        {/* Acciones rápidas */}
+        <AnimatePresence>
+          {showQuickActions && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="border-b border-subtle"
+            >
+              <div className="p-4">
+                <p className="micro-label mb-3">Acciones rápidas</p>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  {QUICK_ACTIONS.map(({ id, icon: Icon, title, description }) => (
+                    <button
+                      key={id}
+                      onClick={() => handleQuickAction(id)}
+                      disabled={loading}
+                      className="text-left p-3.5 rounded-2xl bg-base/60 border border-subtle hover:border-primary/40 hover:-translate-y-0.5 transition-all disabled:opacity-50"
+                    >
+                      <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary dark:text-primary-300 flex items-center justify-center mb-2">
+                        <Icon className="w-4 h-4" strokeWidth={2.25} />
+                      </div>
+                      <p className="text-sm font-bold text-main leading-tight">{title}</p>
+                      <p className="text-[11px] text-muted mt-0.5 leading-snug">{description}</p>
+                    </button>
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div className="max-w-[85%] space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="p-2 bg-gradient-to-br from-primary to-sage-600 rounded-full flex-shrink-0">
-                    <Sparkles className="w-4 h-4 text-white" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Conversación */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-base/40">
+          {messages.map((message: any, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              {message.type === 'user' ? (
+                <div className="max-w-[75%] bg-brand-primary text-white dark:text-brand-dark px-4 py-2.5 rounded-2xl rounded-br-md">
+                  <p className="text-sm font-medium">{message.content}</p>
+                </div>
+              ) : (
+                <div className="max-w-[88%] flex items-start gap-2.5">
+                  <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                    message.isError ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary dark:text-primary-300'
+                  }`}>
+                    {message.isError ? <AlertTriangle className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                   </div>
-                  <div className="flex-1 bg-card px-4 py-3 rounded-2xl rounded-tl-none shadow-md">
+                  <div className={`flex-1 min-w-0 px-4 py-3 rounded-2xl rounded-tl-md border ${
+                    message.isError ? 'bg-amber-500/5 border-amber-500/20' : 'bg-card border-subtle'
+                  }`}>
                     {message.content && (
-                      <p className="text-main whitespace-pre-wrap">
-                        {message.content}
-                      </p>
+                      <p className="text-sm text-main whitespace-pre-wrap leading-relaxed">{message.content}</p>
                     )}
 
-                    {/* Insights */}
-                    {message.insights && message.insights.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        <p className="text-sm font-semibold text-primary dark:text-primary-300 flex items-center">
-                          <Lightbulb className="w-4 h-4 mr-2" />
-                          Insights:
-                        </p>
-                        {message.insights.map((insight, i) => (
-                          <div key={i} className="pl-4 border-l-2 border-primary text-sm text-main/80">
-                            {insight}
-                          </div>
+                    {message.isError && message.canRetry && (
+                      <button onClick={handleRetry} className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary dark:text-primary-300 hover:opacity-80 transition">
+                        <RotateCcw className="w-3.5 h-3.5" /> Reintentar
+                      </button>
+                    )}
+
+                    {message.insights?.length > 0 && (
+                      <div className="mt-3 space-y-1.5">
+                        <p className="micro-label flex items-center gap-1.5"><Lightbulb className="w-3.5 h-3.5" /> Hallazgos</p>
+                        {message.insights.map((insight: string, i: number) => (
+                          <p key={i} className="pl-3 border-l-2 border-primary/40 text-sm text-main/85 leading-relaxed">{insight}</p>
                         ))}
                       </div>
                     )}
 
-                    {/* Recommendations */}
-                    {message.recommendations && message.recommendations.length > 0 && (
+                    {message.recommendations?.length > 0 && (
                       <div className="mt-3 space-y-2">
-                        <p className="text-sm font-semibold text-sage-700 dark:text-sage-300 flex items-center">
-                          <Target className="w-4 h-4 mr-2" />
-                          Recomendaciones:
-                        </p>
-                        {message.recommendations.map((rec, i) => (
-                          <div
-                            key={i}
-                            className="p-3 bg-primary/10 dark:bg-primary/20 rounded-xl border border-primary/20 dark:border-primary/40"
-                          >
-                            <p className="text-sm font-medium text-main">
-                              {typeof rec === 'string' ? rec : rec.title}
-                            </p>
+                        <p className="micro-label flex items-center gap-1.5"><Target className="w-3.5 h-3.5" /> Recomendaciones</p>
+                        {message.recommendations.map((rec: any, i: number) => (
+                          <div key={i} className="p-3 bg-sage-600/5 dark:bg-sage-600/10 rounded-xl border border-sage-600/15">
+                            <p className="text-sm font-semibold text-main">{typeof rec === 'string' ? rec : rec.title}</p>
                             {typeof rec !== 'string' && rec.description && (
-                              <p className="text-xs text-main/80 mt-1">
-                                {rec.description}
-                              </p>
+                              <p className="text-xs text-muted mt-0.5 leading-relaxed">{rec.description}</p>
                             )}
                           </div>
                         ))}
                       </div>
                     )}
 
-                    {/* Suggestions */}
-                    {message.suggestions && message.suggestions.length > 0 && (
+                    {message.suggestions?.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {message.suggestions.map((suggestion, i) => (
+                        {message.suggestions.map((suggestion: string, i: number) => (
                           <button
                             key={i}
                             onClick={() => sendMessage(suggestion)}
-                            className="text-xs px-3 py-1.5 bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary-300 border border-primary/20 rounded-full hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+                            disabled={loading}
+                            className="text-xs font-semibold px-3 py-1.5 bg-primary/10 text-primary dark:text-primary-300 border border-primary/20 rounded-full hover:bg-primary/20 transition disabled:opacity-50"
                           >
                             {suggestion}
                           </button>
@@ -344,94 +289,79 @@ const EnhancedAIAssistant = () => {
                     )}
 
                     {message.timestamp && (
-                      <p className="text-xs text-muted mt-2">
-                        {new Date(message.timestamp).toLocaleTimeString()}
-                      </p>
+                      <p className="text-[10px] font-mono text-muted mt-2">{formatTime(message.timestamp)}</p>
                     )}
                   </div>
                 </div>
+              )}
+            </motion.div>
+          ))}
+
+          {loading && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary dark:text-primary-300 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 animate-pulse motion-reduce:animate-none" />
               </div>
-            )}
-          </motion.div>
-        ))}
-
-        {loading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex justify-start"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-gradient-to-br from-primary-500 to-purple-500 rounded-full">
-                <Sparkles className="w-4 h-4 text-white animate-pulse" />
+              <div className="bg-card border border-subtle px-4 py-3 rounded-2xl rounded-tl-md flex gap-1.5">
+                {[0, 150, 300].map((d) => (
+                  <span key={d} className="w-1.5 h-1.5 bg-brand-primary/50 rounded-full animate-bounce motion-reduce:animate-none" style={{ animationDelay: `${d}ms` }} />
+                ))}
               </div>
-              <div className="bg-card px-4 py-3 rounded-2xl shadow-md">
-                <div className="flex space-x-2">
-                  <div className="w-2 h-2 bg-brand-primary/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-brand-primary/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-brand-primary/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input */}
-      <div className="p-4 bg-card border-t border-subtle rounded-b-xl">
-        {isListening && (
-          <div className="mb-3 px-4 py-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center space-x-2">
-            <div className="flex space-x-1">
-              <div className="w-1 h-4 bg-red-500 rounded-full animate-pulse" />
-              <div className="w-1 h-4 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '150ms' }} />
-              <div className="w-1 h-4 bg-red-500 rounded-full animate-pulse" style={{ animationDelay: '300ms' }} />
-            </div>
-            <span className="text-sm text-red-700 dark:text-red-300 font-medium">
-              Escuchando... Habla ahora
-            </span>
-          </div>
-        )}
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={toggleVoiceInput}
-            disabled={loading}
-            className={`p-3 rounded-lg transition-all ${
-              isListening
-                ? 'bg-red-500 text-white shadow-lg shadow-red-500/50'
-                : 'bg-base/60 text-muted hover:bg-primary/10 dark:hover:bg-primary/20'
-            }`}
-            title={isListening ? 'Detener grabación' : 'Usar voz (Chrome/Edge)'}
-          >
-            {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-          </button>
-
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            disabled={loading}
-            placeholder="Pregúntame sobre tus finanzas..."
-            className="flex-1 min-w-0 px-4 py-3 bg-base/60 text-main rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
-          />
-
-          <button
-            onClick={() => sendMessage()}
-            disabled={loading || !input.trim()}
-            className="p-3 bg-primary hover:bg-primary-600 active:bg-primary-700 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-primary/15"
-            title="Enviar mensaje"
-          >
-            <Send className="w-5 h-5" />
-          </button>
+          <div ref={messagesEndRef} />
         </div>
 
-        <p className="text-xs text-muted mt-2 text-center">
-          Powered by OpenAI • Tus datos están seguros
-        </p>
+        {/* Entrada */}
+        <div className="p-4 border-t border-subtle bg-card">
+          {isListening && (
+            <div className="mb-3 px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-2.5" role="status">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping motion-reduce:animate-none absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500" />
+              </span>
+              <span className="text-sm font-semibold text-main">Escuchando… habla ahora</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleVoiceInput}
+              disabled={loading}
+              aria-label={isListening ? 'Detener dictado' : 'Dictar por voz'}
+              className={`h-11 w-11 shrink-0 rounded-2xl flex items-center justify-center transition ${
+                isListening
+                  ? 'bg-rose-500 text-white'
+                  : 'bg-base/60 border border-subtle text-muted hover:text-primary hover:bg-primary/10'
+              }`}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              disabled={loading}
+              placeholder="Pregúntame sobre tus finanzas…"
+              aria-label="Mensaje para el asistente"
+              className="input-field flex-1 min-w-0"
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={loading || !input.trim()}
+              aria-label="Enviar mensaje"
+              className="h-11 w-11 shrink-0 rounded-2xl bg-brand-primary text-white dark:text-brand-dark flex items-center justify-center hover:opacity-90 disabled:opacity-40 transition shadow-lg shadow-black/10"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] text-muted text-center">
+            Las respuestas se generan con IA a partir de tus movimientos. Verifica los montos importantes.
+          </p>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

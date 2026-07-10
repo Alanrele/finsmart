@@ -34,6 +34,7 @@ import {
   Sector
 } from 'recharts';
 import useAppStore from '../stores/appStore';
+import useAuthStore from '../stores/authStore';
 import { getDashboardData } from '../services/api'; // Importar directamente
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -91,7 +92,9 @@ class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode },
 
 const Dashboard = () => {
   const { dashboardData, setDashboardData } = useAppStore();
+  const user = useAuthStore((s) => s.user);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const currentPeriod = useMemo(() => {
     const now = new Date();
     return { month: now.getMonth() + 1, year: now.getFullYear() };
@@ -104,6 +107,7 @@ const Dashboard = () => {
     if (!period && !all) return;
     try {
       setLoading(true);
+      setLoadError(false);
       const data = await getDashboardData(all ? { range: 'all' } : { month: period.month, year: period.year });
       setDashboardData(data);
 
@@ -118,7 +122,7 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('❌ Dashboard loading error:', error);
-      toast.error(error.message || 'Error al cargar los datos del panel.');
+      setLoadError(true);
       setDashboardData({
         summary: {},
         categorySpending: [],
@@ -281,8 +285,8 @@ const Dashboard = () => {
     >
       {/* PageHeader con selector de mes + acción */}
       <PageHeader
-        title="Panel Financiero"
-        subtitle="Resumen completo e inteligente de tus finanzas personales en Kipu"
+        title={user?.firstName ? `Hola, ${user.firstName}` : 'Panel Financiero'}
+        subtitle="Este es el estado de tus finanzas, nudo por nudo"
         actions={
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 bg-base/60 p-1 rounded-xl border border-subtle">
@@ -317,6 +321,18 @@ const Dashboard = () => {
           </div>
         }
       />
+
+      {/* Error de carga: aviso claro con reintento (nunca un panel vacío mudo) */}
+      {loadError && (
+        <div className="flex items-center gap-3 p-4 rounded-[2rem] bg-rose-500/10 border border-rose-500/20">
+          <IconBadge icon={AlertTriangle} accent="rose" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-main">No se pudo cargar tu panel</p>
+            <p className="text-xs text-muted">Revisa tu conexión con el servidor y vuelve a intentarlo.</p>
+          </div>
+          <button onClick={handleRefresh} className="btn-secondary !py-2.5 whitespace-nowrap">Reintentar</button>
+        </div>
+      )}
 
       {/* Indicador de movimientos sin clasificar */}
       {(summary?.unclassifiedCount ?? 0) > 0 && (
