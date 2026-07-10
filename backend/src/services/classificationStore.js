@@ -44,11 +44,29 @@ async function ensureYapeUpgrade(userId) {
   });
 }
 
+/*
+  Alta incremental: regla de tiendas de conveniencia peruanas (MASS, TAMBO,
+  OXXO, LISTO) para usuarios sembrados antes de que existiera. Idempotente.
+*/
+async function ensureConvenienceRuleUpgrade(userId) {
+  const existing = await prisma.classificationRule.findFirst({
+    where: { userId, pattern: { contains: 'tambo' } },
+  });
+  if (existing) return;
+  await prisma.classificationRule.create({
+    data: {
+      userId, category: 'food', matchType: 'regex',
+      pattern: '\\b(mass|tambo|oxxo|listo)\\b', field: 'all', priority: 28, enabled: true,
+    },
+  });
+}
+
 async function ensureSeeded(userId) {
   const count = await prisma.category.count({ where: { userId } });
   if (count > 0) {
     // Ya sembrado: solo garantiza las altas incrementales del catálogo
     await ensureYapeUpgrade(userId);
+    await ensureConvenienceRuleUpgrade(userId);
     return;
   }
 

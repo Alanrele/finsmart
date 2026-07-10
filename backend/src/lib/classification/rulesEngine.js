@@ -104,6 +104,8 @@ const DEFAULT_RULES = [
   { category: 'income', matchType: 'regex', field: 'all', pattern: '\\b(abono de haberes|deposito de sueldo|remuneracion|planilla|haberes|deposito cts)\\b', priority: 10 },
   // Combustible / transporte
   { category: 'transport', matchType: 'regex', field: 'all', pattern: '\\b(primax|repsol|petroperu|pecsa|grifo|combustible|uber|beat|indriver|cabify|peaje)\\b', priority: 20 },
+  // Tiendas de conveniencia / descuento (frecuentes en correos BCP)
+  { category: 'food', matchType: 'regex', field: 'all', pattern: '\\b(mass|tambo|oxxo|listo)\\b', priority: 28 },
   // Alimentación
   { category: 'food', matchType: 'regex', field: 'all', pattern: '\\b(plaza vea|tottus|metro|wong|makro|vivanda|rappi|pedidosya|kfc|bembos|starbucks|restaurant|mercado|panaderia)\\b', priority: 30 },
   // Servicios (agua, luz, telefonía, internet)
