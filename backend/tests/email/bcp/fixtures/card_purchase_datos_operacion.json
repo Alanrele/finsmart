@@ -1,0 +1,8 @@
+{
+  "descripcion": "Correo real de consumo con Tarjeta de Crédito BCP (plantilla 'Datos de la operación'), con datos personales censurados",
+  "from": "notificaciones@notificacionesbcp.com.pe",
+  "subject": "Realizaste un consumo con tu Tarjeta de Crédito BCP",
+  "receivedAt": "2026-07-02T14:15:00.000Z",
+  "gmailMessageId": "BCP-MSG-0000816110-censurado",
+  "html": "<html><body>\n<div class=\"banner\"><img src=\"https://example.com/banner-bcp.png\" alt=\"BCP\" /></div>\n<p>Hola A****</p>\n<p>Realizaste un consumo con tu Tarjeta de Crédito BCP. Aquí te dejamos el detalle de la operación:</p>\n<h3>Datos de la operación</h3>\n<table>\n  <tr><td>Total del consumo</td>\n      <td><strong>S/ 20.90</strong></td></tr>\n  <tr><td>Operación realizada</td>\n      <td>Consumo Tarjeta de Crédito</td></tr>\n  <tr><td>Fecha y hora</td>\n      <td>28 de junio de 2026 - 02:03 PM</td></tr>\n  <tr><td>Número de Tarjeta de Crédito</td>\n      <td>************1311</td></tr>\n  <tr><td>Empresa</td>\n      <td>1048 MASS LIMA 11 BARR MS</td></tr>\n  <tr><td>Número de operación</td>\n      <td>0000816110</td></tr>\n</table>\n<div class=\"promo\">¿Problemas con tus compras? Conoce aquí cómo resolverlos.</div>\n<p class=\"legal\">Este correo es informativo. Si no reconoces esta operación comunícate inmediatamente con nosotros al (01) 311-9898 anexo *225 para ayudarte a verificarla. ¡Seguimos mejorando para ti!</p>\n</body></html>"
+}
