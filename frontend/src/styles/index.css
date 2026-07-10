@@ -32,6 +32,8 @@
   --glass-header-bg: rgba(235, 230, 218, 0.85);
   --scroll-thumb: rgba(45, 43, 36, 0.15);
   --scroll-thumb-hover: rgba(45, 43, 36, 0.3);
+  /* Chevron de los <select> (taupe, a juego con text-muted) */
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236E6857' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 
   /* Alias legado usados por el código existente */
   --color-bg: var(--bg-base);
@@ -62,6 +64,7 @@
   --glass-header-bg: rgba(11, 14, 14, 0.85);
   --scroll-thumb: rgba(245, 243, 237, 0.1);
   --scroll-thumb-hover: rgba(245, 243, 237, 0.2);
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A79E82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   color-scheme: dark;
 }
 
@@ -180,6 +183,31 @@ a, button, input, select, textarea,
 
 .input-field--with-prefix-icon { @apply pl-10; }
 .input-field--with-suffix-icon { @apply pr-10; }
+
+/* ===== Selects (desplegables) — estilo Kipu en ambos temas =====
+   Los <select> nativos perdían la estética en claro y las opciones eran
+   ilegibles en oscuro (colores por defecto del navegador). Se reemplaza la
+   flecha nativa por el chevron de la marca y se fijan los colores del
+   listado de opciones con los tokens del tema. */
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1rem 1rem;
+  padding-right: 2.5rem !important;
+  cursor: pointer;
+}
+select option,
+select optgroup {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+}
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 
 /* ===== Micro-etiqueta (mono en mayúsculas, tracking ancho — firma Kipu) ===== */
 .micro-label {
