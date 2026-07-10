@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import ConfirmDialog from '../components/common/ConfirmDialog'
 import RulesManager from '../components/settings/RulesManager'
 import SavedPdfCredentials from '../components/settings/SavedPdfCredentials'
+import EmailReviewTray from '../components/settings/EmailReviewTray'
 
 const Settings = () => {
   const { user, updateUser, logout } = useAuthStore()
@@ -269,6 +270,9 @@ const Settings = () => {
 
       {/* Reglas de clasificación (motor determinístico) */}
       <RulesManager />
+
+      {/* Bandeja de revisión: correos BCP no procesables */}
+      <EmailReviewTray />
 
       {/* Credenciales de PDF guardadas (cifradas) */}
       <SavedPdfCredentials />

@@ -144,6 +144,16 @@ export const getDashboardData = async (filters) => {
 // Historial financiero completo y comportamiento (todo el tiempo)
 export const getFinancialHistory = async () => (await api.get('/finance/history')).data;
 
+// ===== Conexión Gmail (reemplaza Outlook) =====
+export const getGmailStatus = async () => (await api.get('/gmail/status')).data;
+export const getGmailAuthUrl = async () => (await api.get('/gmail/auth-url')).data;
+export const syncGmail = async () => (await api.post('/gmail/sync')).data;
+export const disconnectGmail = async () => (await api.post('/gmail/disconnect')).data;
+
+// ===== Bandeja de revisión: correos BCP no procesables =====
+export const getEmailReviews = async () => (await api.get('/graph/email-review')).data;
+export const dismissEmailReview = async (id) => (await api.post(`/graph/email-review/${id}/dismiss`)).data;
+
 // ===== Membresía Platinum (el backend calcula el estado con SU reloj) =====
 export const getMembershipStatus = async () => (await api.get('/membresia/estado')).data;
 export const activateTrial = async () => (await api.post('/membresia/trial')).data;
