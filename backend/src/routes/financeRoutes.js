@@ -109,6 +109,7 @@ router.get('/dashboard', async (req, res) => {
     // Get monthly comparison (current vs previous month) — no aplica en historial completo
     let spendingChange = 0;
     let spendingChangePercentage = null;
+    let previousMonthSpendingTotal = null;
     if (!allTime) {
       const previousMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
       const previousYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
@@ -124,6 +125,7 @@ router.get('/dashboard', async (req, res) => {
       });
 
       const previousMonthSpending = previousMonthTransactions.reduce((sum, t) => sum + t.amount, 0);
+      previousMonthSpendingTotal = previousMonthSpending;
       spendingChange = totalSpending - previousMonthSpending;
       spendingChangePercentage = previousMonthSpending > 0 ? (spendingChange / previousMonthSpending) * 100 : 0;
     }
@@ -252,6 +254,7 @@ router.get('/dashboard', async (req, res) => {
         transactionCount: currentMonthTransactions.length,
         spendingChange: roundToTwo(spendingChange),
         spendingChangePercentage: spendingChangePercentage === null ? null : roundToTwo(spendingChangePercentage),
+        previousMonthSpending: previousMonthSpendingTotal === null ? null : roundToTwo(previousMonthSpendingTotal),
         unclassifiedCount
       },
       categorySpending: categorySpendingArray,
@@ -395,6 +398,14 @@ router.get('/history', async (req, res) => {
       ? { day: WEEKDAYS[topWeekdayIndex], amount: roundToTwo(byWeekday[topWeekdayIndex]) }
       : null;
 
+    // Serie completa por día de la semana (lunes primero, para graficar)
+    const WEEKDAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const weekdaySpending = [1, 2, 3, 4, 5, 6, 0].map((i) => ({
+      day: WEEKDAYS[i],
+      label: WEEKDAY_SHORT[i],
+      amount: roundToTwo(byWeekday[i]),
+    }));
+
     const topCategories = Object.entries(byCategory)
       .sort(([, a], [, b]) => b.amount - a.amount)
       .slice(0, 6)
@@ -449,6 +460,7 @@ router.get('/history', async (req, res) => {
         savingsRate: savingsRate === null ? null : roundToTwo(savingsRate)
       },
       monthly,
+      weekdaySpending,
       behavior: {
         biggestExpense,
         maxSpendingMonth,

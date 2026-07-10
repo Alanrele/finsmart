@@ -73,6 +73,7 @@ export interface DashboardSummary {
   transactionCount?: number
   spendingChange?: number
   spendingChangePercentage?: number
+  previousMonthSpending?: number | null
   unclassifiedCount?: number
 }
 

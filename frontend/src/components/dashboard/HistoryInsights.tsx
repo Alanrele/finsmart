@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import {
   ResponsiveContainer,
   ComposedChart,
+  BarChart,
   Bar,
   Line,
   XAxis,
@@ -202,6 +203,30 @@ const HistoryInsights = () => {
           <EmptyState icon={CalendarRange} title="Sin datos mensuales" message="Aún no hay meses con movimientos." />
         )}
       </SectionCard>
+
+      {/* Patrón semanal: en qué días de la semana se concentra tu gasto */}
+      {data.weekdaySpending?.some((d) => d.amount > 0) && (
+        <SectionCard title="Tu semana de gasto">
+          <ResponsiveContainer width="100%" height={210}>
+            <BarChart data={data.weekdaySpending} barCategoryGap="25%">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="var(--text-muted)" />
+              <YAxis tickFormatter={(v) => formatCurrencyAuto(v)} tick={{ fontSize: 11 }} stroke="var(--text-muted)" width={78} />
+              <Tooltip
+                formatter={(value: any) => [formatCurrency(value), 'Gasto acumulado']}
+                labelFormatter={(label: any) => {
+                  const d = data.weekdaySpending.find((w: any) => w.label === label)
+                  return d?.day || label
+                }}
+              />
+              <Bar dataKey="amount" name="Gasto" fill="#3F7079" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="mt-2 text-[11px] text-muted text-center">
+            Gasto acumulado de todo tu historial por día de la semana
+          </p>
+        </SectionCard>
+      )}
 
       {/* Comportamiento y hábitos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

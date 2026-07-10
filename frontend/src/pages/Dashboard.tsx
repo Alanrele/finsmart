@@ -3,73 +3,59 @@ import { motion } from 'framer-motion';
 import {
   TrendingUp,
   TrendingDown,
-  DollarSign,
   CreditCard,
   ArrowUpRight,
-  ArrowDownRight,
   ArrowDownLeft,
   Activity,
   Calendar,
   Target,
-  Store,
-  PieChart as PieChartIcon, // Renombrar para evitar conflicto
+  Gauge,
+  Scale,
+  AlertTriangle,
   ChevronLeft,
   ChevronRight,
   ChevronRight as ChevronRightIcon
 } from 'lucide-react';
 import {
   ResponsiveContainer,
-  PieChart, // Este es el componente de Recharts
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   LineChart,
-  Line,
-  Sector
+  Line
 } from 'recharts';
 import useAppStore from '../stores/appStore';
 import useAuthStore from '../stores/authStore';
-import { getDashboardData } from '../services/api'; // Importar directamente
-import toast from 'react-hot-toast';
+import { getDashboardData } from '../services/api';
 import { Link } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
 import LoadingCard from '../components/common/LoadingCard';
 import EmailSyncControl from '../components/dashboard/EmailSyncControl';
 import PdfUpload from '../components/dashboard/PdfUpload';
 import HistoryInsights from '../components/dashboard/HistoryInsights';
+import AnimatedNumber from '../components/ui/AnimatedNumber';
 import { PageHeader, StatCard, SectionCard, ListRow, IconBadge, Chip, EmptyState } from '../components/ui/kit';
-import { formatCurrency, formatCurrencyAuto, formatCurrencyUltraCompact, formatNumber, formatPercentage } from '../utils/formatters';
+import { formatCurrency, formatCurrencyAuto, formatPercentage } from '../utils/formatters';
+import { Enhanced3DDonutChart } from '../components/dashboard/EnhancedCharts';
 
-// Import Enhanced Charts
-import {
-  Enhanced3DDonutChart,
-  EnhancedBarChart,
-  IncomeExpenseAreaChart,
-  FinancialHealthRadar,
-  MonthOverMonthComparison
-} from '../components/dashboard/EnhancedCharts';
+/* Animaciones compartidas: entrada escalonada con resorte suave */
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+} as const;
+const fadeUpItem = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0, transition: { type: 'spring', damping: 24, stiffness: 240 } },
+} as const;
+const sectionReveal = {
+  initial: { opacity: 0, y: 24 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-40px' },
+  transition: { type: 'spring', damping: 26, stiffness: 220 },
+} as const;
 
 // Paleta oficial centralizada (misma fuente que tailwind.config.js — DOC/GUIA_DE_ESTILO.md)
 const COLORS = ['#3F7079', '#A6C0B4', '#A79E82', '#D4CBB0', '#63929B', '#658876'];
-
-const CustomTooltip = ({ active, payload }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-card p-2 rounded-lg border border-subtle shadow-lg">
-        <p className="text-sm font-medium text-main">{`${payload[0].name}: ${formatCurrency(payload[0].value)}`}</p>
-        <p className="text-xs text-muted">{`Porcentaje: ${payload[0].payload.percentage.toFixed(1)}%`}</p>
-      </div>
-    );
-  }
-
-  return null;
-};
 
 class ChartErrorBoundary extends React.Component<{ children?: React.ReactNode }, { hasError: boolean }> {
   constructor(props: { children?: React.ReactNode }) {
@@ -351,43 +337,121 @@ const Dashboard = () => {
         </Link>
       )}
 
-      {/* Fila de KPIs (StatCard con glow) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Gasto Total"
-          value={formatCurrency(summary?.totalSpending || 0)}
-          icon={TrendingDown}
-          accent="rose"
-          caption={allTime ? 'TODO EL HISTORIAL' : `${formatPercentage(summary?.spendingChangePercentage || 0)} vs mes anterior`}
-          captionIcon={allTime ? undefined : (spendingUp ? ArrowUpRight : ArrowDownLeft)}
-          captionAccent="rose"
-        />
-        <StatCard
-          label="Ingresos Totales"
-          value={formatCurrency(summary?.totalIncome || 0)}
-          icon={TrendingUp}
-          accent="emerald"
-          caption={allTime ? 'TODO EL HISTORIAL' : 'ESTE MES'}
-          captionIcon={ArrowUpRight}
-          captionAccent="emerald"
-        />
-        <StatCard
-          label="Balance Actual"
-          value={`${balancePositive ? '' : '-'}${formatCurrency(Math.abs(summary?.balance || 0))}`}
-          icon={CreditCard}
-          accent={balancePositive ? 'primary' : 'rose'}
-          caption={balancePositive ? 'BALANCE POSITIVO' : 'BALANCE NEGATIVO'}
-          captionIcon={Activity}
-          captionAccent={balancePositive ? 'primary' : 'rose'}
-        />
-        <StatCard
-          label="Transacciones"
-          value={summary?.transactionCount || 0}
-          icon={Calendar}
-          accent="primary"
-          caption={allTime ? 'TODO EL HISTORIAL' : 'DEL PERIODO'}
-        />
-      </div>
+      {/* Fila de KPIs: números animados y entrada escalonada */}
+      <motion.div
+        variants={staggerContainer}
+        initial="hidden"
+        animate="show"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      >
+        <motion.div variants={fadeUpItem}>
+          <StatCard
+            label="Gasto Total"
+            value={<AnimatedNumber value={summary?.totalSpending || 0} format={(n) => formatCurrency(n)} />}
+            icon={TrendingDown}
+            accent="rose"
+            caption={allTime ? 'TODO EL HISTORIAL' : `${formatPercentage(summary?.spendingChangePercentage || 0)} vs mes anterior`}
+            captionIcon={allTime ? undefined : (spendingUp ? ArrowUpRight : ArrowDownLeft)}
+            captionAccent="rose"
+          />
+        </motion.div>
+        <motion.div variants={fadeUpItem}>
+          <StatCard
+            label="Ingresos Totales"
+            value={<AnimatedNumber value={summary?.totalIncome || 0} format={(n) => formatCurrency(n)} />}
+            icon={TrendingUp}
+            accent="emerald"
+            caption={allTime ? 'TODO EL HISTORIAL' : 'ESTE MES'}
+            captionIcon={ArrowUpRight}
+            captionAccent="emerald"
+          />
+        </motion.div>
+        <motion.div variants={fadeUpItem}>
+          <StatCard
+            label="Balance Actual"
+            value={
+              <>
+                {balancePositive ? '' : '-'}
+                <AnimatedNumber value={Math.abs(summary?.balance || 0)} format={(n) => formatCurrency(n)} />
+              </>
+            }
+            icon={CreditCard}
+            accent={balancePositive ? 'primary' : 'rose'}
+            caption={balancePositive ? 'BALANCE POSITIVO' : 'BALANCE NEGATIVO'}
+            captionIcon={Activity}
+            captionAccent={balancePositive ? 'primary' : 'rose'}
+          />
+        </motion.div>
+        <motion.div variants={fadeUpItem}>
+          <StatCard
+            label="Transacciones"
+            value={<AnimatedNumber value={summary?.transactionCount || 0} format={(n) => String(Math.round(n))} />}
+            icon={Calendar}
+            accent="primary"
+            caption={allTime ? 'TODO EL HISTORIAL' : 'DEL PERIODO'}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Pulso del mes: ritmo diario, proyección de cierre y comparación (solo vista mensual) */}
+      {!allTime && ((summary?.totalSpending || 0) > 0 || (summary?.previousMonthSpending || 0) > 0) && (() => {
+        const daysInMonth = new Date(selectedPeriod.year, selectedPeriod.month, 0).getDate()
+        const daysElapsed = isCurrentPeriod ? Math.max(1, new Date().getDate()) : daysInMonth
+        const dailyAvg = (summary?.totalSpending || 0) / daysElapsed
+        const projection = dailyAvg * daysInMonth
+        const prev = summary?.previousMonthSpending
+        const diff = prev != null ? (summary?.totalSpending || 0) - prev : null
+        return (
+          <motion.div {...sectionReveal}>
+            <SectionCard title="Pulso del mes">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-4 rounded-2xl bg-base/60 border border-subtle">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Gauge className="w-4 h-4 text-primary dark:text-primary-300" />
+                    <p className="micro-label">Ritmo de gasto</p>
+                  </div>
+                  <p className="font-display text-xl font-bold tabular-nums text-main">
+                    <AnimatedNumber value={dailyAvg} format={(n) => formatCurrencyAuto(n)} />
+                  </p>
+                  <p className="text-xs text-muted mt-0.5">promedio por día{isCurrentPeriod ? ` (${daysElapsed} días)` : ''}</p>
+                </div>
+                {isCurrentPeriod && (
+                  <div className="p-4 rounded-2xl bg-base/60 border border-subtle">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Target className="w-4 h-4 text-amber-500" />
+                      <p className="micro-label">Proyección de cierre</p>
+                    </div>
+                    <p className="font-display text-xl font-bold tabular-nums text-main">
+                      <AnimatedNumber value={projection} format={(n) => formatCurrencyAuto(n)} />
+                    </p>
+                    <p className="text-xs text-muted mt-0.5">si mantienes este ritmo hasta fin de mes</p>
+                  </div>
+                )}
+                {prev != null && (
+                  <div className="p-4 rounded-2xl bg-base/60 border border-subtle">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Scale className="w-4 h-4 text-sage-600 dark:text-sage-300" />
+                      <p className="micro-label">Mes anterior</p>
+                    </div>
+                    <p className="font-display text-xl font-bold tabular-nums text-main">
+                      <AnimatedNumber value={prev} format={(n) => formatCurrencyAuto(n)} />
+                    </p>
+                    <p className={`text-xs mt-0.5 font-semibold ${diff != null && diff > 0 ? 'text-rose-500' : 'text-sage-600 dark:text-sage-300'}`}>
+                      {diff == null || prev === 0
+                        ? 'sin datos comparables'
+                        : diff > 0
+                          ? `estás gastando ${formatCurrencyAuto(Math.abs(diff))} más`
+                          : diff < 0
+                            ? `vas ${formatCurrencyAuto(Math.abs(diff))} por debajo`
+                            : 'mismo nivel de gasto'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </SectionCard>
+          </motion.div>
+        )
+      })()}
 
       {/* Grid principal 12 cols: dona (5) + recientes (7) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -447,23 +511,27 @@ const Dashboard = () => {
 
       {/* Tendencia de gastos */}
       {spendingTrend.length > 0 && (
-        <SectionCard title="Tendencia de Gastos (últimos 7 días)">
-          <ChartErrorBoundary>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={spendingTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-                <XAxis dataKey="day" />
-                <YAxis {...({ formatter: (value: any) => formatCurrency(value) } as any)} />
-                <Tooltip formatter={(value: any) => [formatCurrency(value), 'Gasto']} />
-                <Line isAnimationActive={false} type="monotone" dataKey="amount" stroke="#3F7079" strokeWidth={3} dot={{ fill: '#3F7079', strokeWidth: 2, r: 4 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </ChartErrorBoundary>
-        </SectionCard>
+        <motion.div {...sectionReveal}>
+          <SectionCard title={`Tendencia de Gastos (últimos ${spendingTrend.length} día${spendingTrend.length === 1 ? '' : 's'} con movimientos)`}>
+            <ChartErrorBoundary>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={spendingTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 11 }} stroke="var(--text-muted)" />
+                  {/* Bug corregido: YAxis usaba una prop "formatter" inexistente */}
+                  <YAxis tickFormatter={(v) => formatCurrencyAuto(v)} tick={{ fontSize: 11 }} stroke="var(--text-muted)" width={78} />
+                  <Tooltip formatter={(value: any) => [formatCurrency(value), 'Gasto']} />
+                  <Line isAnimationActive={false} type="monotone" dataKey="amount" stroke="#3F7079" strokeWidth={3} dot={{ fill: '#3F7079', strokeWidth: 2, r: 4 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartErrorBoundary>
+          </SectionCard>
+        </motion.div>
       )}
 
       {/* Top comercios */}
       {Array.isArray(dashboardData?.topMerchants) && dashboardData.topMerchants.length > 0 && (
+        <motion.div {...sectionReveal}>
         <SectionCard title={allTime ? 'Top comercios de todo el historial' : 'Top comercios del periodo'}>
           <div className="divide-y divide-subtle">
             {dashboardData.topMerchants.map((m, i) => (
@@ -477,14 +545,19 @@ const Dashboard = () => {
             ))}
           </div>
         </SectionCard>
+        </motion.div>
       )}
 
       {/* Historial completo y comportamiento financiero (vista "Todo") */}
       {allTime && <HistoryInsights />}
 
       {/* Importar PDF + sincronización de correos */}
-      <PdfUpload onImported={() => loadDashboardData(selectedPeriod, allTime)} />
-      <EmailSyncControl />
+      <motion.div {...sectionReveal}>
+        <PdfUpload onImported={() => loadDashboardData(selectedPeriod, allTime)} />
+      </motion.div>
+      <motion.div {...sectionReveal}>
+        <EmailSyncControl />
+      </motion.div>
     </motion.div>
   )
 }
