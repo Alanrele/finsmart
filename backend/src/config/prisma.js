@@ -76,11 +76,26 @@ const ensureEmailParserSchema = async () => {
   }
 };
 
+/* Espeja la migración 20260709140000_conexion_gmail (idempotente). */
+const ensureGmailColumns = async () => {
+  const cols = [
+    '"gmail_email" TEXT',
+    '"gmail_access_token" TEXT',
+    '"gmail_refresh_token" TEXT',
+    '"gmail_token_expiry" TIMESTAMP(3)',
+    '"gmail_last_sync" TIMESTAMP(3)',
+  ];
+  for (const col of cols) {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "users" ADD COLUMN IF NOT EXISTS ${col}`);
+  }
+};
+
 const connectDb = async () => {
   await prisma.$connect();
   await prisma.$queryRaw`SELECT 1`;
   await ensureMembershipColumns();
   await ensureEmailParserSchema();
+  await ensureGmailColumns();
   connected = true;
   return prisma;
 };

@@ -25,6 +25,7 @@ import Transactions from './pages/Transactions'
 import Analysis from './pages/Analysis'
 import ChatIA from './pages/ChatIA'
 import OutlookConnect from './pages/OutlookConnect'
+import GmailConnect from './pages/GmailConnect'
 import Settings from './pages/Settings'
 import EnhancedAIAssistant from './pages/EnhancedAIAssistant'
 import FinancialTools from './pages/FinancialTools'
@@ -264,6 +265,8 @@ function App() {
           <Route path="chat" element={<PremiumGate feature="Chat IA+"><ChatIA /></PremiumGate>} />
           <Route path="ai-assistant" element={<PremiumGate feature="Asistente IA+"><EnhancedAIAssistant /></PremiumGate>} />
           <Route path="tools" element={<FinancialTools />} />
+          <Route path="gmail" element={<GmailConnect />} />
+          {/* Ruta legada (la sincronización oficial ahora es Gmail) */}
           <Route path="outlook" element={<OutlookConnect />} />
           <Route path="settings" element={<Settings />} />
           {debugEnabled && <Route path="email-parser" element={<EmailParserTester />} />}

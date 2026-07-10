@@ -37,6 +37,7 @@ const pdfRoutes = require('./routes/pdfRoutes');
 const rulesRoutes = require('./routes/rulesRoutes');
 const financeRoutes = require('./routes/financeRoutes');
 const membershipRoutes = require('./routes/membershipRoutes');
+const gmailRoutes = require('./routes/gmailRoutes');
 
 // Import middleware
 const authMiddleware = require('./middleware/authMiddleware');
@@ -144,6 +145,9 @@ const premiumAiGate = (req, res, next) =>
   req.path === '/health' ? next() : requierePlatinum(req, res, next);
 app.use('/api/ai', authMiddleware, premiumAiGate, aiRoutes);
 app.use('/api/membresia', authMiddleware, membershipRoutes);
+// Gmail: sin auth global — /callback llega desde Google; cada ruta aplica
+// authMiddleware individualmente dentro del router.
+app.use('/api/gmail', gmailRoutes);
 app.use('/api/finance', authMiddleware, financeRoutes);
 app.use('/api/pdf', authMiddleware, pdfRoutes);
 app.use('/api/rules', authMiddleware, rulesRoutes);

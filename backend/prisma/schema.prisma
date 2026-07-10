@@ -27,6 +27,12 @@ model User {
   lastReprocess DateTime?
   syncEnabled   Boolean       @default(false)
   isDemo        Boolean       @default(false)
+  // Conexión Gmail (OAuth de Google, scope gmail.readonly) — reemplaza Outlook
+  gmailEmail        String?   @map("gmail_email")
+  gmailAccessToken  String?   @map("gmail_access_token")
+  gmailRefreshToken String?   @map("gmail_refresh_token")
+  gmailTokenExpiry  DateTime? @map("gmail_token_expiry")
+  gmailLastSync     DateTime? @map("gmail_last_sync")
   // Membresía Platinum + trial único de 7 días (gating validado en servidor)
   esPlatinum      Boolean   @default(false) @map("es_platinum")
   trialUsado      Boolean   @default(false) @map("trial_usado")

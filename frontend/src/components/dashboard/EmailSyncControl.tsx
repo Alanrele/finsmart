@@ -1,239 +1,98 @@
-import React, { useState, useEffect } from 'react'
-import { getSyncStatus, toggleSync as apiToggleSync, syncEmails } from '../../services/api'
-import useAuthStore from '../../stores/authStore'
+import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Mail, RefreshCw, CheckCircle2, Loader2, ChevronRight } from 'lucide-react'
 import toast from 'react-hot-toast'
-import type { SyncStatus } from '../../types'
+import useAuthStore from '../../stores/authStore'
+import { getGmailStatus, syncGmail } from '../../services/api'
 
+/*
+  Tarjeta del dashboard: sincronización de correos BCP vía Gmail
+  (reemplaza el control anterior basado en Outlook/Graph).
+*/
 const EmailSyncControl = () => {
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>({
-    syncEnabled: false,
-    lastSync: null,
-    hasConnection: false,
-    recentTransactions: 0,
-    isDemo: false
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isToggling, setIsToggling] = useState(false)
-  const [isSyncing, setIsSyncing] = useState(false)
   const { isAuthenticated } = useAuthStore()
+  const [status, setStatus] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
 
-  // Load sync status on component mount
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadSyncStatus()
+  const load = async () => {
+    try {
+      setLoading(true)
+      setStatus(await getGmailStatus())
+    } catch (e) {
+      console.error('Error consultando Gmail:', e)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (isAuthenticated) load()
   }, [isAuthenticated])
 
-  const loadSyncStatus = async () => {
+  const handleSync = async () => {
+    setSyncing(true)
+    toast.loading('Leyendo tus correos del BCP…', { id: 'gmail-sync' })
     try {
-      setIsLoading(true)
-      const response = await getSyncStatus()
-      setSyncStatus({
-        syncEnabled: !!response?.syncEnabled,
-        lastSync: response?.lastSync || null,
-        hasConnection: !!response?.hasConnection,
-        recentTransactions: response?.recentTransactions ?? 0,
-        isDemo: !!response?.isDemo,
-        message: response?.message
-      })
-    } catch (error) {
-      console.error('Error loading sync status:', error)
-      toast.error('Error al cargar estado de sincronización')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleToggleSync = async () => {
-    try {
-      setIsToggling(true)
-      const newState = !syncStatus.syncEnabled
-
-      const response = await apiToggleSync(newState)
-
-      setSyncStatus(prev => ({
-        ...prev,
-        syncEnabled: newState,
-        lastSync: response?.lastSync || prev.lastSync || new Date().toISOString()
-      }))
-
+      const r = await syncGmail()
       toast.success(
-        newState
-          ? '✅ Sincronización automática activada'
-          : '⏸️ Sincronización automática desactivada'
+        `${r.created} nuevo${r.created === 1 ? '' : 's'}, ${r.duplicates} duplicado${r.duplicates === 1 ? '' : 's'}${r.review ? `, ${r.review} en revisión` : ''}`,
+        { id: 'gmail-sync' },
       )
-    } catch (error) {
-      console.error('Error toggling sync:', error)
-      toast.error('Error al cambiar sincronización')
+      load()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'La sincronización falló', { id: 'gmail-sync' })
     } finally {
-      setIsToggling(false)
+      setSyncing(false)
     }
   }
 
-  const manualSync = async () => {
-    try {
-      setIsSyncing(true)
-      toast.loading('📧 Sincronizando correos...', { id: 'sync' })
-
-      const response = await syncEmails()
-
-      toast.success(
-        `✅ Sincronización completada: ${response.processedCount} transacciones procesadas`,
-        { id: 'sync' }
-      )
-
-      // Reload status after sync
-      await loadSyncStatus()
-    } catch (error) {
-      console.error('Error during manual sync:', error)
-      toast.error('Error en la sincronización', { id: 'sync' })
-    } finally {
-      setIsSyncing(false)
-    }
-  }
-
-  const formatLastSync = (lastSync) => {
-    if (!lastSync) return 'Nunca'
-
-    const date = new Date(lastSync)
-    if (isNaN(date.getTime())) return 'Nunca'
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-    if (diffInMinutes < 1) return 'Hace unos segundos'
-    if (diffInMinutes < 60) return `Hace ${diffInMinutes} minutos`
-    if (diffInMinutes < 1440) return `Hace ${Math.floor(diffInMinutes / 60)} horas`
-    return `Hace ${Math.floor(diffInMinutes / 1440)} días`
-  }
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="bg-card rounded-lg shadow p-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-base rounded w-1/3 mb-4"></div>
-          <div className="h-8 bg-base rounded w-full"></div>
-        </div>
+      <div className="card">
+        <div className="h-14 rounded-2xl loading-pulse" />
       </div>
     )
   }
 
+  const lastSync = status?.lastSync
+    ? new Date(status.lastSync).toLocaleString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null
+
   return (
-    <div className="bg-card rounded-lg shadow p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-serif italic text-main">
-          📧 Sincronización de Correos BCP
-        </h3>
-        {syncStatus.syncEnabled && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-            <span className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span>
-            Activa
-          </span>
+    <div className="card">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className={`h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 ${
+            status?.connected
+              ? 'bg-sage-600/10 text-sage-600 dark:text-sage-300'
+              : 'bg-primary/10 text-primary dark:text-primary-300'
+          }`}>
+            {status?.connected ? <CheckCircle2 className="w-5 h-5" /> : <Mail className="w-5 h-5" />}
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-base font-serif italic text-main">Sincronización de Correos BCP</h3>
+            <p className="text-xs text-muted truncate">
+              {!status?.configured
+                ? 'Gmail sin configurar en el servidor'
+                : status?.connected
+                  ? `${status.email || 'Gmail conectado'}${lastSync ? ` · última: ${lastSync}` : ' · aún sin sincronizar'}`
+                  : 'Conecta tu Gmail para importar tus notificaciones del BCP automáticamente'}
+            </p>
+          </div>
+        </div>
+
+        {status?.connected ? (
+          <button onClick={handleSync} disabled={syncing} className="btn-primary whitespace-nowrap">
+            {syncing ? <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" /> : <RefreshCw className="w-4 h-4" />}
+            Sincronizar
+          </button>
+        ) : (
+          <Link to="/gmail" className="btn-secondary whitespace-nowrap">
+            Conectar Gmail <ChevronRight className="w-4 h-4" />
+          </Link>
         )}
       </div>
-
-      {syncStatus.isDemo ? (
-        <div className="text-center py-8">
-          <div className="text-yellow-500 text-4xl mb-4">⚠️</div>
-          <p className="text-muted mb-4">
-            {syncStatus.message}
-          </p>
-          <p className="text-sm text-muted">
-            Conecta tu cuenta real de Microsoft para activar la sincronización automática
-          </p>
-        </div>
-      ) : !syncStatus.hasConnection ? (
-        <div className="text-center py-8">
-          <div className="text-red-500 text-4xl mb-4">🔗</div>
-          <p className="text-muted mb-4">
-            No hay conexión con Microsoft Graph
-          </p>
-          <p className="text-sm text-muted">
-            Conecta tu cuenta de Microsoft primero
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {/* Status Info */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted">Estado:</span>
-              <span className={`ml-2 font-medium ${
-                syncStatus.syncEnabled
-                  ? 'text-green-600 dark:text-green-400'
-                  : 'text-muted'
-              }`}>
-                {syncStatus.syncEnabled ? 'Activa' : 'Inactiva'}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted">Última sync:</span>
-              <span className="ml-2 font-medium text-main">
-                {formatLastSync(syncStatus.lastSync)}
-              </span>
-            </div>
-          </div>
-
-          {syncStatus.recentTransactions > 0 && (
-            <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-3">
-              <div className="flex items-center">
-                <div className="text-primary-500 text-lg mr-2">💳</div>
-                <span className="text-sm text-primary-700 dark:text-primary-300">
-                  {syncStatus.recentTransactions} transacciones detectadas en los últimos 7 días
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Controls */}
-          <div className="flex space-x-3">
-            <button
-              onClick={handleToggleSync}
-              disabled={isToggling}
-              className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors ${
-                syncStatus.syncEnabled
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'
-                  : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/20 dark:text-green-400 dark:hover:bg-green-900/30'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {isToggling ? (
-                <span className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                  Cambiando...
-                </span>
-              ) : syncStatus.syncEnabled ? (
-                '⏸️ Desactivar Sync'
-              ) : (
-                '▶️ Activar Sync'
-              )}
-            </button>
-
-            <button
-              onClick={manualSync}
-              disabled={isSyncing}
-              className="px-4 py-2 bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/20 dark:text-primary-400 dark:hover:bg-primary-900/30 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSyncing ? (
-                <span className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-700 mr-2"></div>
-                  Sincronizando...
-                </span>
-              ) : (
-                '🔄 Sincronizar Ahora'
-              )}
-            </button>
-          </div>
-
-          {/* Description */}
-          <div className="text-xs text-muted bg-base/60 rounded p-3">
-            <p className="mb-1">
-              <strong>Sincronización automática:</strong> Revisa nuevos correos de BCP cada 15 minutos
-            </p>
-            <p>
-              <strong>Sincronización manual:</strong> Revisa todos los correos de BCP inmediatamente
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

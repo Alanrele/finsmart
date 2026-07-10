@@ -12,6 +12,7 @@ const FIELDS = [
   'email', 'password', 'firstName', 'lastName', 'microsoftId',
   'accessToken', 'refreshToken', 'tokenExpiry', 'isVerified',
   'preferences', 'lastSync', 'lastReprocess', 'syncEnabled', 'isDemo',
+  'gmailEmail', 'gmailAccessToken', 'gmailRefreshToken', 'gmailTokenExpiry', 'gmailLastSync',
   'esPlatinum', 'trialUsado', 'trialIniciadoEn',
   'createdAt', 'updatedAt'
 ];
@@ -25,7 +26,7 @@ const DEFAULT_PREFERENCES = {
 const UserDocument = buildDocumentClass({
   delegateName: 'user',
   fields: FIELDS,
-  jsonHidden: ['password', 'accessToken', 'refreshToken'],
+  jsonHidden: ['password', 'accessToken', 'refreshToken', 'gmailAccessToken', 'gmailRefreshToken'],
   onBeforeSave: async (doc) => {
     // Igual que el hook pre('save') de Mongoose: hashear solo si cambió
     if (doc.password && doc.isModified('password')) {

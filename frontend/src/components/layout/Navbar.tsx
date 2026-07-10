@@ -44,7 +44,7 @@ const Navbar = () => {
     { name: 'Chat IA', href: '/chat', icon: MessageSquare },
     { name: 'Asistente IA+', href: '/ai-assistant', icon: PiggyBank },
     { name: 'Herramientas', href: '/tools', icon: Calculator },
-    { name: 'Outlook', href: '/outlook', icon: Mail },
+    { name: 'Gmail', href: '/gmail', icon: Mail },
     ...(debugEnabled ? [{ name: 'Email Parser', href: '/email-parser', icon: FileText }] : []),
     { name: 'Configuración', href: '/settings', icon: SettingsIcon },
   ]
