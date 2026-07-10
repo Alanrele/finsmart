@@ -88,6 +88,13 @@ function buildNormalizedTransaction(fields, context) {
   const template = inferTemplate(fields);
   const notes = buildNotes(fields);
 
+  // El correo no traía fecha propia: se marca EXPLÍCITAMENTE que la fecha
+  // proviene de la recepción. La ingesta estricta rechaza estos casos
+  // (van a la bandeja de revisión) — nunca se persiste una fecha inventada.
+  if (!fields.date && receivedAt) {
+    notes.push('datetime_fallback_received_at');
+  }
+
   let confidence = 0.6;
   if (fields.date) {
     confidence += 0.1;

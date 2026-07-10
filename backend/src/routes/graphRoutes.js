@@ -1012,4 +1012,41 @@ router.post('/reset-and-reprocess', async (req, res) => {
   }
 });
 
+/*
+  Bandeja de revisión: correos BCP que NO pudieron procesarse (etiqueta
+  faltante o formato desconocido). Nada se inventa: quedan aquí visibles.
+*/
+router.get('/email-review', async (req, res) => {
+  try {
+    const { prisma } = require('../config/prisma');
+    const reviews = await prisma.emailReview.findMany({
+      where: { userId: req.user._id, status: 'pending' },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    res.json({ reviews, count: reviews.length });
+  } catch (error) {
+    console.error('❌ Error listando bandeja de revisión:', error);
+    res.status(500).json({ error: 'No se pudo cargar la bandeja de revisión' });
+  }
+});
+
+router.post('/email-review/:id/dismiss', async (req, res) => {
+  try {
+    const { prisma } = require('../config/prisma');
+    const review = await prisma.emailReview.findFirst({
+      where: { id: req.params.id, userId: req.user._id },
+    });
+    if (!review) return res.status(404).json({ error: 'Registro no encontrado' });
+    await prisma.emailReview.update({
+      where: { id: review.id },
+      data: { status: 'dismissed' },
+    });
+    res.json({ message: 'Correo descartado de la bandeja' });
+  } catch (error) {
+    console.error('❌ Error descartando revisión:', error);
+    res.status(500).json({ error: 'No se pudo descartar el registro' });
+  }
+});
+
 module.exports = router;

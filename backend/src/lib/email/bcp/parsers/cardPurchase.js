@@ -86,11 +86,8 @@ function parseOccurredAt(text, options, notes, confidenceCounter) {
     return textual;
   }
 
-  if (options.receivedAt) {
-    notes.push('datetime_fallback_received_at');
-    return options.receivedAt;
-  }
-
+  // Sin fecha en el correo → null: la validación estricta lo manda a la
+  // bandeja de revisión. NUNCA se usa la fecha de recepción como sustituto.
   notes.push('datetime_not_found');
   return null;
 }

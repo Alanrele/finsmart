@@ -61,9 +61,13 @@ function createTransactionFromEmail(result, userId, emailMeta = {}) {
     }
   }
 
-  const occurredAt = tx.occurredAt
-    ? new Date(tx.occurredAt)
-    : (emailMeta.receivedDateTime ? new Date(emailMeta.receivedDateTime) : new Date());
+  // Regla dura: el movimiento se fecha con la fecha de la TRANSACCIÓN del
+  // correo. Si el parser no la extrajo, este correo NO es procesable — jamás
+  // se rellena con la fecha de recepción ni con "ahora".
+  if (!tx.occurredAt) {
+    throw new Error('Transaction date (occurredAt) is required; email must go to review');
+  }
+  const occurredAt = new Date(tx.occurredAt);
 
   return {
     userId,

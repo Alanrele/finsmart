@@ -4,6 +4,7 @@ const { Client } = require('@microsoft/microsoft-graph-client');
 // const TransactionExtractor = require('./transactionExtractor'); // TODO: Create if needed
 const GraphErrorHandler = require('../utils/graphErrorHandler');
 const emailParserService = require('./emailParserService');
+const { ingestParsedEmail, sendToReview, getMissingRequiredFields } = require('./emailIngest');
 
 const BCP_ALLOWED_SENDERS = [
   'notificaciones@notificacionesbcp.com.pe',
@@ -276,85 +277,55 @@ class EmailSyncService {
           continue;
         }
 
-        if (emailParserService.isValidParsedTransaction(parseResult, { subject: subj, receivedDateTime: message.receivedDateTime })) {
-          const normalizedTx = parseResult.transaction;
-          const amountValue = parseFloat(normalizedTx.amount.value);
-          // Sanity guard: evitar montos absurdamente grandes por parsing incorrecto
-          const MAX_ALLOWED_AMOUNT = 10_000_000; // S/ 10 millones
-          if (amountValue > MAX_ALLOWED_AMOUNT) {
-            console.warn(`⚠️ Skipping email-derived transaction with unrealistic amount: ${amountValue}. Subject: ${message.subject}`);
-            continue;
-          }
-
-          // Verificar duplicados por número de operación
-          if (normalizedTx.operationId) {
-            const existingTransaction = await Transaction.findOne({
-              userId: user._id,
-              operationNumber: normalizedTx.operationId
-            });
-
-            if (existingTransaction) {
-              console.log(`⚠️ Transaction already exists with operation number: ${normalizedTx.operationId}`);
-              continue;
-            }
-          }
-
-          // Verificar duplicados por messageId
-          const existingByMessageId = await Transaction.findOne({
+        // Ingesta estricta: valida etiquetas requeridas (o bandeja de
+        // revisión), deduplica en 3 niveles y clasifica con el motor de reglas
+        const ingest = await ingestParsedEmail(
+          {
             userId: user._id,
-            messageId: message.id
-          });
-
-          if (existingByMessageId) {
-            console.log(`⚠️ Transaction already exists for message ID: ${message.id}`);
-            continue;
-          }
-
-          // Create transaction
-          const transactionData = emailParserService.createTransactionFromEmail(
-            parseResult,
-            user._id,
-            {
+            message: {
               id: message.id,
               subject: message.subject,
-              receivedDateTime: message.receivedDateTime
-            }
-          );
+              receivedDateTime: message.receivedDateTime,
+            },
+            parseResult,
+            rawBody: emailText || htmlBody || message.subject || '',
+          },
+          { io: this.io },
+        );
 
-          const transaction = new Transaction({
-            ...transactionData,
-            messageId: message.id,
-            rawText: (textBody || htmlBody || message.subject || "").substring(0, 1000),
-            isProcessed: true,
-            createdAt: new Date(message.receivedDateTime)
+        if (ingest.status === 'duplicate') {
+          console.log(`⚠️ Duplicado (${ingest.dedupKey}) para messageId=${message.id}`);
+          continue;
+        }
+        if (ingest.status === 'review') {
+          continue; // ya quedó en la bandeja, con log y notificación
+        }
+
+        const transaction = ingest.transaction;
+        newTransactionsCount++;
+
+        console.log(`✅ New transaction created for ${user.email}:`, {
+          amount: transaction.amount,
+          type: transaction.type,
+          description: transaction.description
+        });
+
+        // Emit real-time update
+        if (this.io) {
+          this.io.to(`user-${user._id}`).emit('new-transaction', {
+            ...transaction,
+            isNew: true,
+            fromSync: true
           });
 
-          await transaction.save();
-          newTransactionsCount++;
-
-          console.log(`✅ New transaction created for ${user.email}:`, {
-            amount: transaction.amount,
-            type: transaction.type,
-            description: transaction.description
+          this.io.to(`user-${user._id}`).emit('notification', {
+            type: 'success',
+            title: '💳 Nueva Transacción Detectada',
+            message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
+            priority: 'high',
+            timestamp: new Date(),
+            fromSync: true
           });
-
-          // Emit real-time update
-          if (this.io) {
-            this.io.to(`user-${user._id}`).emit('new-transaction', {
-              ...transaction.toObject(),
-              isNew: true,
-              fromSync: true
-            });
-
-            this.io.to(`user-${user._id}`).emit('notification', {
-              type: 'success',
-              title: '💳 Nueva Transacción Detectada',
-              message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
-              priority: 'high',
-              timestamp: new Date(),
-              fromSync: true
-            });
-          }
         }
       }
 
@@ -522,9 +493,9 @@ class EmailSyncService {
             });
 
             const normalizedTx = parseResult && parseResult.transaction;
-            const amountValue = normalizedTx ? parseFloat(normalizedTx.amount.value) : null;
+            const missingFields = getMissingRequiredFields(parseResult);
 
-            if (parseResult?.success && amountValue && amountValue > 0) {
+            if (missingFields.length === 0) {
               // Create transaction data
               const transactionData = emailParserService.createTransactionFromEmail(
                 parseResult,
@@ -544,8 +515,8 @@ class EmailSyncService {
                   // Update the existing transaction
                   existingTransaction.amount = transactionData.amount;
                   existingTransaction.type = transactionData.type;
-                  existingTransaction.category = transactionData.category;
-                  existingTransaction.subcategory = transactionData.subcategory;
+                  // La categoría NO se pisa en reprocesos: la decide el motor
+                  // de reglas o el usuario, nunca un mapa por plantilla.
                   existingTransaction.description = transactionData.description;
                   existingTransaction.merchant = transactionData.merchant;
                   existingTransaction.location = transactionData.location;
@@ -575,45 +546,75 @@ class EmailSyncService {
                   skippedCount++;
                 }
               } else {
-                // Create new transaction
-                const transaction = new Transaction({
-                  ...transactionData,
-                  messageId: message.id,
-                  rawText: (textBody || htmlBody || message.subject || "").substring(0, 1000),
-                  isProcessed: true,
-                  createdAt: new Date(message.receivedDateTime)
-                });
+                // Ingesta estricta unificada (dedup 3 niveles + clasificación)
+                const ingest = await ingestParsedEmail(
+                  {
+                    userId: user._id,
+                    message: {
+                      id: message.id,
+                      subject: message.subject,
+                      receivedDateTime: message.receivedDateTime,
+                    },
+                    parseResult,
+                    rawBody: textBody || htmlBody || message.subject || '',
+                  },
+                  { io: this.io },
+                );
 
-                await transaction.save();
-                newCount++;
+                if (ingest.status === 'duplicate') {
+                  skippedCount++;
+                } else if (ingest.status === 'review') {
+                  errorCount++;
+                } else {
+                  const transaction = ingest.transaction;
+                  newCount++;
 
-                console.log(`🆕 New transaction created from historical email:`, {
-                  amount: transaction.amount,
-                  type: transaction.type,
-                  description: transaction.description,
-                  subject: message.subject.substring(0, 50)
-                });
-
-                // Emit real-time update
-                if (this.io) {
-                  this.io.to(`user-${user._id}`).emit('new-transaction', {
-                    ...transaction.toObject(),
-                    isNew: true,
-                    fromReprocess: true
+                  console.log(`🆕 New transaction created from historical email:`, {
+                    amount: transaction.amount,
+                    type: transaction.type,
+                    description: transaction.description,
+                    subject: (message.subject || '').substring(0, 50)
                   });
 
-                  this.io.to(`user-${user._id}`).emit('notification', {
-                    type: 'success',
-                    title: '💳 Transacción Histórica Encontrada',
-                    message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
-                    priority: 'medium',
-                    timestamp: new Date(),
-                    fromReprocess: true
-                  });
+                  // Emit real-time update
+                  if (this.io) {
+                    this.io.to(`user-${user._id}`).emit('new-transaction', {
+                      ...transaction,
+                      isNew: true,
+                      fromReprocess: true
+                    });
+
+                    this.io.to(`user-${user._id}`).emit('notification', {
+                      type: 'success',
+                      title: '💳 Transacción Histórica Encontrada',
+                      message: `${transaction.type}: S/ ${transaction.amount.toFixed(2)} - ${transaction.description}`,
+                      priority: 'medium',
+                      timestamp: new Date(),
+                      fromReprocess: true
+                    });
+                  }
                 }
               }
+            } else if (existingTransaction) {
+              // Ya existe y el correo dejó de ser parseable: no se toca nada
+              skippedCount++;
             } else {
-              console.log(`⚠️ Could not parse email ${message.id} - ${message.subject?.substring(0, 50) || 'No subject'}`);
+              // Correo no procesable: bandeja de revisión, sin inventar datos
+              await sendToReview(
+                {
+                  userId: user._id,
+                  message: {
+                    id: message.id,
+                    subject: message.subject,
+                    receivedDateTime: message.receivedDateTime,
+                  },
+                  reason: missingFields[0] === 'parse_failed'
+                    ? 'parser: formato no reconocido'
+                    : `faltan campos: ${missingFields.join(', ')}`,
+                  rawBody: textBody || htmlBody || '',
+                },
+                { io: this.io },
+              );
               errorCount++;
             }
 

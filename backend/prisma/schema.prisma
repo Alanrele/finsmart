@@ -37,8 +37,30 @@ model User {
   rules         ClassificationRule[]
   categories    Category[]
   pdfCredentials PdfCredential[]
+  emailReviews  EmailReview[]
 
   @@map("users")
+}
+
+/*
+  Bandeja de revisión de correos NO procesables: cuando al correo del BCP le
+  falta una etiqueta esperada o el parser falla, NO se inventa nada — el
+  correo queda aquí para revisión manual y se notifica al usuario.
+*/
+model EmailReview {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId  String    // id del mensaje en el proveedor de correo
+  subject    String?
+  receivedAt DateTime?
+  reason     String    // qué faltó o qué falló (ej. "faltan: fecha, comercio")
+  snippet    String?   // fragmento del cuerpo para diagnóstico (truncado)
+  status     String    @default("pending") // pending | dismissed
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, messageId])
+  @@map("email_reviews")
 }
 
 // Rubro/categoría del catálogo (editable por el usuario)
@@ -126,6 +148,9 @@ model Transaction {
   sourceFile      String?   // nombre del PDF de origen, si aplica
   account         String?   // cuenta/tarjeta de origen
   dedupeHash      String?   // huella fecha+monto+desc-normalizada+cuenta
+  // Campo "Empresa" tal como llegó en el correo BCP (trazabilidad); el campo
+  // `merchant` guarda la versión normalizada que consume el motor de reglas
+  merchantRaw     String?   @map("merchant_raw")
   ruleId          String?   // regla que clasificó el movimiento (audita el porqué)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt

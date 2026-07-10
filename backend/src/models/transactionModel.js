@@ -8,7 +8,7 @@ const { buildDocumentClass, buildModel } = require('./compat');
 
 const FIELDS = [
   'userId', 'messageId', 'amount', 'currency', 'type', 'category',
-  'subcategory', 'merchant', 'description', 'channel', 'operationNumber',
+  'subcategory', 'merchant', 'merchantRaw', 'description', 'channel', 'operationNumber',
   'cardNumber', 'date', 'balance', 'location', 'rawText', 'isProcessed',
   'aiAnalysis', 'notes', 'reprocessCount', 'lastUpdated',
   'createdAt', 'updatedAt'
