@@ -2,7 +2,8 @@
 // DATABASE_URL: cadena de conexión de Railway Postgres (o local para desarrollo)
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
