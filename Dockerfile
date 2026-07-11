@@ -21,6 +21,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Backend stage
+ARG CACHEBUST=2
 FROM node:20-alpine as backend
 
 # Install runtime dependencies for native modules
